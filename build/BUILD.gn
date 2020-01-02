@@ -1,0 +1,30 @@
+config("compiler_defaults") {
+  if (current_os == "linux") {
+    cflags = [
+      "-fPIC",
+      "-pthread",
+    ]
+    cflags_cc = [
+      "-std=gnu++17",
+
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+    ]
+  }
+}
+
+config("default_include_dirs") {
+  include_dirs = [ "//" ]
+}
+
+config("complete_library") {
+  ldflags = [ "-Wl,-no-undefined" ]
+}
+
+config("executable_ldconfig") {
+  ldflags = [
+    "-Wl,-rpath=\$ORIGIN/",
+    "-Wl,-rpath-link=",
+  ]
+}

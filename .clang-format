@@ -1,0 +1,15 @@
+BasedOnStyle: Chromium
+
+ColumnLimit: 90
+
+Standard: Auto
+SortIncludes: true
+IncludeBlocks: Regroup
+FixNamespaceComments: true
+
+IncludeCategories:
+  - Regex:    '^".*"'
+    Priority: 1
+  - Regex:    '^<.*>'
+    Priority: 2
+

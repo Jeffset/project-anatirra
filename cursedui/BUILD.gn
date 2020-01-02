@@ -1,0 +1,57 @@
+import("//build/pkg_config.gni")
+
+declare_args() {
+  use_tickit = false
+}
+
+pkg_config("backend") {
+  if (use_tickit) {
+    packages = [ "tickit" ]
+  } else {
+    packages = [ "ncursesw" ]
+  }
+}
+
+shared_library("cursedui") {
+  if (use_tickit) {
+    backend_ = "tickit"
+  } else {
+    backend_ = "ncurses"
+  }
+
+  sources = [
+    "$backend_/context.cc",
+    "$backend_/rendering.cc",
+    "context.hpp",
+    "gfx.cc",
+    "gfx.hpp",
+    "linear_layout.cc",
+    "linear_layout.hpp",
+    "macro.hpp",
+    "ref_ptr.cc",
+    "ref_ptr.hpp",
+    "rendering.hpp",
+    "text_view.cc",
+    "text_view.hpp",
+    "util.hpp",
+    "view.cc",
+    "view.hpp",
+    "view_group.cc",
+    "view_group.hpp",
+    "view_root.cc",
+    "view_root.hpp",
+    "view_specs.cc",
+    "view_specs.hpp",
+  ]
+
+  configs += [ ":backend" ]
+}
+
+executable("cursedui_test_bin") {
+  sources = [
+    "main.cc",
+  ]
+  deps = [
+    ":cursedui",
+  ]
+}

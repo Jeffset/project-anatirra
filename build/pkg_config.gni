@@ -1,0 +1,19 @@
+pkg_config_script = "//build/scripts/pkg-config.py"
+
+template("pkg_config") {
+  config(target_name) {
+    args = invoker.packages
+    result = exec_script(pkg_config_script, args, "json")
+    forward_variables_from(result,
+                           [
+                             "cflags",
+                             "libs",
+                             "lib_dirs",
+                           ])
+    forward_variables_from(invoker,
+                           [
+                             "defines",
+                             "visibility",
+                           ])
+  }
+}

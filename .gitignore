@@ -1,0 +1,6 @@
+# GN build.
+out/
+
+# Intellij.
+.idea/
+

@@ -1,0 +1,6 @@
+group("all") {
+  deps = [
+    "//cursedui:cursedui_test_bin",
+    "//injecxx:injecxx_test_bin",
+  ]
+}

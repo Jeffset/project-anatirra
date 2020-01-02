@@ -1,0 +1,66 @@
+// Created by jeffset on 12/23/19.
+
+#ifndef INJECXX_INJECXX_HPP
+#define INJECXX_INJECXX_HPP
+
+namespace base::injecxx {
+
+class injectable {
+ public:
+  injectable() noexcept = default;
+  injectable(const injectable&) = delete;
+  injectable(injectable&&) = delete;
+  injectable& operator=(const injectable&) = delete;
+  injectable& operator=(injectable&&) = delete;
+};
+
+#define DISALLOW_ANY_TRANSFER(injectable)            \
+  injectable(const injectable&) = delete;            \
+  injectable(injectable&&) = delete;                 \
+  injectable& operator=(const injectable&) = delete; \
+  injectable& operator=(injectable&&) = delete
+
+namespace detail {
+
+template <class Ret>
+class function_lite {
+ public:
+  template <class Object>
+  explicit function_lite(Object* object, Ret (Object::*func)()) noexcept
+      : object_(object), fct_((Invoke_t)func) {}
+
+  Ret operator()() noexcept {
+    auto* data = (function_lite*)object_;
+    return (data->*fct_)();
+  }
+
+ private:
+  using Invoke_t = Ret (function_lite::*)();
+
+  void* const object_;
+  const Invoke_t fct_;
+};
+
+}  // namespace detail
+
+template <class T>
+class lazy {
+ public:
+  using type = T;
+
+  inline T* operator->() noexcept { return &getter_(); }
+
+  inline T& operator*() noexcept { return getter_(); }
+
+  ~lazy() noexcept = default;
+
+  template <class Object>
+  lazy(Object* object, T& (Object::*func)()) noexcept : getter_(object, func) {}
+
+ private:
+  detail::function_lite<T&> getter_;
+};
+
+}  // namespace base::injecxx
+
+#endif  // INJECXX_INJECXX_HPP

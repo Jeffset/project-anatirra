@@ -1,0 +1,18 @@
+source_set("injecxx") {
+  sources = [
+    "dependency_graph.hpp",
+    "injecxx.hpp",
+    "injecxx_context.hpp",
+    "meta_constructor.hpp",
+    "type_array.hpp",
+  ]
+}
+
+executable("injecxx_test_bin") {
+  sources = [
+    "main.cc",
+  ]
+  deps = [
+    ":injecxx",
+  ]
+}

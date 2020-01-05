@@ -3,12 +3,11 @@
 #ifndef INJECXX_INJECXX_CONTEXT_HPP
 #define INJECXX_INJECXX_CONTEXT_HPP
 
-#include "dependency_graph.hpp"
-#include "injecxx.hpp"
+#include "base/macro.hpp"
+#include "injecxx/dependency_graph.hpp"
+#include "injecxx/injecxx.hpp"
 
 #include <utility>
-
-#define REQUIRES(condition) typename = std::enable_if_t<(condition), void>
 
 namespace base::injecxx {
 
@@ -30,14 +29,16 @@ constexpr bool is_plain_v = std::is_same_v<T, std::decay_t<T>>;
 }  // namespace detail
 
 template <typename... Ts>
-class context_impl : private injectable,
-                     private detail::instance_holder<Ts>... {
+class context_impl : private detail::instance_holder<Ts>... {
   static_assert((!std::is_copy_constructible_v<Ts> && ...) &&
                     (!std::is_copy_assignable_v<Ts> && ...) &&
                     (!std::is_move_assignable_v<Ts> && ...) &&
                     (!std::is_move_constructible_v<Ts> && ...),
                 "All injectable components must not be copy/move "
                 "constructible/assignable");
+
+ public:
+  MAKE_FULLY_STATIONAR(context_impl);
 
  public:
   static constexpr auto all_types() { return meta::ts<Ts...>; }
@@ -81,16 +82,13 @@ class context_impl : private injectable,
   }
 
   template <class DelegatedContext, class Filter, class Dispatcher>
-  void dispatch(DelegatedContext& context,
-                Filter filter,
-                const Dispatcher& dispatcher) {
+  void dispatch(DelegatedContext& context, Filter filter, const Dispatcher& dispatcher) {
     constexpr auto types = meta::filter(all_types(), filter);
     static_assert(types != meta::empty_ta, "No types would pass the filter");
     meta::for_each(types, [&context, &dispatcher](auto type) {
       using T = meta::ta_single_t<decltype(type)>;
       T& instance = context.template get<T>();
-      if constexpr (std::is_invocable_v<decltype(dispatcher), T&,
-                                        DelegatedContext&>) {
+      if constexpr (std::is_invocable_v<decltype(dispatcher), T&, DelegatedContext&>) {
         dispatcher(instance, context);
       } else {
         static_assert(std::is_invocable_v<decltype(dispatcher), T&>);
@@ -134,8 +132,7 @@ template <class ParentContext, class... Ts>
 class context_wrapper {
   using ChildContext = context_impl<Ts...>;
 
-  static_assert(!meta::contains(ParentContext::all_types(),
-                                ChildContext::all_types()),
+  static_assert(!meta::contains(ParentContext::all_types(), ChildContext::all_types()),
                 "Contexts must not contain duplicate classes");
 
  public:
@@ -169,6 +166,8 @@ class context_wrapper {
     context_.dispatch(*this, dispatcher);
   }
 
+  MAKE_FULLY_STATIONAR(context_wrapper);
+
  private:
   ParentContext& parent_context_;
   context_impl<Ts...> context_;
@@ -199,6 +198,8 @@ class context_wrapper<void, Ts...> {
   void dispatch(const Dispatcher& dispatcher) {
     context_.dispatch(*this, dispatcher);
   }
+
+  MAKE_FULLY_STATIONAR(context_wrapper);
 
  private:
   context_impl<Ts...> context_;

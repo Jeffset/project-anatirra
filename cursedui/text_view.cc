@@ -2,11 +2,10 @@
 // Created by jeffset on 12/9/19.
 //
 
-#include "text_view.hpp"
+#include "cursedui/text_view.hpp"
 
-#include "rendering.hpp"
-#include "util.hpp"
-
+#include "base/util.hpp"
+#include "cursedui/rendering.hpp"
 
 namespace cursedui::view {
 
@@ -14,25 +13,26 @@ namespace {
 
 const gfx::dim_t MIN_HEIGHT = 1;
 
-}
+}  // namespace
 
-void TextView::on_measure(const MeasureSpec& width_spec,
-                          const MeasureSpec& height_spec) {
+void TextView::on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
   gfx::Size measured_size = {
-      .width = std::visit(base::overloaded{
-          [this](MeasureUnlimited) { return width_(); },
-          [this](const MeasureAtMost& at_most) {
-            return std::min(at_most.dim, width_());
-          },
-          [](const MeasureExactly& exactly) { return exactly.dim; },
-      }, width_spec),
-      .height = std::visit(base::overloaded{
-          [](MeasureUnlimited) { return MIN_HEIGHT; },
-          [](const MeasureAtMost& at_most) {
-            return std::min(MIN_HEIGHT, at_most.dim);
-          },
-          [](const MeasureExactly& exactly) { return exactly.dim; },
-      }, height_spec),
+      std::visit(base::overloaded{
+                     [this](MeasureUnlimited) { return width_(); },
+                     [this](const MeasureAtMost& at_most) {
+                       return std::min(at_most.dim, width_());
+                     },
+                     [](const MeasureExactly& exactly) { return exactly.dim; },
+                 },
+                 width_spec),
+      std::visit(base::overloaded{
+                     [](MeasureUnlimited) { return MIN_HEIGHT; },
+                     [](const MeasureAtMost& at_most) {
+                       return std::min(MIN_HEIGHT, at_most.dim);
+                     },
+                     [](const MeasureExactly& exactly) { return exactly.dim; },
+                 },
+                 height_spec),
   };
   set_measured_size(measured_size);
 }
@@ -55,4 +55,4 @@ int TextView::width_() const {
   return text_.size();
 }
 
-}
+}  // namespace cursedui::view

@@ -2,9 +2,9 @@ pkg_config_script = "//build/scripts/pkg-config.py"
 
 template("pkg_config") {
   config(target_name) {
-    args = invoker.packages
-    result = exec_script(pkg_config_script, args, "json")
-    forward_variables_from(result,
+    args_ = invoker.packages
+    result_ = exec_script(pkg_config_script, args_, "json")
+    forward_variables_from(result_,
                            [
                              "cflags",
                              "libs",

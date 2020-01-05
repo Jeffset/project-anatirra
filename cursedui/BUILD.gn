@@ -14,22 +14,19 @@ pkg_config("backend") {
 
 shared_library("cursedui") {
   if (use_tickit) {
-    backend_ = "tickit"
+    _backend = "tickit"
   } else {
-    backend_ = "ncurses"
+    _backend = "ncurses"
   }
 
   sources = [
-    "$backend_/context.cc",
-    "$backend_/rendering.cc",
+    "$_backend/context.cc",
+    "${_backend}/rendering.cc",
     "context.hpp",
-    "gfx.cc",
-    "gfx.hpp",
+    "dim.cc",
+    "dim.hpp",
     "linear_layout.cc",
     "linear_layout.hpp",
-    "macro.hpp",
-    "ref_ptr.cc",
-    "ref_ptr.hpp",
     "rendering.hpp",
     "text_view.cc",
     "text_view.hpp",
@@ -42,9 +39,15 @@ shared_library("cursedui") {
     "view_root.hpp",
     "view_specs.cc",
     "view_specs.hpp",
+    "drawable.cc",
+    "drawable.hpp",
   ]
 
   configs += [ ":backend" ]
+
+  deps = [
+    "//base",
+  ]
 }
 
 executable("cursedui_test_bin") {
@@ -53,5 +56,6 @@ executable("cursedui_test_bin") {
   ]
   deps = [
     ":cursedui",
+    "//base",
   ]
 }

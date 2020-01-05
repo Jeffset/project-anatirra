@@ -4,11 +4,10 @@
 
 #include "cursedui/context.hpp"
 
-#include <cursesw.h>
+#include "cursedui/rendering.hpp"
 
 #include <clocale>
-
-#include "cursedui/rendering.hpp"
+#include <cursesw.h>
 
 namespace cursedui {
 
@@ -24,6 +23,11 @@ Context::Context() {
   ::intrflush(stdscr, FALSE);
 
   ::curs_set(0);
+
+  ::start_color();
+  ::init_extended_color(228, 700, 1000, 300);
+  ::init_pair(1, 228, COLOR_BLACK);
+  ::attron(COLOR_PAIR(1));
 }
 
 Context::~Context() {

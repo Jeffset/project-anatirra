@@ -1,13 +1,10 @@
 
-#include "cursedui/view_root.hpp"
 #include "cursedui/context.hpp"
-
-#include "cursedui/text_view.hpp"
 #include "cursedui/linear_layout.hpp"
+#include "cursedui/text_view.hpp"
+#include "cursedui/view_root.hpp"
 
-
-[[noreturn]]
-int main() {
+[[noreturn]] int main() {
   using namespace cursedui;
 
   Context context;
@@ -25,11 +22,11 @@ int main() {
   lin_layout->add_child(lin_layout2);
   lin_layout->add_child(view2);
 
-  auto* lp1 = (view::LinearLayout::LayoutParams*) view1->layout_params();
+  auto* lp1 = (view::LinearLayout::LayoutParams*)view1->layout_params().value();
   lp1->set_weight(1.0f);
   lp1->set_height_layout_spec(view::LayoutMatchParent{});
 
-  auto* lp2 = (view::LinearLayout::LayoutParams*) view2->layout_params();
+  auto* lp2 = (view::LinearLayout::LayoutParams*)view2->layout_params().value();
   lp2->set_weight(0.5f);
   lp2->set_height_layout_spec(view::LayoutMatchParent{});
 
@@ -39,14 +36,14 @@ int main() {
   view4->set_text(L"◕ Prod ◕ string ◕ long");
   lin_layout2->add_child(view3);
   lin_layout2->add_child(view4);
-  auto* lp3 = (view::LinearLayout::LayoutParams*) view3->layout_params();
+  auto* lp3 = (view::LinearLayout::LayoutParams*)view3->layout_params().value();
   lp3->set_weight(1.0f);
   lp3->set_width_layout_spec(view::LayoutMatchParent{});
-  auto* lp4 = (view::LinearLayout::LayoutParams*) view4->layout_params();
+  auto* lp4 = (view::LinearLayout::LayoutParams*)view4->layout_params().value();
   lp4->set_weight(0.5f);
   lp4->set_width_layout_spec(view::LayoutMatchParent{});
 
-  auto* ll = (view::LinearLayout::LayoutParams*) lin_layout2->layout_params();
+  auto* ll = (view::LinearLayout::LayoutParams*)lin_layout2->layout_params().value();
   ll->set_weight(0.5f);
 
   view::ViewRoot view_root{&context};

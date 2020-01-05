@@ -2,10 +2,10 @@
 // Created by jeffset on 12/24/19.
 //
 
+#include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
-#include "injecxx_context.hpp"
-#include "meta_constructor.hpp"
-#include "type_array.hpp"
+#include "injecxx/injecxx_context.hpp"
+#include "injecxx/meta_constructor.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -15,21 +15,27 @@ using namespace base::injecxx;
 
 class Foo;
 
-class ComG : injecxx::injectable {
+class ComG {
  public:
   explicit ComG(Foo&) noexcept : f(4) {}
 
   const char* d = "comG";
 
   const int f;
+
+  MAKE_FULLY_STATIONAR(ComG);
 };
 
-class Com1 : injecxx::injectable {
+class Com1 {
  public:
+  Com1() = default;
+
   const char* d = "com1";
+
+  MAKE_FULLY_STATIONAR(Com1);
 };
 
-class Com0 : injecxx::injectable {
+class Com0 {
  public:
   Com0(lazy<Com1> c1) noexcept : c1_(c1) {}
 
@@ -37,11 +43,13 @@ class Com0 : injecxx::injectable {
 
   void p() { std::cout << "C0: " << c1_->d << '\n'; }
 
+  MAKE_FULLY_STATIONAR(Com0);
+
  private:
   lazy<Com1> c1_;
 };
 
-class Com2 : injecxx::injectable {
+class Com2 {
  public:
   Com2(Com1&, Com0& c0) noexcept {
     std::cout << "Com2 constructed\n";
@@ -49,13 +57,17 @@ class Com2 : injecxx::injectable {
   }
 
   void act() { std::cout << "Com2 act\n"; }
+
+  MAKE_FULLY_STATIONAR(Com2);
 };
 
-class Foo : injecxx::injectable {
+class Foo {
  public:
   Foo(Com1&, Com2& c2) noexcept : c2_(c2) { std::cout << "Foo constructed\n"; }
 
   Com2& c2_;
+
+  MAKE_FULLY_STATIONAR(Foo);
 };
 
 template <template <typename> typename P>
@@ -131,11 +143,9 @@ int main() {
   auto ctx_1 = injecxx::make_context<Com1, Com2, Com0>();
   auto ctx = injecxx::make_context<ComG, Foo>(ctx_1);
 
-  ctx.dispatch(meta::is_type<Foo>(), [](Foo& instance, auto& context) {
-    consume_foo(instance, context);
-  });
-  ctx.dispatch(
-      [](Foo& instance, auto& context) { consume_foo(instance, context); });
+  ctx.dispatch(meta::is_type<Foo>(),
+               [](Foo& instance, auto& context) { consume_foo(instance, context); });
+  ctx.dispatch([](Foo& instance, auto& context) { consume_foo(instance, context); });
 
   //  static_assert(noexcept(ctx.get<Foo>()));
   //  static_assert(noexcept(ctx.~context()));

@@ -1,17 +1,32 @@
 config("compiler_defaults") {
   if (current_os == "linux") {
     cflags = [
+      "-pipe",
       "-fPIC",
       "-pthread",
     ]
     cflags_cc = [
-      "-std=gnu++17",
+      "-std=c++17",
+      "-fno-rtti",
 
       "-Wall",
       "-Wextra",
       "-Wpedantic",
     ]
   }
+}
+
+config("debug_config") {
+  cflags = [
+    "-g",
+    "-O0",
+  ]
+}
+
+config("release_config") {
+  cflags = [
+    "-O2",
+  ]
 }
 
 config("default_include_dirs") {

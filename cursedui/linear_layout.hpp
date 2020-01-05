@@ -2,8 +2,8 @@
 // Created by jeffset on 12/15/19.
 //
 
-#ifndef CURSES_DEMO_LINEAR_LAYOUT_HPP
-#define CURSES_DEMO_LINEAR_LAYOUT_HPP
+#ifndef CURSEDUI_LINEAR_LAYOUT_HPP
+#define CURSEDUI_LINEAR_LAYOUT_HPP
 
 #include "view_group.hpp"
 
@@ -27,7 +27,7 @@ class LinearLayout : public ViewGroup {
     void set_no_weight();
 
    private:
-    GETTER std::string_view tag() const override;
+    GETTER std::string_view tag() const noexcept override;
 
    private:
     std::optional<float> weight_;
@@ -35,12 +35,12 @@ class LinearLayout : public ViewGroup {
 
   enum Orientation : unsigned char { HORIZONTAL, VERTICAL };
 
-  LinearLayout();
-  ~LinearLayout() override;
+  LinearLayout() noexcept;
+  ~LinearLayout() noexcept override;
 
-  GETTER Orientation orientation() const { return orientation_; }
+  GETTER Orientation orientation() const noexcept { return orientation_; }
 
-  void set_orientation(Orientation orientation);
+  void set_orientation(Orientation orientation) noexcept;
 
  protected:
   void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
@@ -56,4 +56,4 @@ class LinearLayout : public ViewGroup {
 
 }  // namespace cursedui::view
 
-#endif  // CURSES_DEMO_LINEAR_LAYOUT_HPP
+#endif  // CURSEDUI_LINEAR_LAYOUT_HPP

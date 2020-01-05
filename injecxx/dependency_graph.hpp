@@ -1,8 +1,8 @@
-#ifndef DEPENDENCY_GRAPH_HPP
-#define DEPENDENCY_GRAPH_HPP
+#ifndef INJECXX_DEPENDENCY_GRAPH_HPP
+#define INJECXX_DEPENDENCY_GRAPH_HPP
 
-#include "meta_constructor.hpp"
-#include "type_array.hpp"
+#include "base/type_array.hpp"
+#include "injecxx/meta_constructor.hpp"
 
 namespace base::injecxx::detail {
 
@@ -46,21 +46,19 @@ class dependency_graph {
   template <class... Ts>
   MissingDependency(meta::ta<Ts...>)->MissingDependency<Ts...>;
 
-  static constexpr auto all_types =
-      meta::filter(meta::ts<Leaves...>, [](auto type) {
-        constexpr auto all = meta::ts<Leaves...>;
-        constexpr auto deps =
-            meta::deduce_constructor_arg_types(type, all - type);
-        return deps != meta::error_ta;
-      });
+  static constexpr auto all_types = meta::filter(meta::ts<Leaves...>, [](auto type) {
+    constexpr auto all = meta::ts<Leaves...>;
+    constexpr auto deps = meta::deduce_constructor_arg_types(type, all - type);
+    return deps != meta::error_ta;
+  });
 
   template <class T>
   static constexpr auto dependencies(meta::ta<T> type) {
     if constexpr (type == meta::null_ta) {
       return meta::empty_ta;
     } else {
-      constexpr auto deps = meta::deduce_constructor_arg_types(
-          get_type(type), all_types - meta::t<T>);
+      constexpr auto deps =
+          meta::deduce_constructor_arg_types(get_type(type), all_types - meta::t<T>);
       if constexpr (deps == meta::error_ta) {
         return meta::empty_ta;
       } else {
@@ -74,15 +72,13 @@ class dependency_graph {
       constexpr auto deps = dependencies(element);
       constexpr bool missing_deps_present = meta::contains(deps, meta::null_ta);
       if constexpr (missing_deps_present) {
-        static_assert(MissingDependency(element + deps),
-                      "Missing dependencies present");
+        static_assert(MissingDependency(element + deps), "Missing dependencies present");
       }
     });
   }
 
   static constexpr auto topologically_sorted_types() {
-    return topological_sort_impl(meta::empty_ta, meta::empty_ta,
-                                 meta::empty_ta);
+    return topological_sort_impl(meta::empty_ta, meta::empty_ta, meta::empty_ta);
   }
 
  private:
@@ -100,8 +96,7 @@ class dependency_graph {
         meta::map(meta::reverse(stack_frames), [](auto stack_frame) {
           return meta::decompose_first(meta::unwrap(stack_frame));
         });
-    static_assert(CyclicDependency(deps_cycle),
-                  "Cyclic dependency is detected");
+    static_assert(CyclicDependency(deps_cycle), "Cyclic dependency is detected");
     return meta::empty_ta;
   }
 
@@ -129,8 +124,7 @@ class dependency_graph {
       constexpr auto unvisited_children = meta::decompose_tail(current_stack);
       if constexpr (meta::contains(closed, current)) {
         // current is marked as closed - simply return.
-        return topological_sort_impl<true>(meta::decompose_tail(stack), visited,
-                                           closed);
+        return topological_sort_impl<true>(meta::decompose_tail(stack), visited, closed);
       } else {
         if constexpr (!is_return && meta::contains(visited, current)) {
           return report_cyclic_dependency(stack);
@@ -139,12 +133,11 @@ class dependency_graph {
           if constexpr (unvisited_children == meta::empty_ta) {
             // no more children, mark current as closed and return.
             constexpr auto new_closed = closed + current;
-            return topological_sort_impl<true>(meta::decompose_tail(stack),
-                                               new_visited, new_closed) +
+            return topological_sort_impl<true>(meta::decompose_tail(stack), new_visited,
+                                               new_closed) +
                    current;
           } else {
-            constexpr auto new_current =
-                meta::decompose_first(unvisited_children);
+            constexpr auto new_current = meta::decompose_first(unvisited_children);
             constexpr auto new_stack =
                 new_stack_frame(new_current) +
                 meta::wrap(current + meta::decompose_tail(unvisited_children)) +
@@ -164,4 +157,4 @@ constexpr auto make_graph(meta::ta<Ts...>) {
 
 }  // namespace base::injecxx::detail
 
-#endif  // DEPENDENCY_GRAPH_HPP
+#endif  // INJECXX_DEPENDENCY_GRAPH_HPP

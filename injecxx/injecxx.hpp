@@ -3,22 +3,9 @@
 #ifndef INJECXX_INJECXX_HPP
 #define INJECXX_INJECXX_HPP
 
+#include "base/macro.hpp"
+
 namespace base::injecxx {
-
-class injectable {
- public:
-  injectable() noexcept = default;
-  injectable(const injectable&) = delete;
-  injectable(injectable&&) = delete;
-  injectable& operator=(const injectable&) = delete;
-  injectable& operator=(injectable&&) = delete;
-};
-
-#define DISALLOW_ANY_TRANSFER(injectable)            \
-  injectable(const injectable&) = delete;            \
-  injectable(injectable&&) = delete;                 \
-  injectable& operator=(const injectable&) = delete; \
-  injectable& operator=(injectable&&) = delete
 
 namespace detail {
 

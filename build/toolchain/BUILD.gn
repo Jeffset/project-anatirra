@@ -84,11 +84,13 @@ template("toolchain_template") {
 }
 
 toolchain_template("linux_gcc") {
-  cc = "gcc"
-  cxx = "g++"
+  opts_ = "-fdiagnostics-color=always"
+  cc = "gcc $opts_"
+  cxx = "g++ $opts_"
 }
 
 toolchain_template("linux_clang") {
-  cc = "clang"
-  cxx = "clang++"
+  opts_ = "-fcolor-diagnostics"
+  cc = "clang $opts_"
+  cxx = "clang++ $opts_"
 }

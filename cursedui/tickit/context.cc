@@ -18,10 +18,7 @@ struct Context::ContextImpl {
 
   Delegate* delegate_;
 
-  static int render_cb(TickitWindow* win,
-                       TickitEventFlags flags,
-                       void* info,
-                       void* user) {
+  static int render_cb(TickitWindow*, TickitEventFlags, void* info, void* user) {
     auto* impl = static_cast<ContextImpl*>(user);
     auto* render_info = static_cast<TickitExposeEventInfo*>(info);
     render::Canvas canvas{render_info->rb};
@@ -29,7 +26,7 @@ struct Context::ContextImpl {
     return 0;
   }
 
-  static int resize_cb(TickitTerm* term, TickitEventFlags flags, void* info, void* user) {
+  static int resize_cb(TickitTerm*, TickitEventFlags, void*, void* user) {
     auto* impl = static_cast<ContextImpl*>(user);
     tickit_window_expose(impl->window_, nullptr);
     return 0;

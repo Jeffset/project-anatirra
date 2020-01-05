@@ -4,7 +4,7 @@
 
 #include "cursedui/linear_layout.hpp"
 
-#include "cursedui/util.hpp"
+#include "base/util.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -24,10 +24,9 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
 
   const auto count = child_count();
   const auto [use_weights, total_oriented_dim] = std::visit(
-      base::overloaded{[](const MeasureSpecified& spec) {
-                         return std::pair(true, spec.dim);
-                       },
-                       [](MeasureUnlimited) { return std::pair(false, -1); }},
+      base::overloaded{
+          [](const MeasureSpecified& spec) { return std::pair(true, spec.dim); },
+          [](MeasureUnlimited) { return std::pair(false, -1); }},
       oriented_spec);
 
   gfx::Size this_size{};
@@ -44,16 +43,15 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
 
   for (int i = 0; i < count; ++i) {
     auto child = get_child(i);
-    const auto* lp = (LayoutParams*)child->layout_params();
-    assert(lp);
+    const auto* lp = (LayoutParams*)child->layout_params().value();
 
     if (!use_weights || !lp->weight()) {
       child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
                      make_measure_spec(lp->height_layout_spec(), height_spec));
       weightless_children_size += child->measured_size().*oriented_dim;
 
-      this_size.*orthogonal_dim = std::max(
-          this_size.*orthogonal_dim, child->measured_size().*orthogonal_dim);
+      this_size.*orthogonal_dim =
+          std::max(this_size.*orthogonal_dim, child->measured_size().*orthogonal_dim);
     } else {
       child_summary_weight += lp->weight().value();
       ++weighted_child_count;
@@ -69,14 +67,13 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
 
     for (int i = 0; i < count; ++i) {
       auto child = get_child(i);
-      const auto* lp = (LayoutParams*)child->layout_params();
+      const auto* lp = (LayoutParams*)child->layout_params().value();
 
       if (!lp->weight()) {
         continue;
       }
 
-      const float normalized_weight =
-          lp->weight().value() / child_summary_weight;
+      const float normalized_weight = lp->weight().value() / child_summary_weight;
       gfx::dim_t dim =
           weighted_child_num == weighted_child_count
               ? width_for_weighting - distributed_dim
@@ -85,16 +82,15 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
       distributed_dim += dim;
 
       if (is_horizontal) {
-        child->measure(
-            MeasureExactly{dim},
-            make_measure_spec(lp->height_layout_spec(), height_spec));
+        child->measure(MeasureExactly{{dim}},
+                       make_measure_spec(lp->height_layout_spec(), height_spec));
       } else {
         child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
-                       MeasureExactly{dim});
+                       MeasureExactly{{dim}});
       }
 
-      this_size.*orthogonal_dim = std::max(
-          this_size.*orthogonal_dim, child->measured_size().*orthogonal_dim);
+      this_size.*orthogonal_dim =
+          std::max(this_size.*orthogonal_dim, child->measured_size().*orthogonal_dim);
       ++weighted_child_num;
     }
 
@@ -122,19 +118,18 @@ void LinearLayout::on_layout() {
 }
 
 std::unique_ptr<view::LayoutParams> LinearLayout::create_layout_params() {
-  return std::make_unique<LayoutParams>(LayoutWrapContent{},
-                                        LayoutWrapContent{});
+  return std::make_unique<LayoutParams>(LayoutWrapContent{}, LayoutWrapContent{});
 }
 
 bool LinearLayout::check_layout_params(view::LayoutParams* params) {
   return params->tag() == LayoutParams::TAG;
 }
 
-LinearLayout::~LinearLayout() = default;
+LinearLayout::~LinearLayout() noexcept = default;
 
-LinearLayout::LinearLayout() : orientation_(HORIZONTAL) {}
+LinearLayout::LinearLayout() noexcept : orientation_(HORIZONTAL) {}
 
-void LinearLayout::set_orientation(LinearLayout::Orientation orientation) {
+void LinearLayout::set_orientation(LinearLayout::Orientation orientation) noexcept {
   if (orientation_ == orientation)
     return;
   orientation_ = orientation;
@@ -144,7 +139,7 @@ LinearLayout::LayoutParams::LayoutParams(const LayoutSpec& width,
                                          const LayoutSpec& height)
     : view::LayoutParams(width, height) {}
 
-std::string_view LinearLayout::LayoutParams::tag() const {
+std::string_view LinearLayout::LayoutParams::tag() const noexcept {
   return TAG;
 }
 

@@ -2,8 +2,10 @@
 // Created by jeffset on 12/9/19.
 //
 
-#ifndef CURSES_DEMO_GFX_HPP
-#define CURSES_DEMO_GFX_HPP
+#ifndef CURSEDUI_GFX_HPP
+#define CURSEDUI_GFX_HPP
+
+#include "base/macro.hpp"
 
 #include <type_traits>
 
@@ -22,11 +24,11 @@ struct Size {
 struct Rect {
   dim_t left, top, right, bottom;
 
-  [[nodiscard]] Point position() const;
+  GETTER Point position() const;
 
-  [[nodiscard]] Size size() const;
+  GETTER Size size() const;
 
-  [[nodiscard]] bool has_area() const;
+  GETTER bool has_area() const;
 };
 
 Rect rect_from(const gfx::Point& position, const gfx::Size& size);
@@ -38,6 +40,6 @@ Rect centered_rect(const Rect& base, const Size& size);
 Rect grow(const Rect& base, dim_t d);
 Rect shrink(const Rect& base, dim_t d);
 
-}
+}  // namespace cursedui::gfx
 
-#endif //CURSES_DEMO_GFX_HPP
+#endif  // CURSEDUI_GFX_HPP

@@ -18,9 +18,7 @@ struct BorderStyle {
   TickitLineStyle style_;
 };
 
-const BorderStyle BorderStyles::Single = {
-    .style_ = TICKIT_LINE_SINGLE,
-};
+const BorderStyle BorderStyles::Single = {TICKIT_LINE_SINGLE};
 
 struct Canvas::CanvasImpl {
   TickitRenderBuffer* render_buffer_;
@@ -76,7 +74,7 @@ void fill(Canvas& canvas, wchar_t ch, const gfx::Rect& area) {
 }
 
 void border(Canvas& canvas, const gfx::Rect& rect, const BorderStyle& style) {
-  canvas << Box{.rect = rect, .style = &style};
+  canvas << Box{rect, &style};
 }
 
 }  // namespace cursedui::render

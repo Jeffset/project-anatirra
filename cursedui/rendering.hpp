@@ -2,19 +2,17 @@
 // Created by jeffset on 12/9/19.
 //
 
-#ifndef CURSES_DEMO_RENDERING_HPP
-#define CURSES_DEMO_RENDERING_HPP
+#ifndef CURSEDUI_RENDERING_HPP
+#define CURSEDUI_RENDERING_HPP
 
-#include "gfx.hpp"
-
-#include "macro.hpp"
+#include "base/macro.hpp"
+#include "cursedui/dim.hpp"
 
 #include <memory>
 
-
 namespace cursedui {
 class Context;
-}
+}  // namespace cursedui
 
 namespace cursedui::render {
 
@@ -50,6 +48,6 @@ void fill(Canvas& canvas, wchar_t ch, const gfx::Rect& area);
 
 void border(Canvas& canvas, const gfx::Rect& rect, const BorderStyle& style);
 
-}
+}  // namespace cursedui::render
 
-#endif //CURSES_DEMO_RENDERING_HPP
+#endif  // CURSEDUI_RENDERING_HPP

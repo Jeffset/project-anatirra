@@ -2,12 +2,13 @@
 // Created by jeffset on 12/9/19.
 //
 
-#ifndef CURSES_DEMO_CONTEXT_HPP
-#define CURSES_DEMO_CONTEXT_HPP
+#ifndef CURSEDUI_CONTEXT_HPP
+#define CURSEDUI_CONTEXT_HPP
+
+#include "base/macro.hpp"
+#include "cursedui/dim.hpp"
 
 #include <memory>
-
-#include "cursedui/gfx.hpp"
 
 namespace cursedui {
 
@@ -27,7 +28,9 @@ class Context final {
 
   void run(Delegate* delegate);
 
-  [[nodiscard]] gfx::Size screen_size() const;
+  GETTER gfx::Size screen_size() const;
+
+  MAKE_FULLY_STATIONAR(Context);
 
  private:
   struct ContextImpl;
@@ -36,4 +39,4 @@ class Context final {
 
 }  // namespace cursedui
 
-#endif  // CURSES_DEMO_CONTEXT_HPP
+#endif  // CURSEDUI_CONTEXT_HPP

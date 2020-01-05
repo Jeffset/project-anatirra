@@ -2,34 +2,33 @@
 // Created by jeffset on 12/15/19.
 //
 
-#ifndef CURSES_DEMO_VIEW_GROUP_HPP
-#define CURSES_DEMO_VIEW_GROUP_HPP
+#ifndef CURSEDUI_VIEW_GROUP_HPP
+#define CURSEDUI_VIEW_GROUP_HPP
 
-#include "view.hpp"
-#include "macro.hpp"
-#include "gfx.hpp"
+#include "base/macro.hpp"
+#include "cursedui/dim.hpp"
+#include "cursedui/view.hpp"
 
-#include <vector>
 #include <memory>
 #include <string_view>
-
+#include <vector>
 
 namespace cursedui::view {
 
 class LayoutParams {
  public:
-  GETTER LayoutSpec width_layout_spec() const;
-  GETTER LayoutSpec height_layout_spec() const;
+  GETTER LayoutSpec width_layout_spec() const noexcept;
+  GETTER LayoutSpec height_layout_spec() const noexcept;
 
-  void set_width_layout_spec(const LayoutSpec& spec);
-  void set_height_layout_spec(const LayoutSpec& spec);
+  void set_width_layout_spec(const LayoutSpec& spec) noexcept;
+  void set_height_layout_spec(const LayoutSpec& spec) noexcept;
 
-  virtual ~LayoutParams();
+  virtual ~LayoutParams() noexcept;
 
-  GETTER virtual std::string_view tag() const = 0;
+  GETTER virtual std::string_view tag() const noexcept = 0;
 
  protected:
-  LayoutParams(const LayoutSpec& width, const LayoutSpec& height);
+  LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept;
 
  private:
   LayoutSpec width_;
@@ -38,13 +37,13 @@ class LayoutParams {
 
 class ViewGroup : public View {
  public:
-  ViewGroup();
-  ~ViewGroup() override;
+  ViewGroup() noexcept;
+  ~ViewGroup() noexcept override;
 
   void add_child(base::ref_ptr<View> child);
   void remove_child(const base::ref_ptr<View>& child);
 
-  GETTER int child_count() const;
+  GETTER int child_count() const noexcept;
   GETTER base::ref_ptr<View> get_child(int index);
 
  protected:
@@ -60,6 +59,6 @@ class ViewGroup : public View {
   std::vector<base::ref_ptr<View>> children_;
 };
 
-}
+}  // namespace cursedui::view
 
-#endif //CURSES_DEMO_VIEW_GROUP_HPP
+#endif  // CURSEDUI_VIEW_GROUP_HPP

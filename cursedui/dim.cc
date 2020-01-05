@@ -2,15 +2,14 @@
 // Created by jeffset on 12/9/19.
 //
 
-#include "cursedui/gfx.hpp"
+#include "cursedui/dim.hpp"
 
 #include <algorithm>
 
 namespace cursedui::gfx {
 
 Size min(const Size& a, const Size& b) {
-  return {.width = std::min(a.width, b.width),
-          .height = std::min(a.height, a.height)};
+  return {std::min(a.width, b.width), std::min(a.height, a.height)};
 }
 
 Rect centered_rect(const Rect& base, const Size& size) {
@@ -19,20 +18,20 @@ Rect centered_rect(const Rect& base, const Size& size) {
   dx = dx / 2 + dx % 2;
   auto dy = base_size.height - size.height;
   dy = dy / 2 + dy % 2;
-  return {
-      .left = base.left + dx,
-      .top = base.top + dy,
-      .right = base.right - dx,
-      .bottom = base.bottom - dy,
+  return Rect{
+      base.left + dx,
+      base.top + dy,
+      base.right - dx,
+      base.bottom - dy,
   };
 }
 
 Rect rect_from(const gfx::Point& position, const gfx::Size& size) {
-  return {
-      .left = position.x,
-      .top = position.y,
-      .right = position.x + size.width - 1,
-      .bottom = position.y + size.height - 1,
+  return Rect{
+      position.x,
+      position.y,
+      position.x + size.width - 1,
+      position.y + size.height - 1,
   };
 }
 
@@ -45,11 +44,11 @@ Size Rect::size() const {
 }
 
 Rect grow(const Rect& base, dim_t d) {
-  return {
-      .left = base.left - d,
-      .right = base.right + d,
-      .bottom = base.bottom + d,
-      .top = base.top - d,
+  return Rect{
+      base.left - d,
+      base.top - d,
+      base.right + d,
+      base.bottom + d,
   };
 }
 

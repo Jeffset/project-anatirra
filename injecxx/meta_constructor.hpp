@@ -5,8 +5,8 @@
 #ifndef INJECXX_META_CONSTRUCTOR_HPP
 #define INJECXX_META_CONSTRUCTOR_HPP
 
-#include "injecxx.hpp"
-#include "type_array.hpp"
+#include "base/type_array.hpp"
+#include "injecxx/injecxx.hpp"
 
 namespace base::meta {
 

@@ -4,7 +4,9 @@ source_set("injecxx") {
     "injecxx.hpp",
     "injecxx_context.hpp",
     "meta_constructor.hpp",
-    "type_array.hpp",
+  ]
+  deps = [
+    "//base",
   ]
 }
 

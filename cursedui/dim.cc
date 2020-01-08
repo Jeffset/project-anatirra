@@ -40,7 +40,7 @@ Point Rect::position() const {
 }
 
 Size Rect::size() const {
-  return {right - left + 1, bottom - top + 1};
+  return {width(), height()};
 }
 
 Rect grow(const Rect& base, dim_t d) {
@@ -58,6 +58,14 @@ Rect shrink(const Rect& base, dim_t d) {
 
 bool Rect::has_area() const {
   return right >= left && bottom >= top;
+}
+
+dim_t Rect::width() const {
+  return right - left + 1;
+}
+
+dim_t Rect::height() const {
+  return bottom - top + 1;
 }
 
 }  // namespace cursedui::gfx

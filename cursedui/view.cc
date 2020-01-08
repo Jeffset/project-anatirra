@@ -138,6 +138,7 @@ render::BgColorState View::on_draw(render::Canvas& canvas) {
 }
 
 gfx::Rect View::inner_bounds() const noexcept {
+  // FIXME: a bit too heavy for a getter, isn't it?
   return border_ ? gfx::shrink(bounds_.value(), border_->border_width())
                  : bounds_.value();
 }

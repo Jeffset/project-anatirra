@@ -8,6 +8,7 @@
 #include "cursedui/view.hpp"
 
 #include <string>
+#include <string_view>
 
 namespace cursedui::render {
 class Canvas;
@@ -29,10 +30,19 @@ class TextView : public View {
   render::BgColorState on_draw(render::Canvas& canvas) override;
 
  private:
-  GETTER gfx::dim_t width_() const;
+  GETTER gfx::dim_t text_len_() const;
+
+ private:
+  // view attributes:
   std::wstring text_;
-  base::ref_ptr<render::Color> text_color_;
+
+  // layout scoped attributes:
+  std::wstring_view text_to_render_;
   gfx::Point text_pos_;
+  bool ellipsize_;
+
+  // colors:
+  base::ref_ptr<render::Color> text_color_;
 };
 
 }  // namespace cursedui::view

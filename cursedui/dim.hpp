@@ -29,6 +29,9 @@ struct Rect {
   GETTER Size size() const;
 
   GETTER bool has_area() const;
+
+  GETTER dim_t width() const;
+  GETTER dim_t height() const;
 };
 
 Rect rect_from(const gfx::Point& position, const gfx::Size& size);

@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string_view>
 
 namespace cursedui {
 class Context;
@@ -43,6 +44,11 @@ class ColorPalette {
   PIMPL(ColorPalette);
 };
 
+class render_exception : public std::exception {
+ public:
+  const char* what() const noexcept override;
+};
+
 class Canvas {
  public:
   explicit Canvas(void*);
@@ -52,6 +58,7 @@ class Canvas {
 
   Canvas& operator<<(wchar_t ch);
   Canvas& operator<<(const wchar_t* str);
+  Canvas& operator<<(std::wstring_view str);
   Canvas& operator<<(const gfx::Point& pos);
   Canvas& operator<<(const Box& box);
 

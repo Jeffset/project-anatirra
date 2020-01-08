@@ -31,6 +31,10 @@ class hash<cursedui::render::RGB8Data> {
 
 namespace cursedui::render {
 
+const char* render_exception::what() const noexcept {
+  return "unable to execute render operation";
+}
+
 struct BorderStyle {
   wchar_t top_left, top_right, bottom_right, bottom_left;
   wchar_t horizontal, vertical;
@@ -174,9 +178,16 @@ Canvas& Canvas::operator<<(const wchar_t* str) {
   return *this;
 }
 
+Canvas& Canvas::operator<<(std::wstring_view str) {
+  impl_->ensure_color_pair();
+  waddnwstr(stdscr, str.data(), str.length());
+  return *this;
+}
+
 Canvas& Canvas::operator<<(const gfx::Point& pos) {
   auto r = ::wmove(stdscr, pos.y, pos.x);
-  assert(r != ERR);
+  if (r == ERR)
+    throw render_exception();
   return *this;
 }
 

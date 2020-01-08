@@ -23,6 +23,8 @@
 
 #define GETTER NODISCARD
 
+#define NONNULL __attribute__((__nonnull__))
+
 #define REQUIRES(condition) typename = std::enable_if_t<(condition), void>
 
 #define PIMPL(Class)  \

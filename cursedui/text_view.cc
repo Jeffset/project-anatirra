@@ -8,6 +8,9 @@
 #include "cursedui/drawable.hpp"
 #include "cursedui/rendering.hpp"
 
+#include <iostream>
+#include <string_view>
+
 namespace cursedui::view {
 
 namespace {
@@ -16,16 +19,17 @@ const gfx::dim_t MIN_HEIGHT = 1;
 
 }  // namespace
 
-void TextView::on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
+void TextView::on_measure(const MeasureSpec& text_len_spec,
+                          const MeasureSpec& height_spec) {
   gfx::Size measured_size = {
       std::visit(base::overloaded{
-                     [this](MeasureUnlimited) { return width_(); },
+                     [this](MeasureUnlimited) { return text_len_(); },
                      [this](const MeasureAtMost& at_most) {
-                       return std::min(at_most.dim, width_());
+                       return std::min(at_most.dim, text_len_());
                      },
                      [](const MeasureExactly& exactly) { return exactly.dim; },
                  },
-                 width_spec),
+                 text_len_spec),
       std::visit(base::overloaded{
                      [](MeasureUnlimited) { return MIN_HEIGHT; },
                      [](const MeasureAtMost& at_most) {
@@ -39,7 +43,18 @@ void TextView::on_measure(const MeasureSpec& width_spec, const MeasureSpec& heig
 }
 
 void TextView::on_layout() {
-  text_pos_ = gfx::centered_rect(inner_bounds(), {width_(), 1}).position();
+  auto bounds = inner_bounds();
+  ellipsize_ = text_len_() > bounds.width();
+  std::wcerr << "JEFF = text: (" << text_ << ") " << text_len_()
+             << " width: " << bounds.width() << '\n';
+  text_to_render_ = text_;
+  if (ellipsize_) {
+    text_pos_ = gfx::centered_rect(bounds, {bounds.width(), 1}).position();
+    auto shrink = text_len_() - bounds.width() + 1;
+    text_to_render_.remove_suffix(shrink);
+  } else {
+    text_pos_ = gfx::centered_rect(bounds, {text_len_(), 1}).position();
+  }
 }
 
 void TextView::on_colorize(render::ColorPalette& palette) {
@@ -50,15 +65,20 @@ render::BgColorState TextView::on_draw(render::Canvas& canvas) {
   auto bg = View::on_draw(canvas);
   // FIXME: width might be lesser than text size - handle that.
   canvas.set_foreground_color(text_color_.get());
-  canvas << text_pos_ << text_.c_str();
+
+  canvas << text_pos_ << text_to_render_;
+  if (ellipsize_) {
+    canvas << L'…';
+  }
   return bg;
 }
 
 void TextView::set_text(std::wstring_view str) {
   text_ = str;
+  text_to_render_ = str;
 }
 
-int TextView::width_() const {
+int TextView::text_len_() const {
   return text_.size();
 }
 

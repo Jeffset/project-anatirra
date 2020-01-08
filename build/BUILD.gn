@@ -13,20 +13,22 @@ config("compiler_defaults") {
       "-Wextra",
       "-Wpedantic",
     ]
+    ldflags = [ "-fuse-ld=lld" ]
   }
 }
 
 config("debug_config") {
   cflags = [
     "-g",
-    "-O0",
+    "-Og",
+    "-fasynchronous-unwind-tables",
   ]
+  defines = [ "DEBUG" ]
 }
 
 config("release_config") {
-  cflags = [
-    "-O2",
-  ]
+  cflags = [ "-O2" ]
+  defines = [ "NDEBUG" ]
 }
 
 config("default_include_dirs") {

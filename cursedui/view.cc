@@ -5,6 +5,7 @@
 #include "cursedui/view.hpp"
 
 #include "base/util.hpp"
+#include "cursedui/drawable.hpp"
 #include "cursedui/rendering.hpp"
 #include "cursedui/view_group.hpp"
 
@@ -12,45 +13,47 @@
 
 namespace cursedui::view {
 
-const gfx::dim_t BORDER_WIDTH = 1;
-const gfx::dim_t D_BORDER_WIDTH = BORDER_WIDTH * 2;
-
 struct View::ViewImpl {};
 
 void View::measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
   measured_size_.reset();
-  if (border_style_) {
-    on_measure(shrink_measure_spec(width_spec, D_BORDER_WIDTH),
-               shrink_measure_spec(height_spec, D_BORDER_WIDTH));
+  auto double_border_width = border() ? border_->border_width() * 2 : 0;
+  if (double_border_width > 0) {
+    on_measure(shrink_measure_spec(width_spec, double_border_width),
+               shrink_measure_spec(height_spec, double_border_width));
   } else {
     on_measure(width_spec, height_spec);
   }
 
   assert(measured_size_.has_value());
 
-  if (border_style_) {
-    measured_size_->width += D_BORDER_WIDTH;
-    measured_size_->height += D_BORDER_WIDTH;
+  if (double_border_width > 0) {
+    measured_size_->width += double_border_width;
+    measured_size_->height += double_border_width;
   }
 
   // Assert that measuring is done according to specs.
-  // TODO: Think: is this actually right idea to enforce it?
+  // NOTE: Think: is this actually right idea to enforce it?
   std::visit(base::overloaded{
                  [this](const MeasureExactly& exactly) {
-                   assert(measured_size_->width == exactly.dim);
+                   if (measured_size_->width != exactly.dim)
+                     throw measure_spec_violated_exception();
                  },
                  [this](const MeasureAtMost& at_most) {
-                   assert(measured_size_->width <= at_most.dim);
+                   if (measured_size_->width > at_most.dim)
+                     throw measure_spec_violated_exception();
                  },
                  [](MeasureUnlimited) {},
              },
              width_spec);
   std::visit(base::overloaded{
                  [this](const MeasureExactly& exactly) {
-                   assert(measured_size_->height == exactly.dim);
+                   if (measured_size_->height != exactly.dim)
+                     throw measure_spec_violated_exception();
                  },
                  [this](const MeasureAtMost& at_most) {
-                   assert(measured_size_->height <= at_most.dim);
+                   if (measured_size_->height > at_most.dim)
+                     throw measure_spec_violated_exception();
                  },
                  [](MeasureUnlimited) {},
              },
@@ -59,31 +62,47 @@ void View::measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec
 
 void View::layout(const gfx::Rect& area) {
   bounds_ = area;
+  if (background_)
+    background_->set_bounds(inner_bounds());
+  if (border_)
+    border_->set_bounds(outer_bounds());
   on_layout();
 }
 
-void View::draw(render::Canvas& canvas) {
-  on_draw(canvas);
+void View::colorize(render::ColorPalette& palette) {
+  if (background_)
+    background_->colorize(palette);
+  if (border_)
+    border_->colorize(palette);
+  on_colorize(palette);
+}
+
+render::BgColorState View::draw(render::Canvas& canvas) {
+  return on_draw(canvas);
 }
 
 View::~View() = default;
 
-View::View()
-    : background_(L' '),
-      border_style_(&render::BorderStyles::Single),
+View::View() : background_(nullptr), border_(new BorderDrawable()), PIMPL_INIT(View) {}
 
-      impl_(new ViewImpl()) {}
-
-void View::set_background(wchar_t b) {
-  background_ = b;
-}
-
-std::optional<LayoutParams*> View::layout_params() const noexcept {
-  return base::optional_of_nullable(layout_params_);
+base::nullable_ptr<LayoutParams> View::layout_params() const noexcept {
+  return layout_params_.get();
 }
 
 void View::set_layout_params(std::unique_ptr<LayoutParams> layout_params) {
   layout_params_ = std::move(layout_params);
+}
+
+void View::set_background(std::unique_ptr<Drawable> drawable) {
+  background_ = std::move(drawable);
+}
+
+void View::set_background_color(render::ColorDescr color) {
+  background_ = std::make_unique<SolidColorDrawable>(color);
+}
+
+base::nullable_ptr<Drawable> View::background() {
+  return background_.get();
 }
 
 void View::set_measured_size(const gfx::Size& measured_size) {
@@ -101,30 +120,34 @@ void View::on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_s
 
 void View::on_layout() {}
 
-void View::on_draw(render::Canvas& canvas) {
+void View::on_colorize(render::ColorPalette&) {}
+
+render::BgColorState View::on_draw(render::Canvas& canvas) {
   if (!outer_bounds().has_area()) {
-    return;
+    return render::BgColorState{};
   }
 
-  if (inner_bounds().has_area()) {
-    render::fill(canvas, background_, inner_bounds());
-  }
+  render::BgColorState bg;
+  if (background_)
+    bg = background_->draw(canvas);
 
-  if (border_style_) {
-    render::border(canvas, outer_bounds(), *border_style_);
-  }
+  if (border_)
+    border_->draw(canvas);
+
+  return bg;
 }
 
 gfx::Rect View::inner_bounds() const noexcept {
-  return border_style_ ? gfx::shrink(bounds_.value(), BORDER_WIDTH) : bounds_.value();
+  return border_ ? gfx::shrink(bounds_.value(), border_->border_width())
+                 : bounds_.value();
 }
 
 gfx::Rect View::outer_bounds() const noexcept {
   return bounds_.value();
 }
 
-void View::set_border_style(render::BorderStyle const* border_style) {
-  border_style_ = border_style;
+const char* measure_spec_violated_exception::what() const noexcept {
+  return "Measure spec has been violated";
 }
 
 }  // namespace cursedui::view

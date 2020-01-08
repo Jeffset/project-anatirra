@@ -1,51 +1,85 @@
 
 #include "cursedui/context.hpp"
+#include "cursedui/drawable.hpp"
 #include "cursedui/linear_layout.hpp"
 #include "cursedui/text_view.hpp"
 #include "cursedui/view_root.hpp"
 
+#include <algorithm>
+#include <cassert>
+#include <vector>
+
+class Factory {
+ public:
+  base::ref_ptr<cursedui::view::View> create() {
+    auto view = base::make_ref_ptr<cursedui::view::TextView>();
+    weaks_.push_back(base::weak_ref(view));
+    weaks_.push_back(base::weak_ref(view));
+    return view;
+  }
+
+  int weak_count() const {
+    return std::count_if(std::begin(weaks_), std::end(weaks_),
+                         [](const auto& ptr) { return ptr.get(); });
+  }
+
+ private:
+  std::vector<base::weak_ref<cursedui::view::View>> weaks_;
+};
+
 [[noreturn]] int main() {
   using namespace cursedui;
 
-  Context context;
-
-  auto lin_layout = base::ref_ptr(new view::LinearLayout());
-  auto lin_layout2 = base::ref_ptr(new view::LinearLayout());
+  auto lin_layout = base::make_ref_ptr<view::LinearLayout>();
+  auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();
   lin_layout2->set_orientation(view::LinearLayout::VERTICAL);
 
-  auto view1 = base::ref_ptr(new view::TextView());
-  auto view2 = base::ref_ptr(new view::TextView());
+  auto view1 = base::make_ref_ptr<view::TextView>();
+  auto view2 = base::make_ref_ptr<view::TextView>();
   view1->set_text(L"Test ◕ string");
+  view1->set_background_color(render::Color::MAGENTA);
   view2->set_text(L"◕ Prod ◕ string ◕ long");
 
   lin_layout->add_child(view1);
   lin_layout->add_child(lin_layout2);
   lin_layout->add_child(view2);
 
-  auto* lp1 = (view::LinearLayout::LayoutParams*)view1->layout_params().value();
+  auto* lp1 = (view::LinearLayout::LayoutParams*)view1->layout_params().get();
   lp1->set_weight(1.0f);
   lp1->set_height_layout_spec(view::LayoutMatchParent{});
 
-  auto* lp2 = (view::LinearLayout::LayoutParams*)view2->layout_params().value();
+  auto* lp2 = (view::LinearLayout::LayoutParams*)view2->layout_params().get();
   lp2->set_weight(0.5f);
   lp2->set_height_layout_spec(view::LayoutMatchParent{});
 
-  auto view3 = base::ref_ptr(new view::TextView());
-  auto view4 = base::ref_ptr(new view::TextView());
+  auto view3 = base::make_ref_ptr<view::TextView>();
+  view3->border()->set_color(render::RGB8Data{0, 255, 200});
+  auto view4 = base::make_ref_ptr<view::TextView>();
+  view4->border()->set_color(render::RGB8Data{0, 50, 18});
+  view4->border()->set_background_color(render::RGB8Data{128, 255, 255});
   view3->set_text(L"Test ◕ string");
   view4->set_text(L"◕ Prod ◕ string ◕ long");
   lin_layout2->add_child(view3);
   lin_layout2->add_child(view4);
-  auto* lp3 = (view::LinearLayout::LayoutParams*)view3->layout_params().value();
+  auto* lp3 = (view::LinearLayout::LayoutParams*)view3->layout_params().get();
   lp3->set_weight(1.0f);
   lp3->set_width_layout_spec(view::LayoutMatchParent{});
-  auto* lp4 = (view::LinearLayout::LayoutParams*)view4->layout_params().value();
+  auto* lp4 = (view::LinearLayout::LayoutParams*)view4->layout_params().get();
   lp4->set_weight(0.5f);
   lp4->set_width_layout_spec(view::LayoutMatchParent{});
 
-  auto* ll = (view::LinearLayout::LayoutParams*)lin_layout2->layout_params().value();
+  auto* ll = (view::LinearLayout::LayoutParams*)lin_layout2->layout_params().get();
   ll->set_weight(0.5f);
 
+  Factory factory;
+  assert(factory.weak_count() == 0);
+  {
+    auto v = factory.create();
+    assert(factory.weak_count() == 2);
+  }
+  assert(factory.weak_count() == 0);
+
+  Context context;
   view::ViewRoot view_root{&context};
   view_root.set_view_root(lin_layout);
 

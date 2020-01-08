@@ -9,6 +9,11 @@
 
 #include <string>
 
+namespace cursedui::render {
+class Canvas;
+class ColorPalette;
+}  // namespace cursedui::render
+
 namespace cursedui::view {
 
 class TextView : public View {
@@ -20,11 +25,13 @@ class TextView : public View {
  protected:
   void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
   void on_layout() override;
-  void on_draw(render::Canvas& canvas) override;
+  void on_colorize(render::ColorPalette& palette) override;
+  render::BgColorState on_draw(render::Canvas& canvas) override;
 
  private:
   GETTER gfx::dim_t width_() const;
   std::wstring text_;
+  base::ref_ptr<render::Color> text_color_;
   gfx::Point text_pos_;
 };
 

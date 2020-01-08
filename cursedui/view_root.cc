@@ -4,6 +4,7 @@
 
 #include "cursedui/view_root.hpp"
 
+#include "base/macro.hpp"
 #include "cursedui/context.hpp"
 #include "cursedui/rendering.hpp"
 
@@ -17,7 +18,7 @@ void ViewRoot::set_view_root(base::ref_ptr<View> root) noexcept {
 
 ViewRoot::ViewRoot(Context* context) noexcept : context_(context) {}
 
-void ViewRoot::render(render::Canvas& canvas) {
+void ViewRoot::render(render::Canvas& canvas, render::ColorPalette& palette) {
   const auto screen_size = context_->screen_size();
   view::MeasureSpec w_spec = MeasureExactly{{screen_size.width}};
   view::MeasureSpec h_spec = MeasureExactly{{screen_size.height}};
@@ -25,8 +26,9 @@ void ViewRoot::render(render::Canvas& canvas) {
   auto size = root_->measured_size();
   gfx::Rect bounds = gfx::rect_from({0, 0}, size);
   root_->layout(bounds);
-
-  root_->draw(canvas);
+  root_->colorize(palette);
+  canvas.start();
+  MARK_UNUSED(root_->draw(canvas));
 }
 
 }  // namespace cursedui::view

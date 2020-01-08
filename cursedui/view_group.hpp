@@ -6,14 +6,21 @@
 #define CURSEDUI_VIEW_GROUP_HPP
 
 #include "base/macro.hpp"
+#include "cursedui/color.hpp"
 #include "cursedui/dim.hpp"
 #include "cursedui/view.hpp"
 
 #include <memory>
+#include <stdexcept>
 #include <string_view>
 #include <vector>
 
 namespace cursedui::view {
+
+class view_already_present : public view_exception {
+ public:
+  const char* what() const noexcept override;
+};
 
 class LayoutParams {
  public:
@@ -47,7 +54,8 @@ class ViewGroup : public View {
   GETTER base::ref_ptr<View> get_child(int index);
 
  protected:
-  void on_draw(render::Canvas& canvas) override;
+  void on_colorize(render::ColorPalette& palette) override;
+  render::BgColorState on_draw(render::Canvas& canvas) override;
   void on_measure(const MeasureSpec& width_spec,
                   const MeasureSpec& height_spec) override = 0;
   void on_layout() override = 0;

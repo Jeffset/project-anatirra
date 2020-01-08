@@ -5,6 +5,7 @@
 #include "cursedui/text_view.hpp"
 
 #include "base/util.hpp"
+#include "cursedui/drawable.hpp"
 #include "cursedui/rendering.hpp"
 
 namespace cursedui::view {
@@ -41,10 +42,16 @@ void TextView::on_layout() {
   text_pos_ = gfx::centered_rect(inner_bounds(), {width_(), 1}).position();
 }
 
-void TextView::on_draw(render::Canvas& canvas) {
-  View::on_draw(canvas);
-  // TODO: width might be lesser than text size - handle that.
+void TextView::on_colorize(render::ColorPalette& palette) {
+  text_color_ = palette.obtain_color(render::RGB8Data{255, 255, 0});
+}
+
+render::BgColorState TextView::on_draw(render::Canvas& canvas) {
+  auto bg = View::on_draw(canvas);
+  // FIXME: width might be lesser than text size - handle that.
+  canvas.set_foreground_color(text_color_.get());
   canvas << text_pos_ << text_.c_str();
+  return bg;
 }
 
 void TextView::set_text(std::wstring_view str) {

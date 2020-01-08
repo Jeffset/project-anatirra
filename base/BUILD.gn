@@ -1,0 +1,10 @@
+shared_library("base") {
+  sources = [
+    "macro.hpp",
+    "nullable.hpp",
+    "ref_ptr.cc",
+    "ref_ptr.hpp",
+    "type_array.hpp",
+    "util.hpp",
+  ]
+}

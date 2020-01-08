@@ -43,7 +43,7 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
 
   for (int i = 0; i < count; ++i) {
     auto child = get_child(i);
-    const auto* lp = (LayoutParams*)child->layout_params().value();
+    const auto* lp = (LayoutParams*)child->layout_params().get();
 
     if (!use_weights || !lp->weight()) {
       child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
@@ -67,7 +67,7 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
 
     for (int i = 0; i < count; ++i) {
       auto child = get_child(i);
-      const auto* lp = (LayoutParams*)child->layout_params().value();
+      const auto* lp = (LayoutParams*)child->layout_params().get();
 
       if (!lp->weight()) {
         continue;

@@ -12,6 +12,16 @@ pkg_config("backend") {
   }
 }
 
+if (use_tickit) {
+  config("backend_config") {
+    defines = [ "CURSEDUI_USE_TICKIT" ]
+  }
+} else {
+  config("backend_config") {
+    defines = [ "CURSEDUI_USE_NCURSES" ]
+  }
+}
+
 shared_library("cursedui") {
   if (use_tickit) {
     _backend = "tickit"
@@ -21,10 +31,13 @@ shared_library("cursedui") {
 
   sources = [
     "$_backend/context.cc",
-    "${_backend}/rendering.cc",
+    "$_backend/rendering.cc",
+    "color.hpp",
     "context.hpp",
     "dim.cc",
     "dim.hpp",
+    "drawable.cc",
+    "drawable.hpp",
     "linear_layout.cc",
     "linear_layout.hpp",
     "rendering.hpp",
@@ -39,11 +52,10 @@ shared_library("cursedui") {
     "view_root.hpp",
     "view_specs.cc",
     "view_specs.hpp",
-    "drawable.cc",
-    "drawable.hpp",
   ]
 
   configs += [ ":backend" ]
+  all_dependent_configs = [ ":backend_config" ]
 
   deps = [
     "//base",

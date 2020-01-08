@@ -14,13 +14,14 @@ namespace cursedui {
 
 namespace render {
 class Canvas;
-}
+class ColorPalette;
+}  // namespace render
 
 class Context final {
  public:
   class Delegate {
    public:
-    virtual void render(render::Canvas& canvas) = 0;
+    virtual void render(render::Canvas& canvas, render::ColorPalette& palette) = 0;
   };
 
   Context();

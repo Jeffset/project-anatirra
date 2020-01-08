@@ -5,9 +5,11 @@
 #include "cursedui/context.hpp"
 
 #include "cursedui/rendering.hpp"
+#include "cursedui/view.hpp"
+#include "cursesw.h"
 
 #include <clocale>
-#include <cursesw.h>
+#include <iostream>
 
 namespace cursedui {
 
@@ -24,10 +26,7 @@ Context::Context() {
 
   ::curs_set(0);
 
-  ::start_color();
-  ::init_extended_color(228, 700, 1000, 300);
-  ::init_pair(1, 228, COLOR_BLACK);
-  ::attron(COLOR_PAIR(1));
+  render::Canvas::init_rendering();
 }
 
 Context::~Context() {
@@ -36,9 +35,15 @@ Context::~Context() {
 
 void Context::run(Delegate* delegate) {
   render::Canvas canvas{nullptr};
+  render::ColorPalette palette{};
   int ch;
   do {
-    delegate->render(canvas);
+    try {
+      delegate->render(canvas, palette);
+    } catch (view::view_exception& e) {
+      std::cerr << "view_exception: " << e.what() << '\n';
+      return;
+    }
     ::refresh();
     ch = ::wgetch(stdscr);
   } while (ch != 0);

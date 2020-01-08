@@ -23,7 +23,7 @@ class ViewRoot : public Context::Delegate {
 
   void set_view_root(base::ref_ptr<View> root) noexcept;
 
-  void render(render::Canvas& canvas) override;
+  void render(render::Canvas& canvas, render::ColorPalette& palette) override;
 
  private:
   Context* context_;

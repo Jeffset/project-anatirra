@@ -8,6 +8,7 @@
 #include "tickit.h"
 
 #include <clocale>
+#include <iostream>
 
 namespace cursedui {
 
@@ -23,13 +24,13 @@ struct Context::ContextImpl {
     auto* render_info = static_cast<TickitExposeEventInfo*>(info);
     render::Canvas canvas{render_info->rb};
     impl->delegate_->render(canvas);
-    return 0;
+    return 1;
   }
 
   static int resize_cb(TickitTerm*, TickitEventFlags, void*, void* user) {
     auto* impl = static_cast<ContextImpl*>(user);
     tickit_window_expose(impl->window_, nullptr);
-    return 0;
+    return 1;
   }
 };
 
@@ -46,9 +47,14 @@ Context::Context() : impl_(new ContextImpl()) {
                            &ContextImpl::render_cb, impl_.get());
   tickit_term_bind_event(impl_->term_, TICKIT_TERM_ON_RESIZE, TICKIT_BIND_FIRST,
                          &ContextImpl::resize_cb, impl_.get());
+
+  int colors;
+  tickit_term_getctl_int(impl_->term_, TICKIT_TERMCTL_COLORS, &colors);
+  std::cerr << "Colors: " << colors << std::endl;
 }
 
 Context::~Context() {
+  tickit_window_close(impl_->window_);
   tickit_unref(impl_->tickit_);
 }
 

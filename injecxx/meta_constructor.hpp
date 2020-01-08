@@ -57,7 +57,6 @@ constexpr auto gen_constructor_arg_types(ta<Subject> subject,
                                          ta<TypesPool...> types_pool,
                                          ta<Args...> deduced_args,
                                          ta<Ms...> placeholders) {
-  // TODO: rewrite it from O(n^2) to O(n log n) using specific_multi_matcher
   constexpr auto deduced = ([]() {
     if constexpr (std::is_constructible_v<Subject, Args&..., TypesPool&, Ms...>) {
       return t<TypesPool>;

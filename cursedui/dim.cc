@@ -8,11 +8,11 @@
 
 namespace cursedui::gfx {
 
-Size min(const Size& a, const Size& b) {
+Size min(Size a, Size b) {
   return {std::min(a.width, b.width), std::min(a.height, a.height)};
 }
 
-Rect centered_rect(const Rect& base, const Size& size) {
+Rect centered_rect(const Rect& base, Size size) {
   auto base_size = base.size();
   auto dx = base_size.width - size.width;
   dx = dx / 2 + dx % 2;
@@ -26,7 +26,7 @@ Rect centered_rect(const Rect& base, const Size& size) {
   };
 }
 
-Rect rect_from(const gfx::Point& position, const gfx::Size& size) {
+Rect rect_from(Point position, Size size) {
   return Rect{
       position.x,
       position.y,
@@ -66,6 +66,30 @@ dim_t Rect::width() const {
 
 dim_t Rect::height() const {
   return bottom - top + 1;
+}
+
+bool Rect::contains(Point point) const {
+  auto [x, y] = point;
+  return x >= left && x <= right && y >= top && y <= bottom;
+}
+
+Rect gravitated_rect(const Rect& rect, Size size, Gravity gravity) {
+  gfx::dim_t dx = 1, dy = 1;
+  if (gravity & GRAVITY_LEFT)
+    dx -= 1;
+  if (gravity & GRAVITY_RIGHT)
+    dx += 1;
+  if (gravity & GRAVITY_TOP)
+    dy -= 1;
+  if (gravity & GRAVITY_BOTTOM)
+    dy += 1;
+
+  auto xblock = rect.width() - size.width;
+  xblock = xblock / 2 + xblock % 2;
+  auto yblock = rect.height() - size.height;
+  yblock = yblock / 2 + yblock % 2;
+
+  return gfx::rect_from({rect.left + xblock * dx, rect.top + yblock * dy}, size);
 }
 
 }  // namespace cursedui::gfx

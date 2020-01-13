@@ -25,18 +25,59 @@ void ViewGroup::add_child(base::ref_ptr<View> child) {
   if (!old_lp || !check_layout_params(old_lp.get())) {
     child->set_layout_params(create_layout_params());
   }
+  child->set_tree_host(tree_host());
   children_.emplace_back(std::move(child));
 }
 
-void ViewGroup::remove_child(const base::ref_ptr<View>& child) {
+void ViewGroup::remove_child(base::ref_ptr<View>& child) {
   auto it = std::find(children_.begin(), children_.end(), child);
   if (it != children_.end()) {
     children_.erase(it);
   }
+  if (child->focused()) {
+    child->unfocus();
+  }
+  child->set_tree_host(nullptr);
 }
 
 base::ref_ptr<View> ViewGroup::get_child(int index) {
   return children_.at(index);
+}
+
+void ViewGroup::dispatch_mouse_event(const input::MouseEvent& event) {
+  if (intercept_mouse_event(event)) {
+    on_mouse_event(event);
+    return;
+  }
+  auto pos = event.location;
+  for (auto& child : children_) {
+    if (child->outer_bounds().contains(pos)) {
+      child->dispatch_mouse_event(event);
+      break;
+    }
+  }
+}
+
+void ViewGroup::dispatch_scroll_event(const input::ScrollEvent& event) {
+  if (intercept_scroll_event(event)) {
+    on_scroll_event(event);
+    return;
+  }
+  auto pos = event.location;
+  for (auto& child : children_) {
+    if (child->outer_bounds().contains(pos)) {
+      child->dispatch_scroll_event(event);
+      break;
+    }
+  }
+}
+
+bool ViewGroup::intercept_mouse_event(const input::MouseEvent&) {
+  return false;
+}
+
+bool ViewGroup::intercept_scroll_event(const input::ScrollEvent&) {
+  return false;
 }
 
 void ViewGroup::on_colorize(render::ColorPalette& palette) {

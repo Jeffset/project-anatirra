@@ -8,12 +8,27 @@ config("compiler_defaults") {
     cflags_cc = [
       "-std=c++17",
       "-fno-rtti",
-
-      "-Wall",
-      "-Wextra",
-      "-Wpedantic",
     ]
     ldflags = [ "-fuse-ld=lld" ]
+  }
+}
+
+config("death_march_mode") {
+  cflags = [
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+  ]
+
+  # TODO: These are probably specific to clang.
+  warnings_as_errors = [
+    "inconsistent-missing-override",
+    "pessimizing-move",
+    "return-type",
+  ]
+
+  foreach(warning, warnings_as_errors) {
+    cflags += [ "-Werror=$warning" ]
   }
 }
 

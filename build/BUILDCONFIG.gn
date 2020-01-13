@@ -18,6 +18,7 @@ if (current_os == "") {
 # All binary targets will get this list of configs by default.
 _shared_binary_target_configs = [
   "//build:compiler_defaults",
+  "//build:death_march_mode",
   "//build:default_include_dirs",
   "//build:complete_library",
 ]

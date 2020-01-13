@@ -48,17 +48,23 @@ class ViewGroup : public View {
   ~ViewGroup() noexcept override;
 
   void add_child(base::ref_ptr<View> child);
-  void remove_child(const base::ref_ptr<View>& child);
+  void remove_child(base::ref_ptr<View>& child);
 
   GETTER int child_count() const noexcept;
   GETTER base::ref_ptr<View> get_child(int index);
 
+  void dispatch_mouse_event(const input::MouseEvent& event) override;
+  void dispatch_scroll_event(const input::ScrollEvent& event) override;
+
+  virtual bool intercept_mouse_event(const input::MouseEvent& event);
+  virtual bool intercept_scroll_event(const input::ScrollEvent& event);
+
  protected:
-  void on_colorize(render::ColorPalette& palette) override;
-  render::BgColorState on_draw(render::Canvas& canvas) override;
   void on_measure(const MeasureSpec& width_spec,
                   const MeasureSpec& height_spec) override = 0;
   void on_layout() override = 0;
+  void on_colorize(render::ColorPalette& palette) override;
+  render::BgColorState on_draw(render::Canvas& canvas) override;
 
   virtual std::unique_ptr<LayoutParams> create_layout_params() = 0;
   virtual bool check_layout_params(LayoutParams* params) = 0;

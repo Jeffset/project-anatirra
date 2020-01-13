@@ -8,6 +8,7 @@
 #include <memory>
 #include <optional>
 #include <type_traits>
+#include <variant>
 
 namespace base {
 
@@ -20,6 +21,14 @@ struct overloaded : Ts... {
 };
 template <class... Ts>
 overloaded(Ts...)->overloaded<Ts...>;
+
+template <class TargetVariant, class... SourceVariants>
+TargetVariant subvariant(const std::variant<SourceVariants...>& source) {
+  return std::visit([](const auto& s) -> TargetVariant { return s; }, source);
+}
+
+template <class T>
+constexpr auto identity_map = [](T v) { return v; };
 
 }  // namespace base
 

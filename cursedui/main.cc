@@ -3,10 +3,13 @@
 #include "cursedui/drawable.hpp"
 #include "cursedui/linear_layout.hpp"
 #include "cursedui/text_view.hpp"
-#include "cursedui/view_root.hpp"
+#include "cursedui/view_tree_host.hpp"
 
 #include <algorithm>
 #include <cassert>
+#include <fstream>
+#include <iterator>
+#include <unordered_map>
 #include <vector>
 
 class Factory {
@@ -36,8 +39,14 @@ class Factory {
 
   auto view1 = base::make_ref_ptr<view::TextView>();
   auto view2 = base::make_ref_ptr<view::TextView>();
-  view1->set_text(L"Test ◕ string");
-  view1->set_background_color(render::Color::MAGENTA);
+  view1->set_gravity(static_cast<gfx::Gravity>(gfx::GRAVITY_BOTTOM | gfx::GRAVITY_RIGHT));
+  // view1->set_text(L"Test ◕ string");
+  std::wifstream ifs{"/home/jeffset/text.txt"};
+  std::wstring wstring{std::istreambuf_iterator<wchar_t>{ifs}, {}};
+  view1->set_text(std::move(wstring));
+  view1->set_multiline(true);
+
+  view1->set_background_color(render::SystemColor::MAGENTA);
   view2->set_text(L"◕ Prod ◕ string ◕ long");
 
   lin_layout->add_child(view1);
@@ -80,7 +89,7 @@ class Factory {
   assert(factory.weak_count() == 0);
 
   Context context;
-  view::ViewRoot view_root{&context};
+  view::ViewTreeHost view_root{&context};
   view_root.set_view_root(lin_layout);
 
   context.run(&view_root);

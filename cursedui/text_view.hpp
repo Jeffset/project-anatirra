@@ -9,6 +9,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace cursedui::render {
 class Canvas;
@@ -19,9 +20,18 @@ namespace cursedui::view {
 
 class TextView : public View {
  public:
-  void set_text(std::wstring_view str);
+  TextView();
+
+  void set_text(const std::wstring& str);
+  void set_text(std::wstring&& str);
 
   GETTER std::wstring_view get_text() const { return text_; }
+
+  void set_gravity(gfx::Gravity gravity) noexcept;
+  GETTER gfx::Gravity gravity() const noexcept { return gravity_; }
+
+  void set_multiline(bool multiline) noexcept;
+  bool multiline() const noexcept { return multiline_; }
 
  protected:
   void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
@@ -35,9 +45,11 @@ class TextView : public View {
  private:
   // view attributes:
   std::wstring text_;
+  gfx::Gravity gravity_;
+  bool multiline_;
 
   // layout scoped attributes:
-  std::wstring_view text_to_render_;
+  std::vector<std::wstring_view> lines_to_render_;
   gfx::Point text_pos_;
   bool ellipsize_;
 

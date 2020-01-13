@@ -8,12 +8,13 @@
 #include "cursedui/drawable.hpp"
 #include "cursedui/rendering.hpp"
 #include "cursedui/view_group.hpp"
+#include "cursedui/view_tree_host.hpp"
 
 #include <cassert>
 
 namespace cursedui::view {
 
-struct View::ViewImpl {};
+PIMPL_DEFINE(View){};
 
 void View::measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
   measured_size_.reset();
@@ -81,9 +82,51 @@ render::BgColorState View::draw(render::Canvas& canvas) {
   return on_draw(canvas);
 }
 
+void View::dispatch_mouse_event(const input::MouseEvent& event) {
+  if (focusable() && event.is_mouse_down()) {
+    focus();
+  }
+  on_mouse_event(event);
+}
+
+void View::dispatch_scroll_event(const input::ScrollEvent& event) {
+  on_scroll_event(event);
+}
+
+void View::on_key_event(const input::KeyEvent&) {}
+
+void View::on_mouse_event(const input::MouseEvent&) {}
+
+void View::on_scroll_event(const input::ScrollEvent&) {}
+
+bool View::focused() const noexcept {
+  return view_tree_host_ && view_tree_host_->focused_view() == this;
+}
+
+void View::focus() {
+  if (!focusable())
+    throw view_exception();  // FIXME: throw proper exception type here
+  if (!view_tree_host_)
+    return;
+  if (auto focused_view = view_tree_host_->focused_view()) {
+    focused_view->unfocus();
+  }
+  view_tree_host_->set_focused_view(base::ref_ptr(this));
+}
+
+void View::unfocus() {
+  if (focused()) {
+    view_tree_host_->set_focused_view(nullptr);
+  }
+}
+
 View::~View() = default;
 
-View::View() : background_(nullptr), border_(new BorderDrawable()), PIMPL_INIT(View) {}
+View::View()
+    : view_tree_host_(nullptr),
+      background_(nullptr),
+      border_(new BorderDrawable()),
+      PIMPL_INIT(View) {}
 
 base::nullable_ptr<LayoutParams> View::layout_params() const noexcept {
   return layout_params_.get();
@@ -103,6 +146,16 @@ void View::set_background_color(render::ColorDescr color) {
 
 base::nullable_ptr<Drawable> View::background() {
   return background_.get();
+}
+
+void View::set_tree_host(base::nullable_ptr<ViewTreeHost> tree_host) {
+  if (view_tree_host_ == tree_host)
+    return;
+  view_tree_host_ = tree_host.get_nullable();
+}
+
+base::nullable_ptr<ViewTreeHost> View::tree_host() noexcept {
+  return view_tree_host_;
 }
 
 void View::set_measured_size(const gfx::Size& measured_size) {

@@ -15,10 +15,11 @@ void Drawable::set_bounds(const gfx::Rect& bounds) {
 }
 
 void Drawable::colorize(render::ColorPalette& palette) {
-  background_ = palette.obtain_color(render::Color::BLACK);
+  background_ = palette.obtain_color(render::SystemColor::BLACK);
 }
 
-SolidColorDrawable::SolidColorDrawable() noexcept : color_descr_(render::Color::BLACK) {}
+SolidColorDrawable::SolidColorDrawable() noexcept
+    : color_descr_(render::SystemColor::BLACK) {}
 
 SolidColorDrawable::SolidColorDrawable(render::ColorDescr color_descr) noexcept
     : color_descr_(color_descr) {}
@@ -36,7 +37,7 @@ render::BgColorState SolidColorDrawable::draw(render::Canvas& canvas) {
 }
 
 BorderDrawable::BorderDrawable() noexcept
-    : color_descr_(render::Color::WHITE), background_descr_(), style_(SINGLE) {}
+    : color_descr_(render::SystemColor::WHITE), background_descr_(), style_(SINGLE) {}
 
 void BorderDrawable::set_style(BorderDrawable::Style style) {
   if (style_ == style)
@@ -79,12 +80,12 @@ void BorderDrawable::colorize(render::ColorPalette& palette) {
 render::BgColorState BorderDrawable::draw(render::Canvas& canvas) {
   if (style_ == NO_BORDER || !bounds().has_area())
     return render::BgColorState{};
-  // FIXME: use border style
   render::BgColorState bg;
   if (background_) {
     bg = canvas.set_background_color(background_.get());
   }
   canvas.set_foreground_color(foreground_.get());
+  // FIXME: use border style
   canvas << render::Box{bounds(), &render::BorderStyles::Single};
   return bg;
 }

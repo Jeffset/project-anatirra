@@ -38,6 +38,7 @@ shared_library("cursedui") {
     "dim.hpp",
     "drawable.cc",
     "drawable.hpp",
+    "input.hpp",
     "linear_layout.cc",
     "linear_layout.hpp",
     "rendering.hpp",
@@ -48,8 +49,8 @@ shared_library("cursedui") {
     "view.hpp",
     "view_group.cc",
     "view_group.hpp",
-    "view_root.cc",
-    "view_root.hpp",
+    "view_tree_host.cc",
+    "view_tree_host.hpp",
     "view_specs.cc",
     "view_specs.hpp",
   ]

@@ -36,7 +36,8 @@ class ColorPalette {
   ColorPalette();
   ~ColorPalette();
 
-  base::ref_ptr<Color> obtain_color(ColorDescr color_descr);
+  NODISCARD base::ref_ptr<Color> obtain_color(ColorDescr color_descr);
+  NODISCARD base::ref_ptr<Color> obtain_color(color_id_t id, ColorDescr color_descr);
 
   DISABLE_COPY_AND_ASSIGN(ColorPalette);
 
@@ -74,9 +75,6 @@ class Canvas {
  private:
   static void init_rendering();
   friend class cursedui::Context;
-
-  //  friend class FgColorState;
-  //  friend class BgColorState;
 
  private:
   PIMPL(Canvas);

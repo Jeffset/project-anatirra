@@ -17,25 +17,23 @@ class Canvas;
 class ColorPalette;
 }  // namespace render
 
+namespace view {
+class ViewTreeHost;
+}
+
 class Context final {
  public:
-  class Delegate {
-   public:
-    virtual void render(render::Canvas& canvas, render::ColorPalette& palette) = 0;
-  };
-
   Context();
   ~Context();
 
-  void run(Delegate* delegate);
+  void run(NONNULL view::ViewTreeHost* view_tree_host);
 
   GETTER gfx::Size screen_size() const;
 
   MAKE_FULLY_STATIONAR(Context);
 
  private:
-  struct ContextImpl;
-  std::unique_ptr<ContextImpl> impl_;
+  PIMPL(Context);
 };
 
 }  // namespace cursedui

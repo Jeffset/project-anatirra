@@ -15,8 +15,7 @@ namespace base {
 
 namespace internal {
 
-class ref_ptr;
-class weak_ptr;
+class ref_ptr_base;
 
 }  // namespace internal
 
@@ -29,25 +28,24 @@ class RefCounted {
   virtual ~RefCounted() noexcept;
 
  private:
-  friend class internal::ref_ptr;
+  friend class internal::ref_ptr_base;
 
   int refs_;
 };
 
 namespace internal {
 
-class ref_ptr {
+class ref_ptr_base {
  public:
-  ref_ptr() noexcept;
-  explicit ref_ptr(RefCounted* ptr) noexcept;
-  explicit ref_ptr(std::nullptr_t) noexcept;
-  ref_ptr(const ref_ptr& rp) noexcept;
-  ref_ptr(ref_ptr&& rp) noexcept;
-  ref_ptr& operator=(const ref_ptr& rp) noexcept;
-  ref_ptr& operator=(std::nullptr_t) noexcept;
-  ref_ptr& operator=(ref_ptr&& rp) noexcept;
+  ref_ptr_base() noexcept;
+  explicit ref_ptr_base(RefCounted* ptr) noexcept;
+  ref_ptr_base(const ref_ptr_base& rp) noexcept;
+  ref_ptr_base(ref_ptr_base&& rp) noexcept;
+  ref_ptr_base& operator=(const ref_ptr_base& rp) noexcept;
+  ref_ptr_base& operator=(std::nullptr_t) noexcept;
+  ref_ptr_base& operator=(ref_ptr_base&& rp) noexcept;
   RefCounted* operator*() noexcept { return ptr_; }
-  ~ref_ptr();
+  ~ref_ptr_base();
 
   int ref_count() const;
 
@@ -61,8 +59,8 @@ static constexpr bool supports_ref_counted = std::is_base_of_v<RefCounted, D>;
 }  // namespace internal
 
 template <class T, REQUIRES(internal::supports_ref_counted<T>)>
-class ref_ptr final : public internal::ref_ptr {
-  using base = internal::ref_ptr;
+class ref_ptr final : public internal::ref_ptr_base {
+  using base = internal::ref_ptr_base;
 
   template <class D>
   static constexpr bool is_compatible_v = std::is_base_of_v<T, D>;
@@ -72,7 +70,7 @@ class ref_ptr final : public internal::ref_ptr {
 
   explicit ref_ptr(T* ptr) : base(ptr) {}
 
-  explicit ref_ptr(std::nullptr_t) : base(nullptr) {}
+  /* implicit */ ref_ptr(std::nullptr_t) : base() {}
 
   template <class D, REQUIRES(is_compatible_v<D>)>
   ref_ptr(const ref_ptr<D>& rp) : base(rp) {}
@@ -115,7 +113,17 @@ class ref_ptr final : public internal::ref_ptr {
 
   bool operator==(const ref_ptr& other) { return ptr_ == other.ptr_; }
 
+  template <class D, REQUIRES(is_compatible_v<D>)>
+  bool operator==(D* other) {
+    return ptr_ == other;
+  }
+
   bool operator!=(const ref_ptr& other) { return ptr_ != other.ptr_; }
+
+  template <class D, REQUIRES(is_compatible_v<D>)>
+  bool operator!=(D* other) {
+    return ptr_ != other;
+  }
 };
 
 template <class T, class... Args>
@@ -125,38 +133,35 @@ auto make_ref_ptr(Args&&... args) {
 
 class WeakReferenced;
 namespace internal {
+
 struct WeakRefControlBlock : public RefCounted {
   WeakReferenced* ptr_;
   explicit WeakRefControlBlock(WeakReferenced* ptr) : ptr_(ptr) {}
 };
-class weak_ref;
+
+class weak_ref_base;
 }  // namespace internal
 
 class WeakReferenced {
  protected:
-  WeakReferenced() noexcept : control_block_(new internal::WeakRefControlBlock{this}) {}
-  ~WeakReferenced() noexcept { control_block_->ptr_ = nullptr; }
+  WeakReferenced() noexcept;
+  virtual ~WeakReferenced() noexcept;
+
+  ref_ptr<internal::WeakRefControlBlock> control_block() noexcept;
+  ref_ptr<internal::WeakRefControlBlock> control_block() const noexcept;
+  friend class internal::weak_ref_base;
 
  private:
-  friend class internal::weak_ref;
-  ref_ptr<internal::WeakRefControlBlock> control_block_;
+  mutable ref_ptr<internal::WeakRefControlBlock> control_block_;
 };
 
 namespace internal {
 
-class weak_ref {
+class weak_ref_base {
  protected:
-  weak_ref() = default;
-  weak_ref(WeakReferenced* ptr) {
-    if (!ptr)
-      return;
-    control_block_ = ptr->control_block_;
-  }
-  weak_ref(const WeakReferenced* ptr) {
-    if (!ptr)
-      return;
-    control_block_ = ptr->control_block_;
-  }
+  weak_ref_base() = default;
+  weak_ref_base(WeakReferenced* ptr);
+  weak_ref_base(const WeakReferenced* ptr);
 
   base::ref_ptr<WeakRefControlBlock> control_block_;
 };
@@ -167,14 +172,15 @@ static constexpr bool supports_weak_referenced = std::is_base_of_v<WeakReference
 }  // namespace internal
 
 template <class T, REQUIRES(internal::supports_weak_referenced<T>)>
-class weak_ref : public internal::weak_ref {
-  using base = internal::weak_ref;
+class weak_ref : public internal::weak_ref_base {
+  using base = internal::weak_ref_base;
 
   template <class D>
   static constexpr bool is_compatible_v = std::is_base_of_v<T, D>;
 
  public:
   weak_ref() = default;
+  ~weak_ref() noexcept = default;
   explicit weak_ref(T* ptr) : base(ptr) {}
 
   template <class D, REQUIRES(is_compatible_v<D>)>
@@ -198,10 +204,12 @@ class weak_ref : public internal::weak_ref {
     return *this;
   }
 
-  operator bool() const { return control_block_->ptr_ != nullptr; }
+  operator bool() const { return control_block_ && control_block_->ptr_ != nullptr; }
 
-  const T* get() const { return static_cast<const T*>(control_block_->ptr_); }
-  T* get() { return static_cast<T*>(control_block_->ptr_); }
+  const T* get() const {
+    return control_block_ ? static_cast<T*>(control_block_->ptr_) : nullptr;
+  }
+  T* get() { return control_block_ ? static_cast<T*>(control_block_->ptr_) : nullptr; }
 
   template <REQUIRES(internal::supports_ref_counted<T>)>
   ref_ptr<T> get_ref_ptr() {
@@ -216,17 +224,5 @@ template <class D>
 weak_ref(ref_ptr<D>&)->weak_ref<const D>;
 
 }  // namespace base
-
-namespace std {
-
-template <class T>
-class hash<base::weak_ref<T>> {
-  size_t operator()(const base::weak_ref<T>& wp) {
-    std::hash<base::internal::WeakRefControlBlock*> hasher{};
-    return hasher(wp.control_block_.get());
-  }
-};
-
-}  // namespace std
 
 #endif  // BASE_REF_PTR_HPP

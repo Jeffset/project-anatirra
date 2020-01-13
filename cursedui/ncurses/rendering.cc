@@ -14,6 +14,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 
 #ifdef border
 #undef border
@@ -41,36 +42,39 @@ struct BorderStyle {
 };
 
 const BorderStyle BorderStyles::Single = {
-    .horizontal = L'\u2500',
-    .vertical = L'\u2502',
-
-    .top_right = L'\u2510',
-    .top_left = L'\u250C',
-    .bottom_right = L'\u2518',
-    .bottom_left = L'\u2514',
+    L'\u250C', L'\u2510', L'\u2518', L'\u2514', L'\u2500', L'\u2502',
 };
 
+using ColorKey = std::variant<RGB8Data, SystemColor, color_id_t>;
+
+static void allocate_color(RGB8Data rgb, uint8_t index) {
+  constexpr auto conv = [](uint8_t c) { return c * 1000 / 255; };
+  ::init_color(index, conv(rgb.r), conv(rgb.g), conv(rgb.b));
+}
+
 PIMPL_DEFINE(ColorPalette) {
-  std::unordered_map<RGB8Data, base::ref_ptr<Color>> colors{};
+  std::unordered_map<ColorKey, base::ref_ptr<Color>> colors{};
   std::deque<uint8_t> free_indexes;
 
-  // TODO: get rid of dynamic allocation here - it's redundant.
-  std::array<base::ref_ptr<Color>, 8> system_colors{
-      base::ref_ptr(new Color(COLOR_BLACK)), base::ref_ptr(new Color(COLOR_RED)),
-      base::ref_ptr(new Color(COLOR_GREEN)), base::ref_ptr(new Color(COLOR_YELLOW)),
-      base::ref_ptr(new Color(COLOR_BLUE)),  base::ref_ptr(new Color(COLOR_MAGENTA)),
-      base::ref_ptr(new Color(COLOR_CYAN)),  base::ref_ptr(new Color(COLOR_WHITE)),
-  };
-
   ColorPaletteImpl() {
+    constexpr std::array<SystemColor, 8> system_colors = {
+        SystemColor::BLACK, SystemColor::RED,     SystemColor::GREEN, SystemColor::YELLOW,
+        SystemColor::BLUE,  SystemColor::MAGENTA, SystemColor::CYAN,  SystemColor::WHITE,
+    };
+    for (auto color : system_colors) {
+      // TODO: get rid of dynamic allocation here - it's redundant.
+      colors[color] = base::ref_ptr(new Color(static_cast<uint8_t>(color), color));
+    }
     for (uint16_t i = system_colors.size(); i < COLORS; ++i) {
       free_indexes.push_back(static_cast<uint8_t>(i));
     }
   }
 
-  // TODO: remove this gc to eager freeing of indexes.
+  // TODO: Remove this gc to eager freeing of indexes.
+  // UPD. Instead of eagerly freeing indexes or doing full gc just free ONE index.
+  // This way more color reusability may be achieved.
   void gc() {
-    std::unordered_map<RGB8Data, base::ref_ptr<Color>> gcollected;
+    std::unordered_map<ColorKey, base::ref_ptr<Color>> gcollected;
     for (auto& [rgb, color] : colors) {
       if (color.ref_count() <= 1) {
         free_indexes.push_back(color->index_);
@@ -91,34 +95,49 @@ PIMPL_DEFINE(ColorPalette) {
     free_indexes.pop_front();
     return free_index;
   }
+
+  base::ref_ptr<Color> obtain_color(std::optional<color_id_t> color_id,
+                                    ColorDescr color_descr) {
+    ColorKey color_key = color_id.has_value() ? ColorKey(color_id.value())
+                                              : base::subvariant<ColorKey>(color_descr);
+    auto& color = colors[color_key];
+    if (color) {
+      if (color->descr_ != color_descr) {
+        // recolor
+        std::cerr << "ALLOCATE_COLOR\n";
+        allocate_color(std::get<RGB8Data>(color_descr), color->index_);
+      }
+    } else {
+      auto free_index = obtain_free_index();
+      auto rgb = std::visit(
+          base::overloaded{base::identity_map<RGB8Data>,
+                           [](SystemColor system) {
+                             short r, g, b;
+                             constexpr auto conv = [](short c) {
+                               return static_cast<uint8_t>(c * 255 / 1000);
+                             };
+                             ::color_content(static_cast<short>(system), &r, &g, &b);
+                             return RGB8Data{conv(r), conv(g), conv(b)};
+                           }},
+          color_descr);
+      std::cerr << "ALLOCATE_COLOR\n";
+      allocate_color(rgb, free_index);
+      color = base::ref_ptr(new Color(free_index, color_descr));
+    }
+    return color;
+  }
 };
 
 ColorPalette::ColorPalette() : PIMPL_INIT(ColorPalette) {}
 
 ColorPalette::~ColorPalette() = default;
 
-static void allocate_color(RGB8Data rgb, uint8_t index) {
-  constexpr auto conv = [](uint8_t c) { return c * 1000 / 255; };
-  ::init_color(index, conv(rgb.r), conv(rgb.g), conv(rgb.b));
+base::ref_ptr<Color> ColorPalette::obtain_color(ColorDescr color_descr) {
+  return impl_->obtain_color({}, color_descr);
 }
 
-base::ref_ptr<Color> ColorPalette::obtain_color(ColorDescr color_descr) {
-  auto rgb_getter = [this](RGB8Data rgb) {
-    auto& color = impl_->colors[rgb];
-    if (color.ref_count() <= 1) {
-      auto free_index = impl_->obtain_free_index();
-      std::cerr << "Allocating color for index " << (int)free_index << '\n';
-      allocate_color(rgb, free_index);
-      color = base::ref_ptr(new Color(free_index));
-    } else {
-      std::cerr << "Using cached color for index " << (int)color->index_ << '\n';
-    }
-    return color;
-  };
-  auto system_getter = [this](Color::System system_color) {
-    return impl_->system_colors[system_color];
-  };
-  return std::visit(base::overloaded{rgb_getter, system_getter}, color_descr);
+base::ref_ptr<Color> ColorPalette::obtain_color(color_id_t id, ColorDescr color_descr) {
+  return impl_->obtain_color(id, color_descr);
 }
 
 PIMPL_DEFINE(Canvas) {

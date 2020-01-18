@@ -74,22 +74,51 @@ bool Rect::contains(Point point) const {
 }
 
 Rect gravitated_rect(const Rect& rect, Size size, Gravity gravity) {
-  gfx::dim_t dx = 1, dy = 1;
-  if (gravity & GRAVITY_LEFT)
-    dx -= 1;
-  if (gravity & GRAVITY_RIGHT)
-    dx += 1;
-  if (gravity & GRAVITY_TOP)
-    dy -= 1;
-  if (gravity & GRAVITY_BOTTOM)
-    dy += 1;
+  dim_t left, right;
+  switch (gravity & (GRAVITY_LEFT | GRAVITY_RIGHT)) {
+    case GRAVITY_LEFT:
+      left = rect.left;
+      right = left + size.width - 1;
+      break;
+    case GRAVITY_RIGHT:
+      right = rect.right;
+      left = right - size.width + 1;
+      break;
+    case 0:
+    case GRAVITY_LEFT | GRAVITY_RIGHT: {
+      auto dx = rect.width() - size.width;
+      dx = dx / 2 + dx % 2;
+      left = rect.left + dx;
+      right = rect.right - dx;
+    } break;
+    default:
+      // TODO: change to proper exception type
+      throw std::exception();
+  }
 
-  auto xblock = rect.width() - size.width;
-  xblock = xblock / 2 + xblock % 2;
-  auto yblock = rect.height() - size.height;
-  yblock = yblock / 2 + yblock % 2;
+  dim_t top, bottom;
+  switch (gravity & (GRAVITY_TOP | GRAVITY_BOTTOM)) {
+    case GRAVITY_TOP:
+      top = rect.top;
+      bottom = top + size.height - 1;
+      break;
+    case GRAVITY_BOTTOM:
+      bottom = rect.bottom;
+      top = bottom - size.height + 1;
+      break;
+    case 0:
+    case GRAVITY_TOP | GRAVITY_BOTTOM: {
+      auto dy = rect.height() - size.height;
+      dy = dy / 2 + dy % 2;
+      top = rect.top + dy;
+      bottom = rect.bottom - dy;
+    } break;
+    default:
+      // TODO: change to proper exception type
+      throw std::exception();
+  }
 
-  return gfx::rect_from({rect.left + xblock * dx, rect.top + yblock * dy}, size);
+  return Rect{left, top, right, bottom};
 }
 
 }  // namespace cursedui::gfx

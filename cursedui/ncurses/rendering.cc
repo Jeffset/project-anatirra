@@ -107,6 +107,7 @@ PIMPL_DEFINE(ColorPalette) {
         std::cerr << "ALLOCATE_COLOR\n";
         allocate_color(std::get<RGB8Data>(color_descr), color->index_);
       }
+      std::cerr << "Using cached color id " << (int)color->index_ << '\n';
     } else {
       auto free_index = obtain_free_index();
       auto rgb = std::visit(
@@ -148,7 +149,9 @@ PIMPL_DEFINE(Canvas) {
   void ensure_color_pair() {
     if (current_color_pair_ < 0) {
       current_color_pair_ = ::alloc_pair(fg_color_index_, bg_color_index_);
-      ::wattr_on(stdscr, COLOR_PAIR(current_color_pair_), nullptr);
+      if (::wcolor_set(stdscr, current_color_pair_, nullptr) == ERR) {
+        throw render_exception();
+      }
     }
   }
 
@@ -174,39 +177,55 @@ void Canvas::start() {
   impl_->fg_color_index_ = COLOR_WHITE;
   impl_->current_color_pair_ = -1;
   // WARNING: this will be wrong after more accurate repaints are implemented.
-  ::wclear(stdscr);
+  if (::wclear(stdscr) == ERR) {
+    throw render_exception();
+  }
 }
 
 Canvas::~Canvas() = default;
 
 // static
 void Canvas::init_rendering() {
-  ::start_color();
+  if (::start_color() == ERR) {
+    throw render_exception();
+  }
   std::cerr << "COLORS=" << COLORS << "; COLOR_PAIRS=" << COLOR_PAIRS << std::endl;
 }
 
 Canvas& Canvas::operator<<(wchar_t ch) {
   impl_->ensure_color_pair();
-  ::waddnwstr(stdscr, &ch, 1);
+  cchar_t cc;
+  wchar_t c[] = {ch, 0};
+  ::setcchar(&cc, c, 0, 0, nullptr);
+  if (::wadd_wch(stdscr, &cc) == ERR) {
+    // BUG: this throws when trying to render right bottom cell.
+    // throw render_exception();
+  }
   return *this;
 }
 
 Canvas& Canvas::operator<<(const wchar_t* str) {
   impl_->ensure_color_pair();
-  waddwstr(stdscr, str);
+  if (waddwstr(stdscr, str) == ERR) {
+    throw render_exception();
+  }
   return *this;
 }
 
 Canvas& Canvas::operator<<(std::wstring_view str) {
-  impl_->ensure_color_pair();
-  waddnwstr(stdscr, str.data(), str.length());
+  if (!str.empty()) {
+    impl_->ensure_color_pair();
+    if (::waddnwstr(stdscr, str.data(), str.length()) == ERR) {
+      throw render_exception();
+    }
+  }
   return *this;
 }
 
 Canvas& Canvas::operator<<(const gfx::Point& pos) {
-  auto r = ::wmove(stdscr, pos.y, pos.x);
-  if (r == ERR)
+  if (::wmove(stdscr, pos.y, pos.x) == ERR) {
     throw render_exception();
+  }
   return *this;
 }
 
@@ -266,7 +285,9 @@ void hor_line(gfx::dim_t length, wchar_t ch) {
   wchar_t c[] = {ch, 0};
   ::setcchar(&cc[0], c, 0, 0, nullptr);
 
-  ::whline_set(stdscr, cc, length);
+  if (::whline_set(stdscr, cc, length) == ERR) {
+    throw render_exception();
+  }
 }
 
 void ver_line(gfx::dim_t length, wchar_t ch) {
@@ -274,7 +295,9 @@ void ver_line(gfx::dim_t length, wchar_t ch) {
   wchar_t c[] = {ch, 0};
   ::setcchar(&cc[0], c, 0, 0, nullptr);
 
-  ::wvline_set(stdscr, cc, length);
+  if (::wvline_set(stdscr, cc, length) == ERR) {
+    throw render_exception();
+  }
 }
 
 }  // namespace

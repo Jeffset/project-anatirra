@@ -18,6 +18,8 @@
 
 #define KEY_ALT(x) (KEY_F(64 - 26) + (x - 'A'))
 
+using namespace std::string_literals;
+
 namespace {
 
 volatile std::sig_atomic_t g_siginted = false;
@@ -31,7 +33,8 @@ void sigint_handler(int) {
 namespace cursedui {
 
 PIMPL_DEFINE(Context) {
-  uint32_t mouse_bstate;
+  bool left_down_ = false;
+  bool right_down_ = false;
 
   input::InputEvent to_input_event(int code) {
     using namespace input;
@@ -49,18 +52,22 @@ PIMPL_DEFINE(Context) {
         MouseEvent ev;
         ev.location = location;
         auto state = mouse_event.bstate;
-        if (!(mouse_bstate & BUTTON1_PRESSED) && (state & BUTTON1_PRESSED)) {
+        if (!left_down_ && (state & BUTTON1_PRESSED)) {
           ev.event_code = MouseEventCode::LEFT_DOWN;
-        } else if ((mouse_bstate & BUTTON1_PRESSED) && !(state & BUTTON1_PRESSED)) {
+          left_down_ = true;
+        } else if (left_down_ && !(state & BUTTON1_PRESSED)) {
           ev.event_code = MouseEventCode::LEFT_UP;
-        } else if (!(mouse_bstate & BUTTON2_PRESSED) && (state & BUTTON2_PRESSED)) {
+          left_down_ = false;
+        } else if (!right_down_ && (state & BUTTON3_PRESSED)) {
           ev.event_code = MouseEventCode::RIGHT_DOWN;
-        } else if ((mouse_bstate & BUTTON2_PRESSED) && !(state & BUTTON2_PRESSED)) {
+          right_down_ = true;
+        } else if (right_down_ && !(state & BUTTON3_PRESSED)) {
           ev.event_code = MouseEventCode::RIGHT_UP;
+          right_down_ = false;
         } else {
-          assert(false);
+          throw std::runtime_error("invalid mouse state: "s +
+                                   std::to_string(mouse_event.bstate));
         }
-        mouse_bstate = state;
         return ev;
       }
       case '\t':
@@ -117,8 +124,6 @@ PIMPL_DEFINE(Context) {
 };
 
 Context::Context() : PIMPL_INIT(Context) {
-  std::setlocale(LC_ALL, "");
-
   ::initscr();
   ::noecho();
   ::cbreak();
@@ -188,8 +193,13 @@ void Context::run(view::ViewTreeHost* view_tree_host) {
           ::refresh();
           break;
         default: {
-          auto event = impl_->to_input_event(ch);
-          std::visit(input_dispatcher, event);
+          try {
+            auto event = impl_->to_input_event(ch);
+            std::visit(input_dispatcher, event);
+          } catch (std::runtime_error& e) {
+            std::wcerr << "exception in input: " << e.what() << '\n';
+            continue;
+          }
           break;
         }
       }
@@ -197,10 +207,10 @@ void Context::run(view::ViewTreeHost* view_tree_host) {
   } catch (view::view_exception& e) {
     std::cerr << "view_exception: " << e.what() << '\n';
     return;
-  } catch (render::render_exception& e) {
-    std::cerr << "render_exception: " << e.what() << '\n';
-    return;
-  }
+  } /* catch (render::render_exception& e) {
+     std::cerr << "render_exception: " << e.what() << '\n';
+     return;
+   }*/
 }
 
 gfx::Size Context::screen_size() const {

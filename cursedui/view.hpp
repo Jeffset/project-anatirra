@@ -82,6 +82,8 @@ class View : public base::RefCounted, public base::WeakReferenced {
   GETTER base::nullable_ptr<ViewTreeHost> tree_host() noexcept;
 
  protected:
+  virtual void on_tree_host_set();
+
   void set_measured_size(const gfx::Size& measured_size);
 
   virtual void on_mouse_event(const input::MouseEvent& event);

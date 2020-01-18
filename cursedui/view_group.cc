@@ -80,6 +80,12 @@ bool ViewGroup::intercept_scroll_event(const input::ScrollEvent&) {
   return false;
 }
 
+void ViewGroup::on_tree_host_set() {
+  for (auto& child : children_) {
+    child->set_tree_host(tree_host());
+  }
+}
+
 void ViewGroup::on_colorize(render::ColorPalette& palette) {
   View::on_colorize(palette);
 
@@ -98,7 +104,7 @@ render::BgColorState ViewGroup::on_draw(render::Canvas& canvas) {
   for (auto& child : children_) {
     MARK_UNUSED(child->draw(canvas));
   }
-  return render::BgColorState{};
+  return {};
 }
 
 LayoutSpec LayoutParams::width_layout_spec() const noexcept {

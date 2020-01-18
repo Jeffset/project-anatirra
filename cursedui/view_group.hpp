@@ -60,6 +60,8 @@ class ViewGroup : public View {
   virtual bool intercept_scroll_event(const input::ScrollEvent& event);
 
  protected:
+  void on_tree_host_set() override;
+
   void on_measure(const MeasureSpec& width_spec,
                   const MeasureSpec& height_spec) override = 0;
   void on_layout() override = 0;

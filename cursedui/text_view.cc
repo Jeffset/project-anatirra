@@ -43,33 +43,47 @@ void TextView::on_measure(const MeasureSpec& text_len_spec,
 }
 
 void TextView::on_layout() {
-  // TODO: Handle '\n' in text properly.
   auto bounds = inner_bounds();
   auto [width, height] = bounds.size();
   auto text_len = text_len_();
   if (multiline_) {
-    auto lines_count = text_len / width;
-    if (text_len % width) {
-      ++lines_count;
-    }
-    ellipsize_ = lines_count > height;
-    lines_count = std::min(height, lines_count);
-    auto text_size = gfx::Size{std::min(text_len, width), lines_count};
+    ellipsize_ = false;
     lines_to_render_.clear();
-    for (int i = 0; i < lines_count; ++i) {
-      std::wstring_view line = text_;
-      line.remove_prefix(i * width);
-      if (ellipsize_ || i != (lines_count - 1)) {
-        line.remove_suffix(text_len - (i + 1) * width);
+    auto begin = std::begin(text_);
+    auto end = std::end(text_);
+    auto it = begin;
+    auto line_start = begin;
+    int line_count = 0;
+    while (it != end) {
+      if (line_count >= height) {
+        ellipsize_ = true;
+        break;
       }
-      lines_to_render_.push_back(line);
+      auto ch = *it;
+      if (ch == L'\n' || (it - line_start + 1) >= width) {
+        std::wstring_view line{text_};
+        line.remove_prefix(line_start - begin);
+        line.remove_suffix(end - ++it);
+        if (ch == '\n')
+          line.remove_suffix(1);
+        lines_to_render_.push_back(line);
+        ++line_count;
+        line_start = it;
+      } else {
+        ++it;
+      }
     }
+
+    auto text_size = gfx::Size{std::min(text_len, width), line_count};
     if (ellipsize_) {
       // this is for '...' symbol.
-      lines_to_render_.back().remove_suffix(1);
+      auto& last_line = lines_to_render_.back();
+      if (last_line.size() == (size_t)width)
+        lines_to_render_.back().remove_suffix(1);
     }
     text_pos_ = gfx::gravitated_rect(bounds, text_size, gravity_).position();
   } else {
+    // FIXME: strip text of '\n'
     ellipsize_ = text_len > width;
     std::wstring_view text_to_render = text_;
     if (ellipsize_) {
@@ -84,7 +98,13 @@ void TextView::on_layout() {
 }
 
 void TextView::on_colorize(render::ColorPalette& palette) {
-  text_color_ = palette.obtain_color(render::RGB8Data{255, 255, 0});
+  text_color_ = palette.obtain_color(text_color_descr_);
+}
+
+void TextView::on_key_event(const input::KeyEvent& event) {
+  if (event.key_char) {
+    text_ += event.key_char.value();
+  }
 }
 
 render::BgColorState TextView::on_draw(render::Canvas& canvas) {
@@ -104,7 +124,8 @@ render::BgColorState TextView::on_draw(render::Canvas& canvas) {
 
 TextView::TextView()
     : gravity_(static_cast<gfx::Gravity>(gfx::GRAVITY_LEFT | gfx::GRAVITY_TOP)),
-      multiline_(false) {
+      multiline_(false),
+      text_color_descr_(render::SystemColor::WHITE) {
   gravity_ = gfx::GRAVITY_CENTER;
 }
 
@@ -126,6 +147,10 @@ void TextView::set_gravity(gfx::Gravity gravity) noexcept {
 
 void TextView::set_multiline(bool multiline) noexcept {
   multiline_ = multiline;
+}
+
+void TextView::set_text_color(render::ColorDescr descr) noexcept {
+  text_color_descr_ = descr;
 }
 
 int TextView::text_len_() const {

@@ -11,6 +11,7 @@
 #include "cursedui/view_tree_host.hpp"
 
 #include <cassert>
+#include <iostream>
 
 namespace cursedui::view {
 
@@ -79,10 +80,16 @@ void View::colorize(render::ColorPalette& palette) {
 }
 
 render::BgColorState View::draw(render::Canvas& canvas) {
-  return on_draw(canvas);
+  try {
+    return on_draw(canvas);
+  } catch (render::render_exception& e) {
+    std::cerr << e.what() << '\n';
+    return {};
+  }
 }
 
 void View::dispatch_mouse_event(const input::MouseEvent& event) {
+  std::wcerr << L"mevent " << (int)event.event_code << L'\n';
   if (focusable() && event.is_mouse_down()) {
     focus();
   }
@@ -104,10 +111,14 @@ bool View::focused() const noexcept {
 }
 
 void View::focus() {
+  std::wcerr << "focus()\n";
   if (!focusable())
     throw view_exception();  // FIXME: throw proper exception type here
   if (!view_tree_host_)
     return;
+  if (focused())
+    return;
+  std::wcerr << "focus2()\n";
   if (auto focused_view = view_tree_host_->focused_view()) {
     focused_view->unfocus();
   }
@@ -152,11 +163,14 @@ void View::set_tree_host(base::nullable_ptr<ViewTreeHost> tree_host) {
   if (view_tree_host_ == tree_host)
     return;
   view_tree_host_ = tree_host.get_nullable();
+  on_tree_host_set();
 }
 
 base::nullable_ptr<ViewTreeHost> View::tree_host() noexcept {
   return view_tree_host_;
 }
+
+void View::on_tree_host_set() {}
 
 void View::set_measured_size(const gfx::Size& measured_size) {
   measured_size_ = measured_size;
@@ -177,7 +191,7 @@ void View::on_colorize(render::ColorPalette&) {}
 
 render::BgColorState View::on_draw(render::Canvas& canvas) {
   if (!outer_bounds().has_area()) {
-    return render::BgColorState{};
+    return {};
   }
 
   render::BgColorState bg;

@@ -33,10 +33,18 @@ class TextView : public View {
   void set_multiline(bool multiline) noexcept;
   bool multiline() const noexcept { return multiline_; }
 
+  void set_text_color(render::ColorDescr descr) noexcept;
+  GETTER render::ColorDescr text_color() const noexcept { return text_color_descr_; }
+
+  bool focusable() const noexcept override { return true; }
+
  protected:
   void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
   void on_layout() override;
   void on_colorize(render::ColorPalette& palette) override;
+
+  void on_key_event(const input::KeyEvent& event) override;
+
   render::BgColorState on_draw(render::Canvas& canvas) override;
 
  private:
@@ -47,6 +55,7 @@ class TextView : public View {
   std::wstring text_;
   gfx::Gravity gravity_;
   bool multiline_;
+  render::ColorDescr text_color_descr_;
 
   // layout scoped attributes:
   std::vector<std::wstring_view> lines_to_render_;

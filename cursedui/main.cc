@@ -7,8 +7,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <codecvt>
 #include <fstream>
+#include <iostream>
 #include <iterator>
+#include <locale>
 #include <unordered_map>
 #include <vector>
 
@@ -32,6 +35,7 @@ class Factory {
 
 [[noreturn]] int main() {
   using namespace cursedui;
+  std::setlocale(LC_ALL, "");
 
   auto lin_layout = base::make_ref_ptr<view::LinearLayout>();
   auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();
@@ -39,14 +43,17 @@ class Factory {
 
   auto view1 = base::make_ref_ptr<view::TextView>();
   auto view2 = base::make_ref_ptr<view::TextView>();
-  view1->set_gravity(static_cast<gfx::Gravity>(gfx::GRAVITY_BOTTOM | gfx::GRAVITY_RIGHT));
-  // view1->set_text(L"Test ◕ string");
+  view1->set_gravity(static_cast<gfx::Gravity>(gfx::GRAVITY_TOP | gfx::GRAVITY_BOTTOM));
+  view1->set_text(L"Test ◕ string");
   std::wifstream ifs{"/home/jeffset/text.txt"};
+  ifs.imbue(std::locale(""));
   std::wstring wstring{std::istreambuf_iterator<wchar_t>{ifs}, {}};
+  std::wcerr << "SOURCE TEXT: " << wstring << '\n';
   view1->set_text(std::move(wstring));
   view1->set_multiline(true);
 
-  view1->set_background_color(render::SystemColor::MAGENTA);
+  view1->set_background_color(render::RGB8Data{100, 34, 40});
+  view1->set_text_color(render::RGB8Data{0, 0, 0});
   view2->set_text(L"◕ Prod ◕ string ◕ long");
 
   lin_layout->add_child(view1);

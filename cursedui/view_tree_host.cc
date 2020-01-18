@@ -8,6 +8,7 @@
 #include "cursedui/context.hpp"
 #include "cursedui/rendering.hpp"
 
+#include <iostream>
 #include <utility>
 
 namespace cursedui::view {
@@ -26,6 +27,7 @@ void ViewTreeHost::set_focused_view(base::ref_ptr<View> focused_view) noexcept {
   if (focused_view_ == focused_view)
     return;
   focused_view_ = base::weak_ref(focused_view);
+  std::wcerr << "ViewTreeHost: view focused\n";
 }
 
 base::ref_ptr<View> ViewTreeHost::focused_view() noexcept {

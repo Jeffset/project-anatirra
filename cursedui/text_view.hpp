@@ -48,7 +48,7 @@ class TextView : public View {
   render::BgColorState on_draw(render::Canvas& canvas) override;
 
  private:
-  GETTER gfx::dim_t text_len_() const;
+  gfx::Size measure_text(gfx::dim_t max_width, gfx::dim_t max_height) const noexcept;
 
  private:
   // view attributes:

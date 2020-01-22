@@ -27,6 +27,17 @@ TargetVariant subvariant(const std::variant<SourceVariants...>& source) {
   return std::visit([](const auto& s) -> TargetVariant { return s; }, source);
 }
 
+template <class Type, class... VariantTypes>
+bool holds_alternative(
+    const std::optional<std::variant<VariantTypes...>>& variant) noexcept {
+  return variant.has_value() && std::holds_alternative<Type>(variant.value());
+}
+
+template <class Type, class... VariantTypes>
+inline bool holds_alternative(const std::variant<VariantTypes...>& variant) noexcept {
+  return std::holds_alternative<Type>(variant);
+}
+
 template <class T>
 constexpr auto identity_map = [](T v) { return v; };
 

@@ -12,55 +12,55 @@ namespace base {
  * Nothing more, nothing less.
  */
 template <class T>
-class nullable_ptr {
+class nullable {
  public:
-  /* implicit */ nullable_ptr(std::nullptr_t) noexcept : ptr_(nullptr) {}
-  /* implicit */ nullable_ptr(T* ptr) : ptr_(ptr) {}
+  /* implicit */ nullable(std::nullptr_t) noexcept : ptr_(nullptr) {}
+  /* implicit */ nullable(T* ptr) : ptr_(ptr) {}
 
   operator bool() const noexcept { return ptr_ != nullptr; }
 
   NONNULL
-  T* get() noexcept {
+  inline T* get() noexcept {
     assert(ptr_);
     return ptr_;
   }
 
-  T* get_nullable() noexcept { return ptr_; }
+  inline T* get_nullable() noexcept { return ptr_; }
 
-  bool operator==(nullable_ptr other) const noexcept { return ptr_ == other.ptr_; }
+  bool operator==(nullable other) const noexcept { return ptr_ == other.ptr_; }
 
-  bool operator!=(nullable_ptr other) const noexcept { return ptr_ != other.ptr_; }
+  bool operator!=(nullable other) const noexcept { return ptr_ != other.ptr_; }
 
   template <class D>
-  friend bool operator==(nullable_ptr<D> a, D* b);
+  friend bool operator==(nullable<D> a, D* b);
   template <class D>
-  friend bool operator==(D* a, nullable_ptr<D> b);
+  friend bool operator==(D* a, nullable<D> b);
   template <class D>
-  friend bool operator!=(nullable_ptr<D> a, D* b);
+  friend bool operator!=(nullable<D> a, D* b);
   template <class D>
-  friend bool operator!=(D* a, nullable_ptr<D> b);
+  friend bool operator!=(D* a, nullable<D> b);
 
  private:
   T* ptr_;
 };
 
 template <class T>
-bool operator==(nullable_ptr<T> a, T* b) {
+bool operator==(nullable<T> a, T* b) {
   return a.ptr_ == b;
 }
 
 template <class T>
-bool operator==(T* a, nullable_ptr<T> b) {
+bool operator==(T* a, nullable<T> b) {
   return a == b.ptr_;
 }
 
 template <class T>
-bool operator!=(nullable_ptr<T> a, T* b) {
+bool operator!=(nullable<T> a, T* b) {
   return a.ptr_ != b;
 }
 
 template <class T>
-bool operator!=(T* a, nullable_ptr<T> b) {
+bool operator!=(T* a, nullable<T> b) {
   return a != b.ptr_;
 }
 

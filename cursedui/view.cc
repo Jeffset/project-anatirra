@@ -68,6 +68,7 @@ void View::layout(const gfx::Rect& area) {
     background_->set_bounds(inner_bounds());
   if (border_)
     border_->set_bounds(outer_bounds());
+  needs_layout_ = NEEDS_LAYOUT_NOT;
   on_layout();
 }
 
@@ -137,14 +138,18 @@ View::View()
     : view_tree_host_(nullptr),
       background_(nullptr),
       border_(new BorderDrawable()),
+      parent_(nullptr),
+      needs_layout_(NEEDS_LAYOUT_SIZE),
+      layout_propagation_mask(NEEDS_LAYOUT_SIZE),
       PIMPL_INIT(View) {}
 
-base::nullable_ptr<LayoutParams> View::layout_params() const noexcept {
+base::nullable<LayoutParams> View::layout_params() const noexcept {
   return layout_params_.get();
 }
 
 void View::set_layout_params(std::unique_ptr<LayoutParams> layout_params) {
   layout_params_ = std::move(layout_params);
+  mark_needs_layout(NEEDS_LAYOUT_SIZE);
 }
 
 void View::set_background(std::unique_ptr<Drawable> drawable) {
@@ -155,19 +160,42 @@ void View::set_background_color(render::ColorDescr color) {
   background_ = std::make_unique<SolidColorDrawable>(color);
 }
 
-base::nullable_ptr<Drawable> View::background() {
+base::nullable<Drawable> View::background() {
   return background_.get();
 }
 
-void View::set_tree_host(base::nullable_ptr<ViewTreeHost> tree_host) {
+void View::set_tree_host(base::nullable<ViewTreeHost> tree_host) {
   if (view_tree_host_ == tree_host)
     return;
   view_tree_host_ = tree_host.get_nullable();
   on_tree_host_set();
 }
 
-base::nullable_ptr<ViewTreeHost> View::tree_host() noexcept {
+base::nullable<ViewTreeHost> View::tree_host() noexcept {
   return view_tree_host_;
+}
+
+base::nullable<ViewGroup> View::get_parent() {
+  return parent_;
+}
+
+void View::set_parent(base::nullable<ViewGroup> parent) {
+  parent_ = parent.get_nullable();
+}
+
+void View::mark_needs_layout(NeedsLayoutMarkBin mark) noexcept {
+  needs_layout_ |= mark;
+}
+
+void View::visit_down(ViewTreeVisitor& visitor) {
+  visitor.visit(this);
+}
+
+void View::visit_up(ViewTreeVisitor& visitor) {
+  visitor.visit(this);
+  if (parent_) {
+    parent_->visit_up(visitor);
+  }
 }
 
 void View::on_tree_host_set() {}
@@ -217,5 +245,7 @@ gfx::Rect View::outer_bounds() const noexcept {
 const char* measure_spec_violated_exception::what() const noexcept {
   return "Measure spec has been violated";
 }
+
+ViewTreeVisitor::~ViewTreeVisitor() = default;
 
 }  // namespace cursedui::view

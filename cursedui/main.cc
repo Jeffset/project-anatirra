@@ -1,9 +1,9 @@
 
 #include "cursedui/context.hpp"
 #include "cursedui/drawable.hpp"
-#include "cursedui/linear_layout.hpp"
 #include "cursedui/text_view.hpp"
 #include "cursedui/view_tree_host.hpp"
+#include "cursedui/views/linear_layout.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -49,7 +49,7 @@ class Factory {
   ifs.imbue(std::locale(""));
   std::wstring wstring{std::istreambuf_iterator<wchar_t>{ifs}, {}};
   std::wcerr << "SOURCE TEXT: " << wstring << '\n';
-  view1->set_text(std::move(wstring));
+  view1->set_text(wstring);
   view1->set_multiline(true);
 
   view1->set_background_color(render::RGB8Data{100, 34, 40});
@@ -74,11 +74,14 @@ class Factory {
   view4->border()->set_color(render::RGB8Data{0, 50, 18});
   view4->border()->set_background_color(render::RGB8Data{128, 255, 255});
   view3->set_text(L"Test ◕ string");
+  view3->set_multiline(true);
+  view3->set_text(std::move(wstring));
+
   view4->set_text(L"◕ Prod ◕ string ◕ long");
   lin_layout2->add_child(view3);
   lin_layout2->add_child(view4);
   auto* lp3 = (view::LinearLayout::LayoutParams*)view3->layout_params().get();
-  lp3->set_weight(1.0f);
+  //  lp3->set_weight(1.0f);
   lp3->set_width_layout_spec(view::LayoutMatchParent{});
   auto* lp4 = (view::LinearLayout::LayoutParams*)view4->layout_params().get();
   lp4->set_weight(0.5f);
@@ -96,8 +99,8 @@ class Factory {
   assert(factory.weak_count() == 0);
 
   Context context;
-  view::ViewTreeHost view_root{&context};
+  view::ViewTreeHost view_root{};
   view_root.set_view_root(lin_layout);
 
-  context.run(&view_root);
+  context.run(view_root);
 }

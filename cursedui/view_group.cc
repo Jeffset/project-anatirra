@@ -4,6 +4,7 @@
 
 #include "cursedui/view_group.hpp"
 
+#include "base/util.hpp"
 #include "cursedui/drawable.hpp"
 
 #include <algorithm>
@@ -18,6 +19,9 @@ ViewGroup::ViewGroup() noexcept {
 ViewGroup::~ViewGroup() noexcept = default;
 
 void ViewGroup::add_child(base::ref_ptr<View> child) {
+  if (child->get_parent()) {
+    throw view_exception();
+  }
   if (std::find(children_.begin(), children_.end(), child) != children_.end()) {
     throw view_already_present();
   }
@@ -26,6 +30,7 @@ void ViewGroup::add_child(base::ref_ptr<View> child) {
     child->set_layout_params(create_layout_params());
   }
   child->set_tree_host(tree_host());
+  child->set_parent(this);
   children_.emplace_back(std::move(child));
 }
 
@@ -38,10 +43,11 @@ void ViewGroup::remove_child(base::ref_ptr<View>& child) {
     child->unfocus();
   }
   child->set_tree_host(nullptr);
+  child->set_parent(nullptr);
 }
 
-base::ref_ptr<View> ViewGroup::get_child(int index) {
-  return children_.at(index);
+View* ViewGroup::get_child(int index) {
+  return children_.at(index).get();
 }
 
 void ViewGroup::dispatch_mouse_event(const input::MouseEvent& event) {
@@ -78,6 +84,27 @@ bool ViewGroup::intercept_mouse_event(const input::MouseEvent&) {
 
 bool ViewGroup::intercept_scroll_event(const input::ScrollEvent&) {
   return false;
+}
+
+std::unique_ptr<LayoutParams> ViewGroup::create_layout_params() {
+  return std::make_unique<LayoutParams>(LayoutWrapContent{}, LayoutWrapContent{});
+}
+
+bool ViewGroup::check_layout_params(LayoutParams* params) {
+  return params->tag() == LayoutParams::TAG;
+}
+
+void ViewGroup::visit_down(ViewTreeVisitor& visitor) {
+  if (!visitor.visit(this))
+    return;
+  for (auto& child : children_) {
+    child->visit_down(visitor);
+  }
+}
+
+void ViewGroup::propagate_needs_layout_mark(View* child) {
+  auto propagated_mark = child->needs_layout() & ~child->layout_propagation_mask;
+  mark_needs_layout(propagated_mark);
 }
 
 void ViewGroup::on_tree_host_set() {
@@ -122,6 +149,12 @@ void LayoutParams::set_width_layout_spec(const LayoutSpec& spec) noexcept {
 void LayoutParams::set_height_layout_spec(const LayoutSpec& spec) noexcept {
   height_ = spec;
 }
+
+std::string_view LayoutParams::tag() const noexcept {
+  return TAG;
+}
+
+const char* LayoutParams::TAG = "LayoutParams";
 
 LayoutParams::LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept
     : width_(width), height_(height) {}

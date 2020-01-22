@@ -93,6 +93,14 @@ PIMPL_DEFINE(Context) {
         return KeyEvent{Key::HOME, {}};
       case KEY_END:
         return KeyEvent{Key::END, {}};
+      case KEY_LEFT:
+        return KeyEvent{Key::LEFT, {}};
+      case KEY_UP:
+        return KeyEvent{Key::UP, {}};
+      case KEY_RIGHT:
+        return KeyEvent{Key::RIGHT, {}};
+      case KEY_DOWN:
+        return KeyEvent{Key::DOWN, {}};
       case KEY_F(1):
         return KeyEvent{Key::F1, {}};
       case KEY_F(2):
@@ -168,29 +176,29 @@ Context::~Context() {
   ::endwin();
 }
 
-void Context::run(view::ViewTreeHost* view_tree_host) {
+void Context::run(view::ViewTreeHost& view_tree_host) {
   const auto input_dispatcher =
-      base::overloaded{[view_tree_host](const input::KeyEvent& key_event) {
-                         view_tree_host->dispatch_key_event(key_event);
+      base::overloaded{[&view_tree_host](const input::KeyEvent& key_event) {
+                         view_tree_host.dispatch_key_event(key_event);
                        },
-                       [view_tree_host](const input::MouseEvent& event) {
-                         view_tree_host->dispatch_mouse_event(event);
+                       [&view_tree_host](const input::MouseEvent& event) {
+                         view_tree_host.dispatch_mouse_event(event);
                        },
-                       [view_tree_host](const input::ScrollEvent& event) {
-                         view_tree_host->dispatch_scroll_event(event);
+                       [&view_tree_host](const input::ScrollEvent& event) {
+                         view_tree_host.dispatch_scroll_event(event);
                        }};
 
   render::Canvas canvas{nullptr};
   render::ColorPalette palette{};
   try {
     int ch;
-    view_tree_host->render(canvas, palette);
     do {
       ch = ::wgetch(stdscr);
       switch (ch) {
         case KEY_RESIZE:
-          view_tree_host->render(canvas, palette);
+          view_tree_host.on_terminal_resize(screen_size());
           ::refresh();
+          continue;
           break;
         default: {
           try {
@@ -203,6 +211,8 @@ void Context::run(view::ViewTreeHost* view_tree_host) {
           break;
         }
       }
+      view_tree_host.poll(canvas, palette);
+      ::refresh();
     } while (ch != 0 && !g_siginted);
   } catch (view::view_exception& e) {
     std::cerr << "view_exception: " << e.what() << '\n';

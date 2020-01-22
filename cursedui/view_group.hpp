@@ -11,6 +11,7 @@
 #include "cursedui/view.hpp"
 
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <vector>
@@ -22,25 +23,7 @@ class view_already_present : public view_exception {
   const char* what() const noexcept override;
 };
 
-class LayoutParams {
- public:
-  GETTER LayoutSpec width_layout_spec() const noexcept;
-  GETTER LayoutSpec height_layout_spec() const noexcept;
-
-  void set_width_layout_spec(const LayoutSpec& spec) noexcept;
-  void set_height_layout_spec(const LayoutSpec& spec) noexcept;
-
-  virtual ~LayoutParams() noexcept;
-
-  GETTER virtual std::string_view tag() const noexcept = 0;
-
- protected:
-  LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept;
-
- private:
-  LayoutSpec width_;
-  LayoutSpec height_;
-};
+class LayoutParams;
 
 class ViewGroup : public View {
  public:
@@ -51,13 +34,20 @@ class ViewGroup : public View {
   void remove_child(base::ref_ptr<View>& child);
 
   GETTER int child_count() const noexcept;
-  GETTER base::ref_ptr<View> get_child(int index);
+  GETTER View* get_child(int index);
 
   void dispatch_mouse_event(const input::MouseEvent& event) override;
   void dispatch_scroll_event(const input::ScrollEvent& event) override;
 
   virtual bool intercept_mouse_event(const input::MouseEvent& event);
   virtual bool intercept_scroll_event(const input::ScrollEvent& event);
+
+  virtual std::unique_ptr<LayoutParams> create_layout_params();
+  virtual bool check_layout_params(LayoutParams* params);
+
+  void visit_down(ViewTreeVisitor& visitor) override;
+
+  void propagate_needs_layout_mark(View* child);
 
  protected:
   void on_tree_host_set() override;
@@ -68,11 +58,29 @@ class ViewGroup : public View {
   void on_colorize(render::ColorPalette& palette) override;
   render::BgColorState on_draw(render::Canvas& canvas) override;
 
-  virtual std::unique_ptr<LayoutParams> create_layout_params() = 0;
-  virtual bool check_layout_params(LayoutParams* params) = 0;
-
  private:
   std::vector<base::ref_ptr<View>> children_;
+};
+
+class LayoutParams {
+ public:
+  static const char* TAG;
+
+  GETTER LayoutSpec width_layout_spec() const noexcept;
+  GETTER LayoutSpec height_layout_spec() const noexcept;
+
+  void set_width_layout_spec(const LayoutSpec& spec) noexcept;
+  void set_height_layout_spec(const LayoutSpec& spec) noexcept;
+
+  virtual ~LayoutParams() noexcept;
+
+  GETTER virtual std::string_view tag() const noexcept;
+
+  LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept;
+
+ private:
+  LayoutSpec width_;
+  LayoutSpec height_;
 };
 
 }  // namespace cursedui::view

@@ -50,4 +50,26 @@ MeasureSpec shrink_measure_spec(const MeasureSpec& spec, gfx::dim_t dim) noexcep
       spec);
 }
 
+NeedsLayoutMarkBin make_layout_propagation_mask(const LayoutSpec& layout,
+                                                const MeasureSpec& parent_measure,
+                                                NeedsLayoutMarkBin mark) noexcept {
+  return std::visit(
+      base::overloaded{
+          // layout exactly never needs propagating size change.
+          [](LayoutExactly) -> NeedsLayoutMarkBin { return 0; },
+          // wrap_content always propagates size change.
+          [mark](LayoutWrapContent) -> NeedsLayoutMarkBin { return mark; },
+          // match_parent is more complex case
+          [&parent_measure, mark](LayoutMatchParent) -> NeedsLayoutMarkBin {
+            return std::visit(
+                base::overloaded{
+                    // if parent is laid out exactly, do not propagate layout.
+                    [](MeasureExactly) -> NeedsLayoutMarkBin { return 0; },
+                    // if for every other spec size may influence, so do propagate.
+                    [mark](auto) -> NeedsLayoutMarkBin { return mark; }},
+                parent_measure);
+          }},
+      layout);
+}
+
 }  // namespace cursedui::view

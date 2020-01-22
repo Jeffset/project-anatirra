@@ -11,18 +11,16 @@
 
 #include <memory>
 
-namespace cursedui {
-class Context;
-namespace render {
+namespace cursedui::render {
 class Canvas;
-}  // namespace render
-}  // namespace cursedui
+class ColorPalette;
+}  // namespace cursedui::render
 
 namespace cursedui::view {
 
 class ViewTreeHost {
  public:
-  explicit ViewTreeHost(Context* context) noexcept;
+  ViewTreeHost() noexcept;
 
   void set_view_root(base::ref_ptr<View> root) noexcept;
 
@@ -33,10 +31,14 @@ class ViewTreeHost {
   void dispatch_mouse_event(const input::MouseEvent& event);
   void dispatch_scroll_event(const input::ScrollEvent& event);
 
-  void render(render::Canvas& canvas, render::ColorPalette& palette);
+  void on_terminal_resize(const gfx::Size& screen_size);
+
+  void poll(render::Canvas& canvas, render::ColorPalette& palette);
 
  private:
-  Context* context_;
+  void layout_tree();
+
+ private:
   base::ref_ptr<View> root_;
 
   base::weak_ref<View> focused_view_;

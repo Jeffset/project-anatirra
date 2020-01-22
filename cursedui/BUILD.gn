@@ -39,8 +39,6 @@ shared_library("cursedui") {
     "drawable.cc",
     "drawable.hpp",
     "input.hpp",
-    "linear_layout.cc",
-    "linear_layout.hpp",
     "rendering.hpp",
     "text_view.cc",
     "text_view.hpp",
@@ -49,10 +47,14 @@ shared_library("cursedui") {
     "view.hpp",
     "view_group.cc",
     "view_group.hpp",
-    "view_tree_host.cc",
-    "view_tree_host.hpp",
     "view_specs.cc",
     "view_specs.hpp",
+    "view_tree_host.cc",
+    "view_tree_host.hpp",
+    "views/frame_layout.cc",
+    "views/frame_layout.hpp",
+    "views/linear_layout.cc",
+    "views/linear_layout.hpp",
   ]
 
   configs += [ ":backend" ]

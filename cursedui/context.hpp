@@ -26,7 +26,7 @@ class Context final {
   Context();
   ~Context();
 
-  void run(NONNULL view::ViewTreeHost* view_tree_host);
+  void run(view::ViewTreeHost& view_tree_host);
 
   GETTER gfx::Size screen_size() const;
 

@@ -5,7 +5,7 @@
 #ifndef CURSEDUI_LINEAR_LAYOUT_HPP
 #define CURSEDUI_LINEAR_LAYOUT_HPP
 
-#include "view_group.hpp"
+#include "cursedui/view_group.hpp"
 
 #include <memory>
 #include <optional>
@@ -42,13 +42,12 @@ class LinearLayout : public ViewGroup {
 
   void set_orientation(Orientation orientation) noexcept;
 
+  std::unique_ptr<view::LayoutParams> create_layout_params() override;
+  bool check_layout_params(view::LayoutParams* params) override;
+
  protected:
   void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
   void on_layout() override;
-
- protected:
-  std::unique_ptr<view::LayoutParams> create_layout_params() override;
-  bool check_layout_params(view::LayoutParams* params) override;
 
  private:
   Orientation orientation_;

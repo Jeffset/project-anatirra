@@ -12,6 +12,10 @@ Size min(Size a, Size b) {
   return {std::min(a.width, b.width), std::min(a.height, a.height)};
 }
 
+Size max(Size a, Size b) {
+  return {std::max(a.width, b.width), std::max(a.height, a.height)};
+}
+
 Rect centered_rect(const Rect& base, Size size) {
   auto base_size = base.size();
   auto dx = base_size.width - size.width;

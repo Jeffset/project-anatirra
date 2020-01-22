@@ -23,6 +23,11 @@ enum class Key : uint8_t {
   HOME,
   END,
 
+  LEFT,
+  UP,
+  RIGHT,
+  DOWN,
+
   F1,
   F2,
   F3,

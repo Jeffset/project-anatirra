@@ -5,8 +5,10 @@
 #ifndef CURSEDUI_VIEW_SPECS_HPP
 #define CURSEDUI_VIEW_SPECS_HPP
 
+#include "base/util.hpp"
 #include "cursedui/dim.hpp"
 
+#include <type_traits>
 #include <variant>
 
 namespace cursedui::view {
@@ -28,10 +30,31 @@ struct LayoutExactly {
 
 using LayoutSpec = std::variant<LayoutMatchParent, LayoutWrapContent, LayoutExactly>;
 
+enum NeedsLayoutMark : uint8_t {
+  // clang-format off
+  NEEDS_LAYOUT_NOT     = 0b000,
+  NEEDS_LAYOUT_CONTENT = 0b001,
+  NEEDS_LAYOUT_WIDTH   = 0b010,
+  NEEDS_LAYOUT_HEIGHT  = 0b100,
+  NEEDS_LAYOUT_SIZE    = 0b110,
+  // clang-format on
+};
+
+using NeedsLayoutMarkBin = std::underlying_type_t<NeedsLayoutMark>;
+
 MeasureSpec make_measure_spec(const LayoutSpec& layout,
                               const MeasureSpec& parent_measure) noexcept;
 
 MeasureSpec shrink_measure_spec(const MeasureSpec& spec, gfx::dim_t dim) noexcept;
+
+NeedsLayoutMarkBin make_layout_propagation_mask(const LayoutSpec& layout,
+                                                const MeasureSpec& parent_measure,
+                                                NeedsLayoutMarkBin mark) noexcept;
+
+inline auto measure_exactly_or(gfx::dim_t value) {
+  return base::overloaded{[](MeasureExactly exaclty) { return exaclty.dim; },
+                          [value](auto) { return value; }};
+}
 
 }  // namespace cursedui::view
 

@@ -40,6 +40,9 @@ class measure_spec_violated_exception : public std::exception {
   const char* what() const noexcept override;
 };
 
+class ViewTreeVisitor;
+class ViewGroup;
+
 /**
  * Base class for cursed UI view system.
  */
@@ -69,17 +72,26 @@ class View : public base::RefCounted, public base::WeakReferenced {
   GETTER gfx::Rect inner_bounds() const noexcept;
   GETTER gfx::Rect outer_bounds() const noexcept;
 
-  GETTER base::nullable_ptr<LayoutParams> layout_params() const noexcept;
+  GETTER base::nullable<LayoutParams> layout_params() const noexcept;
   void set_layout_params(std::unique_ptr<LayoutParams> layout_params);
 
   void set_background(std::unique_ptr<Drawable> drawable);
   void set_background_color(render::ColorDescr color);
 
-  GETTER base::nullable_ptr<Drawable> background();
+  GETTER base::nullable<Drawable> background();
   GETTER BorderDrawable* border() { return border_.get(); }
 
-  void set_tree_host(base::nullable_ptr<ViewTreeHost> tree_host);
-  GETTER base::nullable_ptr<ViewTreeHost> tree_host() noexcept;
+  void set_tree_host(base::nullable<ViewTreeHost> tree_host);
+  GETTER base::nullable<ViewTreeHost> tree_host() noexcept;
+
+  GETTER base::nullable<ViewGroup> get_parent();
+  void set_parent(base::nullable<ViewGroup> parent);
+
+  void mark_needs_layout(NeedsLayoutMarkBin mark) noexcept;
+  NeedsLayoutMarkBin needs_layout() const noexcept { return needs_layout_; }
+
+  virtual void visit_down(ViewTreeVisitor& visitor);
+  void visit_up(ViewTreeVisitor& visitor);
 
  protected:
   virtual void on_tree_host_set();
@@ -104,7 +116,25 @@ class View : public base::RefCounted, public base::WeakReferenced {
   std::unique_ptr<BorderDrawable> border_;  // TODO: consider making this stored by value
   std::unique_ptr<LayoutParams> layout_params_;
 
+  ViewGroup* parent_;
+
+  NeedsLayoutMarkBin needs_layout_;
+
+ public:
+  NeedsLayoutMarkBin layout_propagation_mask;
+
+ private:
   PIMPL(View);
+};
+
+class ViewTreeVisitor {
+ protected:
+  ~ViewTreeVisitor();
+
+ public:
+  enum VisitResult : uint8_t { STOP_VISIT = 0, CONTINUE_VISIT = 1 };
+
+  virtual VisitResult visit(View* view) = 0;
 };
 
 }  // namespace cursedui::view

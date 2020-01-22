@@ -2,7 +2,7 @@
 // Created by jeffset on 12/15/19.
 //
 
-#include "cursedui/linear_layout.hpp"
+#include "cursedui/views/linear_layout.hpp"
 
 #include "base/util.hpp"
 
@@ -42,12 +42,17 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
   int weighted_child_count = 0;
 
   for (int i = 0; i < count; ++i) {
-    auto child = get_child(i);
+    auto* child = get_child(i);
     const auto* lp = (LayoutParams*)child->layout_params().get();
 
     if (!use_weights || !lp->weight()) {
       child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
                      make_measure_spec(lp->height_layout_spec(), height_spec));
+      child->layout_propagation_mask =
+          make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
+                                       NEEDS_LAYOUT_WIDTH) |
+          make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
+                                       NEEDS_LAYOUT_HEIGHT);
       weightless_children_size += child->measured_size().*oriented_dim;
 
       this_size.*orthogonal_dim =
@@ -66,7 +71,7 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
     int weighted_child_num = 1;
 
     for (int i = 0; i < count; ++i) {
-      auto child = get_child(i);
+      auto* child = get_child(i);
       const auto* lp = (LayoutParams*)child->layout_params().get();
 
       if (!lp->weight()) {
@@ -84,9 +89,17 @@ void LinearLayout::on_measure(const MeasureSpec& width_spec,
       if (is_horizontal) {
         child->measure(MeasureExactly{{dim}},
                        make_measure_spec(lp->height_layout_spec(), height_spec));
+        child->layout_propagation_mask =
+            NEEDS_LAYOUT_WIDTH |
+            make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
+                                         NEEDS_LAYOUT_HEIGHT);
       } else {
         child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
                        MeasureExactly{{dim}});
+        child->layout_propagation_mask =
+            make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
+                                         NEEDS_LAYOUT_WIDTH) |
+            NEEDS_LAYOUT_HEIGHT;
       }
 
       this_size.*orthogonal_dim =
@@ -107,7 +120,7 @@ void LinearLayout::on_layout() {
   const auto count = child_count();
   auto position = inner_bounds().position();
   for (int i = 0; i < count; ++i) {
-    auto child = get_child(i);
+    auto* child = get_child(i);
     const auto child_size = child->measured_size();
     child->layout(gfx::rect_from(position, child_size));
     if (is_horizontal)

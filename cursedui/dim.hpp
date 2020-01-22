@@ -52,6 +52,8 @@ Rect rect_from(Point position, Size size);
 
 Size min(Size a, Size b);
 
+Size max(Size a, Size b);
+
 Rect centered_rect(const Rect& base, Size size);
 
 Rect grow(const Rect& base, dim_t d);

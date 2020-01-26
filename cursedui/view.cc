@@ -17,7 +17,7 @@ namespace cursedui::view {
 
 PIMPL_DEFINE(View){};
 
-void View::measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
+void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   measured_size_.reset();
   auto double_border_width = border() ? border_->border_width() * 2 : 0;
   if (double_border_width > 0) {
@@ -204,7 +204,7 @@ void View::set_measured_size(const gfx::Size& measured_size) {
   measured_size_ = measured_size;
 }
 
-void View::on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
+void View::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   constexpr auto measurer = base::overloaded{
       [](const MeasureExactly& spec) { return spec.dim; },
       [](const auto&) { return 0; },

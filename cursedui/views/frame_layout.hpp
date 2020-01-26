@@ -7,7 +7,7 @@ namespace cursedui::view {
 
 class FrameLayout : public ViewGroup {
  public:
-  void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
+  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
 };
 

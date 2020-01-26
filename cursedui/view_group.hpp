@@ -52,8 +52,8 @@ class ViewGroup : public View {
  protected:
   void on_tree_host_set() override;
 
-  void on_measure(const MeasureSpec& width_spec,
-                  const MeasureSpec& height_spec) override = 0;
+  void on_measure(MeasureSpec width_spec,
+                  MeasureSpec height_spec) override = 0;
   void on_layout() override = 0;
   void on_colorize(render::ColorPalette& palette) override;
   render::BgColorState on_draw(render::Canvas& canvas) override;

@@ -1,0 +1,52 @@
+declare_args() {
+  is_compiler_test = false
+}
+
+template("gtest_binary") {
+  executable(target_name) {
+    visibility = []
+
+    forward_variables_from(invoker, "*", [ "testonly" ])
+
+    assert(defined(sources))
+
+    testonly = true
+    if (!defined(deps)) {
+      deps = []
+    }
+    deps += [
+      "//third-party/googletest:gmock_main",
+      "//third-party/googletest:gtest_main",
+    ]
+
+    if (!defined(ldflags)) {
+      ldflags = []
+    }
+    ldflags += [ "-pthread" ]
+
+    if (!defined(defines)) {
+      defines = []
+    }
+    defines += [ "UNIT_TEST" ]
+  }
+}
+
+template("compiler_test") {
+  test_source_set_ = "${target_name}__test_source_set"
+  if (is_compiler_test) {
+    source_set(test_source_set_) {
+      forward_variables_from(invoker,
+                             [
+                               "sources",
+                               "defines",
+                             ])
+    }
+  } else {
+    not_needed(invoker, "*")
+  }
+  group(target_name) {
+    deps = [
+      ":$test_source_set_(//build/toolchain:clang_compiler_test)",
+    ]
+  }
+}

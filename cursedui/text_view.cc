@@ -72,7 +72,7 @@ gfx::Size TextView::measure_text(gfx::dim_t max_width, gfx::dim_t max_height) co
   return {width, height};
 }
 
-void TextView::on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) {
+void TextView::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   if (base::holds_alternative<MeasureExactly>(width_spec) &&
       base::holds_alternative<MeasureExactly>(height_spec)) {
     set_measured_size({std::get<MeasureExactly>(width_spec).dim,

@@ -1,20 +1,31 @@
+import("//build/test.gni")
+
 source_set("injecxx") {
-  sources = [
-    "dependency_graph.hpp",
+  public = [
     "injecxx.hpp",
     "injecxx_context.hpp",
+  ]
+  sources = [
+    "dependency_graph.hpp",
     "meta_constructor.hpp",
   ]
+  friend = [ ":injecxx_tests" ]
   deps = [
     "//base",
   ]
 }
 
-executable("injecxx_test_bin") {
+gtest_binary("injecxx_tests") {
   sources = [
-    "main.cc",
+    "test/injecxx_integration_test.cc",
   ]
   deps = [
     ":injecxx",
+  ]
+}
+
+compiler_test("injecxx_compiler_test") {
+  sources = [
+    "main.cc",
   ]
 }

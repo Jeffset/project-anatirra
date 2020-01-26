@@ -51,7 +51,7 @@ class View : public base::RefCounted, public base::WeakReferenced {
   View();
   ~View() override;
 
-  void measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec);
+  void measure(MeasureSpec width_spec, MeasureSpec height_spec);
   void layout(const gfx::Rect& area);
   void colorize(render::ColorPalette& palette);
   NODISCARD render::BgColorState draw(render::Canvas& canvas);
@@ -101,7 +101,7 @@ class View : public base::RefCounted, public base::WeakReferenced {
   virtual void on_mouse_event(const input::MouseEvent& event);
   virtual void on_scroll_event(const input::ScrollEvent& event);
 
-  virtual void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec);
+  virtual void on_measure(MeasureSpec width_spec, MeasureSpec height_spec);
   virtual void on_layout();
   virtual void on_colorize(render::ColorPalette& palette);
   NODISCARD virtual render::BgColorState on_draw(render::Canvas& canvas);

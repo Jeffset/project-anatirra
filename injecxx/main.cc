@@ -1,11 +1,8 @@
-//
-// Created by jeffset on 12/24/19.
-//
+// COMPILER TEST EXPECTS: FAILS
 
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
 #include "injecxx/injecxx_context.hpp"
-#include "injecxx/meta_constructor.hpp"
 
 #include <iostream>
 #include <type_traits>
@@ -41,7 +38,7 @@ class Com0 {
 
   const char* d = "C0";
 
-  void p() { std::cout << "C0: " << c1_->d << '\n'; }
+  void p() { std::cout << "C0: " << c1_.get().d << '\n'; }
 
   MAKE_FULLY_STATIONAR(Com0);
 
@@ -167,10 +164,10 @@ int main() {
   if (&f.c2_ == &c2) {
     std::cout << "Addresses are the same (ok)\n";
   }
-  if (&f == &*lazyf) {
+  if (&f == &lazyf.get()) {
     std::cout << "Addresses are the same (ok)\n";
   }
-  lazyf->c2_.act();
+  lazyf.get().c2_.act();
 
   static_assert(ta<int, float>() == t<int> + t<float>);
 

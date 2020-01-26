@@ -43,12 +43,12 @@ enum NeedsLayoutMark : uint8_t {
 using NeedsLayoutMarkBin = std::underlying_type_t<NeedsLayoutMark>;
 
 MeasureSpec make_measure_spec(const LayoutSpec& layout,
-                              const MeasureSpec& parent_measure) noexcept;
+                              MeasureSpec parent_measure) noexcept;
 
-MeasureSpec shrink_measure_spec(const MeasureSpec& spec, gfx::dim_t dim) noexcept;
+MeasureSpec shrink_measure_spec(MeasureSpec spec, gfx::dim_t dim) noexcept;
 
 NeedsLayoutMarkBin make_layout_propagation_mask(const LayoutSpec& layout,
-                                                const MeasureSpec& parent_measure,
+                                                MeasureSpec parent_measure,
                                                 NeedsLayoutMarkBin mark) noexcept;
 
 inline auto measure_exactly_or(gfx::dim_t value) {

@@ -9,7 +9,7 @@
 namespace cursedui::view {
 
 MeasureSpec make_measure_spec(const LayoutSpec& layout,
-                              const MeasureSpec& parent_measure) noexcept {
+                              MeasureSpec parent_measure) noexcept {
   return std::visit(
       base::overloaded{
           [](LayoutExactly exactly) -> MeasureSpec {
@@ -36,7 +36,7 @@ MeasureSpec make_measure_spec(const LayoutSpec& layout,
       layout);
 }
 
-MeasureSpec shrink_measure_spec(const MeasureSpec& spec, gfx::dim_t dim) noexcept {
+MeasureSpec shrink_measure_spec(MeasureSpec spec, gfx::dim_t dim) noexcept {
   return std::visit(
       base::overloaded{
           [dim](MeasureExactly exactly) -> MeasureSpec {
@@ -51,7 +51,7 @@ MeasureSpec shrink_measure_spec(const MeasureSpec& spec, gfx::dim_t dim) noexcep
 }
 
 NeedsLayoutMarkBin make_layout_propagation_mask(const LayoutSpec& layout,
-                                                const MeasureSpec& parent_measure,
+                                                MeasureSpec parent_measure,
                                                 NeedsLayoutMarkBin mark) noexcept {
   return std::visit(
       base::overloaded{

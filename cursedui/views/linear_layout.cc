@@ -12,8 +12,8 @@
 
 namespace cursedui::view {
 
-void LinearLayout::on_measure(const MeasureSpec& width_spec,
-                              const MeasureSpec& height_spec) {
+void LinearLayout::on_measure(MeasureSpec width_spec,
+                              MeasureSpec height_spec) {
   const bool is_horizontal = orientation_ == HORIZONTAL;
   const MeasureSpec oriented_spec = is_horizontal ? width_spec : height_spec;
   const MeasureSpec orthogonal_spec = is_horizontal ? height_spec : width_spec;

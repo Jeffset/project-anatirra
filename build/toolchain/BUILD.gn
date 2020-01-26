@@ -6,7 +6,7 @@ template("toolchain_template") {
       depsformat = "gcc"
       description = "CC {{output}}"
       outputs = [
-        "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.o",
+        "{{source_out_dir}}/{{target_output_name}}/{{source_name_part}}.o",
       ]
     }
 
@@ -16,7 +16,7 @@ template("toolchain_template") {
       depsformat = "gcc"
       description = "CXX {{output}}"
       outputs = [
-        "{{source_out_dir}}/{{target_output_name}}.{{source_name_part}}.o",
+        "{{source_out_dir}}/{{target_output_name}}/{{source_name_part}}.o",
       ]
     }
 
@@ -93,4 +93,33 @@ toolchain_template("linux_clang") {
   opts_ = "-fcolor-diagnostics"
   cc = "clang $opts_"
   cxx = "clang++ $opts_"
+}
+
+toolchain("clang_compiler_test") {
+  toolchain_args = {
+    is_compiler_test = true
+  }
+
+  _runner = rebase_path("//build/scripts/compiler-test.py")
+  tool("cc") {
+    _compiler_command_line = "{{defines}} {{include_dirs}} {{cflags}} {{cflags_c}} -c {{source}} -o /tmp/tmp.o"
+    command = "python3 $_runner {{output}} clang $_compiler_command_line"
+    description = "TEST-CC {{output}}"
+    outputs = [
+      "{{source_out_dir}}/{{source_name_part}}.o.py",
+    ]
+  }
+
+  tool("cxx") {
+    _compiler_command_line = "{{defines}} {{include_dirs}} {{cflags}} {{cflags_cc}} -c {{source}} -o /tmp/tmp.o"
+    command = "python3 $_runner {{output}} clang++ $_compiler_command_line"
+    description = "TEST-CXX {{output}}"
+    outputs = [
+      "{{source_out_dir}}/{{source_name_part}}.o.py",
+    ]
+  }
+  tool("stamp") {
+    command = "touch {{output}}"
+    description = "STAMP {{output}}"
+  }
 }

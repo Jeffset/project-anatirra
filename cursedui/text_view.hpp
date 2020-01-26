@@ -39,7 +39,7 @@ class TextView : public View {
   bool focusable() const noexcept override { return true; }
 
  protected:
-  void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
+  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
   void on_colorize(render::ColorPalette& palette) override;
 

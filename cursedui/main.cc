@@ -1,4 +1,3 @@
-
 #include "cursedui/context.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/text_view.hpp"

@@ -7,6 +7,7 @@
 #include "injecxx/dependency_graph.hpp"
 #include "injecxx/injecxx.hpp"
 
+#include <optional>
 #include <utility>
 
 namespace base::injecxx {
@@ -14,12 +15,7 @@ namespace base::injecxx {
 namespace detail {
 
 template <class T>
-struct instance_holder {
-  bool initialized : 1;
-  unsigned char data[sizeof(T)];
-
-  instance_holder() noexcept : initialized(false) {}
-};
+using instance_holder = std::optional<T>;
 
 struct MissingDependency {};
 
@@ -30,21 +26,24 @@ constexpr bool is_plain_v = std::is_same_v<T, std::decay_t<T>>;
 
 template <typename... Ts>
 class context_impl : private detail::instance_holder<Ts>... {
-  static_assert((!std::is_copy_constructible_v<Ts> && ...) &&
-                    (!std::is_copy_assignable_v<Ts> && ...) &&
-                    (!std::is_move_assignable_v<Ts> && ...) &&
-                    (!std::is_move_constructible_v<Ts> && ...),
-                "All injectable components must not be copy/move "
-                "constructible/assignable");
-
  public:
   MAKE_FULLY_STATIONAR(context_impl);
 
- public:
-  static constexpr auto all_types() { return meta::ts<Ts...>; }
+  constexpr inline context_impl() noexcept {
+    constexpr auto all_unwrapped_types =
+        meta::map(meta::ts<Ts...>, [](auto t) { return detail::get_context_type(t); });
+
+    meta::for_each(all_unwrapped_types, [](auto t) {
+      using T = meta::ta_single_t<decltype(t)>;
+      static_assert(!std::is_copy_constructible_v<T> && !std::is_copy_assignable_v<T> &&
+                        !std::is_move_assignable_v<T> && !std::is_move_constructible_v<T>,
+                    "All injectable components must not be copy/move "
+                    "constructible/assignable");
+    });
+  }
 
  public:
-  context_impl() noexcept = default;
+  static constexpr auto all_types() { return meta::ts<Ts...>; }
 
   ~context_impl() noexcept {
     constexpr auto graph = detail::make_graph(all_types());
@@ -54,20 +53,17 @@ class context_impl : private detail::instance_holder<Ts>... {
       using T = meta::ta_single_t<decltype(type)>;
       if constexpr (type != meta::null_ta) {
         using provider_t = detail::instance_holder<T>;
-        if (provider_t::initialized) {
-          auto* data = reinterpret_cast<T*>(provider_t::data);
-          data->~T();
-        }
+        provider_t::reset();
       }
-      (void)this;  // |this| is actually used above, but clang
-                   // still emits a warning, so suppress it.
+      MARK_UNUSED(this);  // |this| is actually used above, but clang
+                          // still emits a warning, so suppress it.
     });
   }
 
   template <class T, class DelegatedContext, REQUIRES(detail::is_plain_v<T>)>
   decltype(auto) get(DelegatedContext& context) noexcept {
     constexpr auto requested_type = meta::t<T>;
-    constexpr auto type = detail::get_type(requested_type);
+    constexpr auto type = detail::get_dependency_type(requested_type);
     constexpr auto delegated_all_types = DelegatedContext::all_types();
     if constexpr (meta::contains(delegated_all_types, type)) {
       if constexpr (detail::is_lazy(requested_type)) {
@@ -97,29 +93,18 @@ class context_impl : private detail::instance_holder<Ts>... {
     });
   }
 
-  template <class DelegatedContext, class Dispatcher>
-  void dispatch(DelegatedContext& context, const Dispatcher& dispatcher) {
-    constexpr auto default_filter = [](auto t) {
-      using T = meta::ta_single_t<decltype(t)>;
-      return std::is_invocable_v<Dispatcher, T&> or
-             std::is_invocable_v<Dispatcher, T&, DelegatedContext&>;
-    };
-    dispatch(context, default_filter, dispatcher);
-  }
-
  private:
   template <class T, class DelegatedContext, class... Args>
   T& construct(DelegatedContext& context, meta::ta<Args...> args) noexcept {
     using provider_t = detail::instance_holder<T>;
-    if (!provider_t::initialized) {
+    if (!provider_t::has_value()) {
       if constexpr (!meta::contains(args, meta::null_ta)) {
         static_assert(std::is_nothrow_constructible_v<T, Args&...>,
                       "Component must be noexcept constructible");
       }
-      new (provider_t::data) T(context.template get<Args>()...);
-      provider_t::initialized = true;
+      provider_t::emplace(context.template get<Args>()...);
     }
-    return *reinterpret_cast<T*>(provider_t::data);
+    return provider_t::value();
   }
 
   template <class DelegatedContext, class T>
@@ -141,6 +126,12 @@ class context_wrapper {
     detail::make_graph(all_types()).check_for_missing_deps();
   }
 
+ private:
+  template <class, class...>
+  friend class context_wrapper;
+  template <typename...>
+  friend class context_impl;
+
   static constexpr auto all_types() {
     return ChildContext::all_types() + ParentContext::all_types();
   }
@@ -154,6 +145,7 @@ class context_wrapper {
     }
   }
 
+ public:
   template <class Filter, class Dispatcher>
   void dispatch(Filter filter, const Dispatcher& dispatcher) {
     // No parent context dispatch.
@@ -163,7 +155,12 @@ class context_wrapper {
   template <class Dispatcher>
   void dispatch(const Dispatcher& dispatcher) {
     // No parent context dispatch.
-    context_.dispatch(*this, dispatcher);
+    constexpr auto default_filter = [](auto t) {
+      using T = meta::ta_single_t<decltype(t)>;
+      return std::is_invocable_v<Dispatcher, T&> or
+             std::is_invocable_v<Dispatcher, T&, context_wrapper&>;
+    };
+    context_.dispatch(*this, default_filter, dispatcher);
   }
 
   MAKE_FULLY_STATIONAR(context_wrapper);
@@ -182,6 +179,12 @@ class context_wrapper<void, Ts...> {
     detail::make_graph(all_types()).check_for_missing_deps();
   }
 
+ private:
+  template <class, class...>
+  friend class context_wrapper;
+  template <typename...>
+  friend class context_impl;
+
   static constexpr auto all_types() { return Context::all_types(); }
 
   template <class T>
@@ -189,6 +192,7 @@ class context_wrapper<void, Ts...> {
     return context_.template get<T>(*this);
   }
 
+ public:
   template <class Filter, class Dispatcher>
   void dispatch(Filter filter, const Dispatcher& dispatcher) {
     context_.dispatch(*this, filter, dispatcher);
@@ -196,7 +200,12 @@ class context_wrapper<void, Ts...> {
 
   template <class Dispatcher>
   void dispatch(const Dispatcher& dispatcher) {
-    context_.dispatch(*this, dispatcher);
+    constexpr auto default_filter = [](auto t) {
+      using T = meta::ta_single_t<decltype(t)>;
+      return std::is_invocable_v<Dispatcher, T&> or
+             std::is_invocable_v<Dispatcher, T&, context_wrapper&>;
+    };
+    context_.dispatch(*this, default_filter, dispatcher);
   }
 
   MAKE_FULLY_STATIONAR(context_wrapper);

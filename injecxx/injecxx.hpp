@@ -35,9 +35,7 @@ class lazy {
  public:
   using type = T;
 
-  inline T* operator->() noexcept { return &getter_(); }
-
-  inline T& operator*() noexcept { return getter_(); }
+  inline T& get() noexcept { return getter_(); }
 
   ~lazy() noexcept = default;
 

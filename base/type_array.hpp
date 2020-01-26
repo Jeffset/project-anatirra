@@ -172,6 +172,11 @@ constexpr auto is_type() {
   return [](auto t) { return std::is_same_v<ta_single_t<decltype(t)>, T>; };
 }
 
+template <typename Base>
+constexpr auto is_base_of(ta<Base>) {
+  return [](auto t) { return std::is_base_of_v<Base, ta_single_t<decltype(t)>>; };
+}
+
 template <class... Ts>
 constexpr auto filter_not_null(ta<Ts...> array) {
   return filter(array, not_type(null_ta));

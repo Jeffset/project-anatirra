@@ -2,6 +2,7 @@
 #define INJECXX_DEPENDENCY_GRAPH_HPP
 
 #include "base/type_array.hpp"
+#include "injecxx/injecxx.hpp"
 #include "injecxx/meta_constructor.hpp"
 
 namespace base::injecxx::detail {
@@ -17,12 +18,20 @@ constexpr bool is_lazy(meta::ta<T>) {
 }
 
 template <class T>
-constexpr auto get_type(meta::ta<T> type) {
+constexpr auto get_dependency_type(meta::ta<T> type) {
   if constexpr (is_lazy(type)) {
     return meta::t<typename T::type>;
   } else {
     return type;
   }
+}
+
+template <class T>
+constexpr auto get_context_type(meta::ta<T> type) {
+  static_assert(!is_lazy(type),
+                "Improper use of lazy<> decorator: use it in component's constructors,"
+                "not in a context types list.");
+  return type;
 }
 
 template <typename... Leaves>
@@ -47,8 +56,9 @@ class dependency_graph {
   MissingDependency(meta::ta<Ts...>)->MissingDependency<Ts...>;
 
   static constexpr auto all_types = meta::filter(meta::ts<Leaves...>, [](auto type) {
-    constexpr auto all = meta::ts<Leaves...>;
-    constexpr auto deps = meta::deduce_constructor_arg_types(type, all - type);
+    constexpr auto all_provided =
+        meta::map(meta::ts<Leaves...>, [](auto t) { return get_context_type(t); });
+    constexpr auto deps = meta::deduce_constructor_arg_types(type, all_provided - type);
     return deps != meta::error_ta;
   });
 
@@ -57,8 +67,10 @@ class dependency_graph {
     if constexpr (type == meta::null_ta) {
       return meta::empty_ta;
     } else {
-      constexpr auto deps =
-          meta::deduce_constructor_arg_types(get_type(type), all_types - meta::t<T>);
+      constexpr auto all_provided_deps =
+          meta::map(all_types - type, [](auto t) { return get_context_type(t); });
+      constexpr auto deps = meta::deduce_constructor_arg_types(get_dependency_type(type),
+                                                               all_provided_deps);
       if constexpr (deps == meta::error_ta) {
         return meta::empty_ta;
       } else {
@@ -85,7 +97,7 @@ class dependency_graph {
   template <class T>
   static constexpr auto new_stack_frame(meta::ta<T> type) {
     constexpr auto deps =
-        meta::map(dependencies(type), [](auto t) { return get_type(t); });
+        meta::map(dependencies(type), [](auto t) { return get_dependency_type(t); });
     return meta::wrap(type + deps);
   }
 

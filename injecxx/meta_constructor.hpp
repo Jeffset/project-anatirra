@@ -8,9 +8,13 @@
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
 
+#include <cmath>
+
 namespace base::meta {
 
 namespace detail {
+
+constexpr int MAX_ALLOWED_ARGS = 32;
 
 template <class T>
 struct specific_matcher {
@@ -18,7 +22,7 @@ struct specific_matcher {
 };
 
 template <class Exclude, class... Ts>
-struct matcher : public specific_matcher<Ts>... {
+struct matcher /*: public specific_matcher<Ts>...*/ {
   template <class T,
             typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, Exclude>, T>>
   operator T&();
@@ -36,7 +40,7 @@ constexpr auto gen_constructor_arg_placeholders_impl(ta<TypesPool...> types_pool
   if constexpr (is_constructible(subject, ms)) {
     return ms;
   } else {
-    if constexpr (meta::size(ms) >= 32) {
+    if constexpr (meta::size(ms) >= MAX_ALLOWED_ARGS) {
       return empty_ta;
     } else {
       constexpr auto v1_branch = gen_constructor_arg_placeholders_impl(
@@ -68,8 +72,11 @@ constexpr auto gen_constructor_arg_types(ta<Subject> subject,
     }
   }() + ... + empty_ta);
   constexpr auto deduced_or_null = [deduced]() {
-    if constexpr (deduced == empty_ta || size(deduced) > 1) {
+    if constexpr (deduced == empty_ta) {
       return meta::null_ta;
+    } else if constexpr (size(deduced) > 1) {
+      return meta::null_ta;  // TODO: this is not missing dependency, this is ambiguous
+                             // dependency - report it specificly.
     } else {
       return deduced;
     }

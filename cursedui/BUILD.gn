@@ -42,7 +42,6 @@ shared_library("cursedui") {
     "rendering.hpp",
     "text_view.cc",
     "text_view.hpp",
-    "util.hpp",
     "view.cc",
     "view.hpp",
     "view_group.cc",

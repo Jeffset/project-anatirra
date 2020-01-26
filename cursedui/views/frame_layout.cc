@@ -5,8 +5,8 @@
 
 namespace cursedui::view {
 
-void FrameLayout::on_measure(const MeasureSpec& width_spec,
-                             const MeasureSpec& height_spec) {
+void FrameLayout::on_measure(MeasureSpec width_spec,
+                             MeasureSpec height_spec) {
   const auto count = child_count();
   gfx::Size size{};
   for (int i = 0; i < count; ++i) {

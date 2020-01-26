@@ -46,7 +46,7 @@ class LinearLayout : public ViewGroup {
   bool check_layout_params(view::LayoutParams* params) override;
 
  protected:
-  void on_measure(const MeasureSpec& width_spec, const MeasureSpec& height_spec) override;
+  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
 
  private:

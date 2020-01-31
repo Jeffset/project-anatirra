@@ -46,7 +46,7 @@ template("compiler_test") {
   }
   group(target_name) {
     deps = [
-      ":$test_source_set_(//build/toolchain:clang_compiler_test)",
+      ":$test_source_set_(//build/compiler-test:clang_compiler_test)",
     ]
   }
 }

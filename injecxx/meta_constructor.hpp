@@ -10,7 +10,9 @@
 
 #include <cmath>
 
-namespace base::meta {
+namespace injecxx::detail {
+
+using namespace base;
 
 namespace detail {
 
@@ -29,22 +31,22 @@ struct matcher /*: public specific_matcher<Ts>...*/ {
 };
 
 template <class Subject, class... Ms>
-constexpr bool is_constructible(ta<Subject>, ta<Ms...> ms) {
+constexpr bool is_constructible(meta::ta<Subject>, meta::ta<Ms...> ms) {
   return ms != meta::empty_ta && std::is_constructible_v<Subject, Ms...>;
 }
 
 template <class Subject, class... Ms, class... TypesPool>
-constexpr auto gen_constructor_arg_placeholders_impl(ta<TypesPool...> types_pool,
-                                                     ta<Subject> subject,
-                                                     ta<Ms...> ms) {
+constexpr auto gen_constructor_arg_placeholders_impl(meta::ta<TypesPool...> types_pool,
+                                                     meta::ta<Subject> subject,
+                                                     meta::ta<Ms...> ms) {
   if constexpr (is_constructible(subject, ms)) {
     return ms;
   } else {
-    if constexpr (meta::size(ms) >= MAX_ALLOWED_ARGS) {
-      return empty_ta;
+    if constexpr (size(ms) >= MAX_ALLOWED_ARGS) {
+      return meta::empty_ta;
     } else {
       constexpr auto v1_branch = gen_constructor_arg_placeholders_impl(
-          types_pool, subject, ms + t<matcher<Subject, TypesPool...>>);
+          types_pool, subject, ms + meta::t<matcher<Subject, TypesPool...>>);
       return v1_branch;
     }
   }
@@ -57,22 +59,22 @@ constexpr auto gen_constructor_arg_placeholders(meta::ta<Subject> subject,
 }
 
 template <class Subject, class... TypesPool, class... Args, class... Ms>
-constexpr auto gen_constructor_arg_types(ta<Subject> subject,
-                                         ta<TypesPool...> types_pool,
-                                         ta<Args...> deduced_args,
-                                         ta<Ms...> placeholders) {
+constexpr auto gen_constructor_arg_types(meta::ta<Subject> subject,
+                                         meta::ta<TypesPool...> types_pool,
+                                         meta::ta<Args...> deduced_args,
+                                         meta::ta<Ms...> placeholders) {
   constexpr auto deduced = ([]() {
     if constexpr (std::is_constructible_v<Subject, Args&..., TypesPool&, Ms...>) {
-      return t<TypesPool>;
-    } else if constexpr (std::is_constructible_v<Subject, Args&...,
-                                                 injecxx::lazy<TypesPool>, Ms...>) {
-      return t<injecxx::lazy<TypesPool>>;
+      return meta::t<TypesPool>;
+    } else if constexpr (std::is_constructible_v<Subject, Args&..., lazy<TypesPool>,
+                                                 Ms...>) {
+      return meta::t<lazy<TypesPool>>;
     } else {
-      return empty_ta;
+      return meta::empty_ta;
     }
-  }() + ... + empty_ta);
+  }() + ... + meta::empty_ta);
   constexpr auto deduced_or_null = [deduced]() {
-    if constexpr (deduced == empty_ta) {
+    if constexpr (deduced == meta::empty_ta) {
       return meta::null_ta;
     } else if constexpr (size(deduced) > 1) {
       return meta::null_ta;  // TODO: this is not missing dependency, this is ambiguous
@@ -82,7 +84,7 @@ constexpr auto gen_constructor_arg_types(ta<Subject> subject,
     }
   }();
   constexpr auto new_deduced_args = deduced_args + deduced_or_null;
-  if constexpr (placeholders == empty_ta) {
+  if constexpr (placeholders == meta::empty_ta) {
     return new_deduced_args;
   } else {
     return gen_constructor_arg_types(subject, types_pool, new_deduced_args,
@@ -93,29 +95,29 @@ constexpr auto gen_constructor_arg_types(ta<Subject> subject,
 }  // namespace detail
 
 template <class Subject, class... TypesPool>
-constexpr auto deduce_constructor_arg_types(ta<Subject> subject,
-                                            ta<TypesPool...> types_pool) {
+constexpr auto deduce_constructor_arg_types(meta::ta<Subject> subject,
+                                            meta::ta<TypesPool...> types_pool) {
   if constexpr (std::is_default_constructible_v<Subject>) {
-    return empty_ta;
+    return meta::empty_ta;
   } else {
     constexpr auto placeholders =
         detail::gen_constructor_arg_placeholders(subject, types_pool);
-    if constexpr (placeholders == empty_ta) {
-      static_assert(placeholders != empty_ta,
+    if constexpr (placeholders == meta::empty_ta) {
+      static_assert(placeholders != meta::empty_ta,
                     "Unable to detect any usable constructors. This may be "
                     "because there's no "
                     "accessible constructors at all, or constructor is declared "
                     "in some really unexpected way, or there is a constructor with more "
                     "than 32 arguments which is a little to much. Try to correct "
                     "these problems and compile again.");
-      return error_ta;
+      return meta::error_ta;
     } else {
-      return detail::gen_constructor_arg_types(subject, types_pool, empty_ta,
+      return detail::gen_constructor_arg_types(subject, types_pool, meta::empty_ta,
                                                decompose_tail(placeholders));
     }
   }
 }
 
-}  // namespace base::meta
+}  // namespace injecxx::detail
 
 #endif  // INJECXX_META_CONSTRUCTOR_HPP

@@ -4,7 +4,7 @@
 
 #include <variant>
 
-using namespace base::injecxx;
+using namespace injecxx;
 
 class Recorder {
  public:

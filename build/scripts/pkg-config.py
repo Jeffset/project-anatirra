@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import subprocess as sp
 import argparse
 import json
@@ -7,8 +9,7 @@ def parse_args():
   parser = argparse.ArgumentParser()
   parser.add_argument('packages', nargs="+")
   parser.add_argument('--at-least-version', required=False)
-  args = parser.parse_args()
-  return args
+  return parser.parse_args()
 
 
 def call_pkg_config(packages, flag):
@@ -17,7 +18,7 @@ def call_pkg_config(packages, flag):
   return list(map(str, output.split()))
 
 
-if __name__ == "__main__":
+def main():
   args = parse_args()
   if args.at_least_version:
     call_pkg_config(args.packages, 'atleast-version='
@@ -29,3 +30,7 @@ if __name__ == "__main__":
   data['libs'] = libs
   data['lib_dirs'] = call_pkg_config(args.packages, 'libs-only-L')
   print(json.dumps(data))
+
+
+if __name__ == "__main__":
+  main()

@@ -1,4 +1,4 @@
-// COMPILER TEST EXPECTS: FAILS
+#error COMPILER TEST
 
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
@@ -8,7 +8,7 @@
 #include <type_traits>
 
 using namespace base;
-using namespace base::injecxx;
+using namespace injecxx;
 
 class Foo;
 
@@ -126,6 +126,10 @@ void consume_foo(Foo& foo, Context& context) {
 int main() {
   using namespace meta;
 
+#pragma tests begin
+
+#pragma test "Test1" must compile
+
   A a;
   a.act();
   B b;
@@ -157,6 +161,8 @@ int main() {
   static_assert(injecxx::detail::is_lazy(meta::t<lazy<int>>));
   static_assert(!injecxx::detail::is_lazy(meta::t<int>));
 
+#pragma test "Test2" must fail with "use of undeclared identifier 'ctx'"
+
   auto lazyf = ctx.get<lazy<Foo>>();
   auto& f = ctx.get<Foo>();
   ctx.get<ComG>();
@@ -180,4 +186,7 @@ int main() {
   constexpr auto filtered =
       filter(ta<int, short, float>(), meta::predicate<std::is_integral>());
   static_assert(filtered == ta<int, short>());
+
+#pragma tests end
+
 }

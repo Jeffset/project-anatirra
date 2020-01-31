@@ -5,7 +5,7 @@
 
 #include "base/macro.hpp"
 
-namespace base::injecxx {
+namespace injecxx {
 
 namespace detail {
 
@@ -46,6 +46,6 @@ class lazy {
   detail::function_lite<T&> getter_;
 };
 
-}  // namespace base::injecxx
+}  // namespace injecxx
 
 #endif  // INJECXX_INJECXX_HPP

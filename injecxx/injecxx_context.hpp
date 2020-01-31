@@ -10,7 +10,9 @@
 #include <optional>
 #include <utility>
 
-namespace base::injecxx {
+namespace injecxx {
+
+using namespace base;
 
 namespace detail {
 
@@ -224,6 +226,6 @@ auto make_context(ParentContext& parent) {
   return context_wrapper<ParentContext, Ts...>{parent};
 }
 
-}  // namespace base::injecxx
+}  // namespace injecxx
 
 #endif  // INJECXX_INJECXX_CONTEXT_HPP

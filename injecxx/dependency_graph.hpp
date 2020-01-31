@@ -5,7 +5,9 @@
 #include "injecxx/injecxx.hpp"
 #include "injecxx/meta_constructor.hpp"
 
-namespace base::injecxx::detail {
+namespace injecxx::detail {
+
+using namespace base;
 
 template <class T>
 constexpr bool is_lazy(meta::ta<lazy<T>>) {
@@ -58,7 +60,7 @@ class dependency_graph {
   static constexpr auto all_types = meta::filter(meta::ts<Leaves...>, [](auto type) {
     constexpr auto all_provided =
         meta::map(meta::ts<Leaves...>, [](auto t) { return get_context_type(t); });
-    constexpr auto deps = meta::deduce_constructor_arg_types(type, all_provided - type);
+    constexpr auto deps = deduce_constructor_arg_types(type, all_provided - type);
     return deps != meta::error_ta;
   });
 
@@ -69,8 +71,8 @@ class dependency_graph {
     } else {
       constexpr auto all_provided_deps =
           meta::map(all_types - type, [](auto t) { return get_context_type(t); });
-      constexpr auto deps = meta::deduce_constructor_arg_types(get_dependency_type(type),
-                                                               all_provided_deps);
+      constexpr auto deps =
+          deduce_constructor_arg_types(get_dependency_type(type), all_provided_deps);
       if constexpr (deps == meta::error_ta) {
         return meta::empty_ta;
       } else {
@@ -167,6 +169,6 @@ constexpr auto make_graph(meta::ta<Ts...>) {
   return dependency_graph<Ts...>{};
 }
 
-}  // namespace base::injecxx::detail
+}  // namespace injecxx::detail
 
 #endif  // INJECXX_DEPENDENCY_GRAPH_HPP

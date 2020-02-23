@@ -86,11 +86,11 @@ bool ViewGroup::intercept_scroll_event(const input::ScrollEvent&) {
   return false;
 }
 
-std::unique_ptr<LayoutParams> ViewGroup::create_layout_params() {
+std::unique_ptr<LayoutParams> ViewGroup::create_layout_params() const noexcept {
   return std::make_unique<LayoutParams>(LayoutWrapContent{}, LayoutWrapContent{});
 }
 
-bool ViewGroup::check_layout_params(LayoutParams* params) {
+bool ViewGroup::check_layout_params(LayoutParams* params) const noexcept {
   return params->tag() == LayoutParams::TAG;
 }
 

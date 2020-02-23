@@ -42,8 +42,8 @@ class LinearLayout : public ViewGroup {
 
   void set_orientation(Orientation orientation) noexcept;
 
-  std::unique_ptr<view::LayoutParams> create_layout_params() override;
-  bool check_layout_params(view::LayoutParams* params) override;
+  std::unique_ptr<view::LayoutParams> create_layout_params() const noexcept override;
+  bool check_layout_params(view::LayoutParams* params) const noexcept override;
 
  protected:
   void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;

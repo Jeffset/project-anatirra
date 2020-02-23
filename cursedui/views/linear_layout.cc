@@ -12,8 +12,7 @@
 
 namespace cursedui::view {
 
-void LinearLayout::on_measure(MeasureSpec width_spec,
-                              MeasureSpec height_spec) {
+void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   const bool is_horizontal = orientation_ == HORIZONTAL;
   const MeasureSpec oriented_spec = is_horizontal ? width_spec : height_spec;
   const MeasureSpec orthogonal_spec = is_horizontal ? height_spec : width_spec;
@@ -130,11 +129,11 @@ void LinearLayout::on_layout() {
   }
 }
 
-std::unique_ptr<view::LayoutParams> LinearLayout::create_layout_params() {
+std::unique_ptr<view::LayoutParams> LinearLayout::create_layout_params() const noexcept {
   return std::make_unique<LayoutParams>(LayoutWrapContent{}, LayoutWrapContent{});
 }
 
-bool LinearLayout::check_layout_params(view::LayoutParams* params) {
+bool LinearLayout::check_layout_params(view::LayoutParams* params) const noexcept {
   return params->tag() == LayoutParams::TAG;
 }
 

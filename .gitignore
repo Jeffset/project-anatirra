@@ -4,3 +4,4 @@
 # Intellij.
 .idea/
 
+.clangd/

@@ -42,8 +42,8 @@ class ViewGroup : public View {
   virtual bool intercept_mouse_event(const input::MouseEvent& event);
   virtual bool intercept_scroll_event(const input::ScrollEvent& event);
 
-  virtual std::unique_ptr<LayoutParams> create_layout_params();
-  virtual bool check_layout_params(LayoutParams* params);
+  virtual std::unique_ptr<LayoutParams> create_layout_params() const noexcept;
+  virtual bool check_layout_params(LayoutParams* params) const noexcept;
 
   void visit_down(ViewTreeVisitor& visitor) override;
 
@@ -52,8 +52,7 @@ class ViewGroup : public View {
  protected:
   void on_tree_host_set() override;
 
-  void on_measure(MeasureSpec width_spec,
-                  MeasureSpec height_spec) override = 0;
+  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override = 0;
   void on_layout() override = 0;
   void on_colorize(render::ColorPalette& palette) override;
   render::BgColorState on_draw(render::Canvas& canvas) override;

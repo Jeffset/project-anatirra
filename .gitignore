@@ -1,5 +1,5 @@
 # GN build.
-/out/
+/src/out/
 
 # Intellij.
 .idea/

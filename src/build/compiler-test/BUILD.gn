@@ -20,4 +20,14 @@ toolchain("clang_compiler_test") {
     command = "touch {{output}}"
     description = "STAMP {{output}}"
   }
+
+  tool("link") {
+    outfile = "{{target_output_name}}{{output_extension}}"
+    command = "$_runner link {{inputs}} -o $outfile"
+    description = "TEST-LINK $outfile"
+    default_output_dir = "{{root_out_dir}}"
+    outputs = [
+      outfile,
+    ]
+  }
 }

@@ -5,3 +5,7 @@
 .idea/
 
 .clangd/
+
+/compile_commands.json
+
+__pycache__/

@@ -32,9 +32,9 @@ template("gtest_binary") {
 }
 
 template("compiler_test") {
-  test_source_set_ = "${target_name}__test_source_set"
+  test_source_set_ = "${target_name}__runner"
   if (is_compiler_test) {
-    source_set(test_source_set_) {
+    executable(test_source_set_) {
       forward_variables_from(invoker,
                              [
                                "sources",

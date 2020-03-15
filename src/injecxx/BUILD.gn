@@ -24,7 +24,7 @@ gtest_binary("injecxx_tests") {
   ]
 }
 
-compiler_test("injecxx_compiler_test") {
+compiler_test("injecxx_compiler_tests") {
   sources = [
     "main.cc",
   ]

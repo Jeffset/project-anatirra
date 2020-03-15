@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/26/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef BASE_TYPE_ARRAY_HPP
-#define BASE_TYPE_ARRAY_HPP
+#ifndef ANATIRRA_SRC_BASE_TYPE_ARRAY
+#define ANATIRRA_SRC_BASE_TYPE_ARRAY
 
 #include <type_traits>
 
@@ -184,4 +184,4 @@ constexpr auto filter_not_null(ta<Ts...> array) {
 
 }  // namespace base::meta
 
-#endif  // BASE_TYPE_ARRAY_HPP
+#endif  // ANATIRRA_SRC_BASE_TYPE_ARRAY

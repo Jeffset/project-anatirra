@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_INJECXX_META_CONSTRUCTOR
-#define ANATIRRA_INJECXX_META_CONSTRUCTOR
+#ifndef ANATIRRA_SRC_INJECXX_META_CONSTRUCTOR
+#define ANATIRRA_SRC_INJECXX_META_CONSTRUCTOR
 
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
@@ -120,4 +120,4 @@ constexpr auto deduce_constructor_arg_types(meta::ta<Subject> subject,
 
 }  // namespace injecxx::detail
 
-#endif  // ANATIRRA_INJECXX_META_CONSTRUCTOR
+#endif  // ANATIRRA_SRC_INJECXX_META_CONSTRUCTOR

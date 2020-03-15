@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_CURSEDUI_CONTEXT
-#define ANATIRRA_CURSEDUI_CONTEXT
+#ifndef ANATIRRA_SRC_CURSEDUI_CONTEXT
+#define ANATIRRA_SRC_CURSEDUI_CONTEXT
 
 #include "base/macro.hpp"
 #include "cursedui/dim.hpp"
@@ -38,4 +38,4 @@ class Context final {
 
 }  // namespace cursedui
 
-#endif  // ANATIRRA_CURSEDUI_CONTEXT
+#endif  // ANATIRRA_SRC_CURSEDUI_CONTEXT

@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/15/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef BASE_UTIL_HPP
-#define BASE_UTIL_HPP
+#ifndef ANATIRRA_SRC_BASE_UTIL
+#define ANATIRRA_SRC_BASE_UTIL
 
 #include <memory>
 #include <optional>
@@ -43,4 +43,4 @@ constexpr auto identity_map = [](T v) { return v; };
 
 }  // namespace base
 
-#endif  // BASE_UTIL_HPP
+#endif  // ANATIRRA_SRC_BASE_UTIL

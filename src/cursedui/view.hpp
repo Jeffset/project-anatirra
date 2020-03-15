@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_CURSEDUI_VIEW
-#define ANATIRRA_CURSEDUI_VIEW
+#ifndef ANATIRRA_SRC_CURSEDUI_VIEW
+#define ANATIRRA_SRC_CURSEDUI_VIEW
 
 #include "base/macro.hpp"
 #include "base/nullable.hpp"
@@ -139,4 +139,4 @@ class ViewTreeVisitor {
 
 }  // namespace cursedui::view
 
-#endif  // ANATIRRA_CURSEDUI_VIEW
+#endif  // ANATIRRA_SRC_CURSEDUI_VIEW

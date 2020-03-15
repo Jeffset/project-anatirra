@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_CURSEDUI_COLOR
-#define ANATIRRA_CURSEDUI_COLOR
+#ifndef ANATIRRA_SRC_CURSEDUI_COLOR
+#define ANATIRRA_SRC_CURSEDUI_COLOR
 
 #include "base/ref_ptr.hpp"
 
@@ -77,4 +77,4 @@ using BgColorState = ColorState2;
 
 }  // namespace cursedui::render
 
-#endif  // ANATIRRA_CURSEDUI_COLOR
+#endif  // ANATIRRA_SRC_CURSEDUI_COLOR

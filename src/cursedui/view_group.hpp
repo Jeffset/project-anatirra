@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_CURSEDUI_VIEW_GROUP
-#define ANATIRRA_CURSEDUI_VIEW_GROUP
+#ifndef ANATIRRA_SRC_CURSEDUI_VIEW_GROUP
+#define ANATIRRA_SRC_CURSEDUI_VIEW_GROUP
 
 #include "base/macro.hpp"
 #include "cursedui/color.hpp"
@@ -84,4 +84,4 @@ class LayoutParams {
 
 }  // namespace cursedui::view
 
-#endif  // ANATIRRA_CURSEDUI_VIEW_GROUP
+#endif  // ANATIRRA_SRC_CURSEDUI_VIEW_GROUP

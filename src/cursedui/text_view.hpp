@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_CURSEDUI_TEXT_VIEW
-#define ANATIRRA_CURSEDUI_TEXT_VIEW
+#ifndef ANATIRRA_SRC_CURSEDUI_TEXT_VIEW
+#define ANATIRRA_SRC_CURSEDUI_TEXT_VIEW
 
 #include "cursedui/view.hpp"
 
@@ -68,4 +68,4 @@ class TextView : public View {
 
 }  // namespace cursedui::view
 
-#endif  // ANATIRRA_CURSEDUI_TEXT_VIEW
+#endif  // ANATIRRA_SRC_CURSEDUI_TEXT_VIEW

@@ -1,5 +1,9 @@
-#ifndef NULLABLE_HPP
-#define NULLABLE_HPP
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
+#ifndef ANATIRRA_SRC_BASE_NULLABLE
+#define ANATIRRA_SRC_BASE_NULLABLE
 
 #include "base/macro.hpp"
 
@@ -66,4 +70,4 @@ bool operator!=(T* a, nullable<T> b) {
 
 }  // namespace base
 
-#endif  // NULLABLE_HPP
+#endif  // ANATIRRA_SRC_BASE_NULLABLE

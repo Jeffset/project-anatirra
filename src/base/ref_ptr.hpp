@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/15/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef BASE_REF_PTR_HPP
-#define BASE_REF_PTR_HPP
+#ifndef ANATIRRA_SRC_BASE_REF_PTR
+#define ANATIRRA_SRC_BASE_REF_PTR
 
 #include "base/macro.hpp"
 
@@ -225,4 +225,4 @@ weak_ref(ref_ptr<D>&)->weak_ref<const D>;
 
 }  // namespace base
 
-#endif  // BASE_REF_PTR_HPP
+#endif  // ANATIRRA_SRC_BASE_REF_PTR

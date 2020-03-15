@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/7/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef BASE_MACRO_HPP
-#define BASE_MACRO_HPP
+#ifndef ANATIRRA_SRC_BASE_MACRO
+#define ANATIRRA_SRC_BASE_MACRO
 
 #define MARK_UNUSED(expr) (void)(expr)
 
@@ -35,4 +35,4 @@
 
 #define PIMPL_DEFINE(Class) struct Class::Class##Impl
 
-#endif  // BASE_MACRO_HPP
+#endif  // ANATIRRA_SRC_BASE_MACRO

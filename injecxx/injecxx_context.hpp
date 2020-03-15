@@ -1,7 +1,9 @@
-// Created by jeffset on 12/23/19.
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef INJECXX_INJECXX_CONTEXT_HPP
-#define INJECXX_INJECXX_CONTEXT_HPP
+#ifndef ANATIRRA_INJECXX_INJECXX_CONTEXT
+#define ANATIRRA_INJECXX_INJECXX_CONTEXT
 
 #include "base/macro.hpp"
 #include "injecxx/dependency_graph.hpp"
@@ -228,4 +230,4 @@ auto make_context(ParentContext& parent) {
 
 }  // namespace injecxx
 
-#endif  // INJECXX_INJECXX_CONTEXT_HPP
+#endif  // ANATIRRA_INJECXX_INJECXX_CONTEXT

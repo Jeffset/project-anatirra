@@ -1,5 +1,9 @@
-#ifndef FRAMELAYOUT_HPP
-#define FRAMELAYOUT_HPP
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
+#ifndef ANATIRRA_CURSEDUI_VIEWS_FRAME_LAYOUT
+#define ANATIRRA_CURSEDUI_VIEWS_FRAME_LAYOUT
 
 #include "cursedui/view_group.hpp"
 
@@ -13,4 +17,4 @@ class FrameLayout : public ViewGroup {
 
 }  // namespace cursedui::view
 
-#endif  // FRAMELAYOUT_HPP
+#endif  // ANATIRRA_CURSEDUI_VIEWS_FRAME_LAYOUT

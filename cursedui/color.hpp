@@ -1,5 +1,9 @@
-#ifndef COLOR_HPP
-#define COLOR_HPP
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
+#ifndef ANATIRRA_CURSEDUI_COLOR
+#define ANATIRRA_CURSEDUI_COLOR
 
 #include "base/ref_ptr.hpp"
 
@@ -73,4 +77,4 @@ using BgColorState = ColorState2;
 
 }  // namespace cursedui::render
 
-#endif  // COLOR_HPP
+#endif  // ANATIRRA_CURSEDUI_COLOR

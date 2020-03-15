@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/15/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef CURSEDUI_LINEAR_LAYOUT_HPP
-#define CURSEDUI_LINEAR_LAYOUT_HPP
+#ifndef ANATIRRA_CURSEDUI_VIEWS_LINEAR_LAYOUT
+#define ANATIRRA_CURSEDUI_VIEWS_LINEAR_LAYOUT
 
 #include "cursedui/view_group.hpp"
 
@@ -55,4 +55,4 @@ class LinearLayout : public ViewGroup {
 
 }  // namespace cursedui::view
 
-#endif  // CURSEDUI_LINEAR_LAYOUT_HPP
+#endif  // ANATIRRA_CURSEDUI_VIEWS_LINEAR_LAYOUT

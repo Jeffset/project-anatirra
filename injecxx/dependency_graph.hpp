@@ -1,5 +1,9 @@
-#ifndef INJECXX_DEPENDENCY_GRAPH_HPP
-#define INJECXX_DEPENDENCY_GRAPH_HPP
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
+#ifndef ANATIRRA_INJECXX_DEPENDENCY_GRAPH
+#define ANATIRRA_INJECXX_DEPENDENCY_GRAPH
 
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
@@ -171,4 +175,4 @@ constexpr auto make_graph(meta::ta<Ts...>) {
 
 }  // namespace injecxx::detail
 
-#endif  // INJECXX_DEPENDENCY_GRAPH_HPP
+#endif  // ANATIRRA_INJECXX_DEPENDENCY_GRAPH

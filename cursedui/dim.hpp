@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/9/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef CURSEDUI_GFX_HPP
-#define CURSEDUI_GFX_HPP
+#ifndef ANATIRRA_CURSEDUI_DIM
+#define ANATIRRA_CURSEDUI_DIM
 
 #include "base/macro.hpp"
 
@@ -64,4 +64,4 @@ gfx::Rect gravitated_rect(const gfx::Rect& rect, gfx::Size size, Gravity gravity
 
 }  // namespace cursedui::gfx
 
-#endif  // CURSEDUI_GFX_HPP
+#endif  // ANATIRRA_CURSEDUI_DIM

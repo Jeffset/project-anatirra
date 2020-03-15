@@ -1,3 +1,7 @@
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
 #include "cursedui/views/frame_layout.hpp"
 
 #include "base/util.hpp"
@@ -5,8 +9,7 @@
 
 namespace cursedui::view {
 
-void FrameLayout::on_measure(MeasureSpec width_spec,
-                             MeasureSpec height_spec) {
+void FrameLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   const auto count = child_count();
   gfx::Size size{};
   for (int i = 0; i < count; ++i) {

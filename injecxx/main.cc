@@ -188,5 +188,4 @@ int main() {
   static_assert(filtered == ta<int, short>());
 
 #pragma tests end
-
 }

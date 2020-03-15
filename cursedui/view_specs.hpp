@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/15/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef CURSEDUI_VIEW_SPECS_HPP
-#define CURSEDUI_VIEW_SPECS_HPP
+#ifndef ANATIRRA_CURSEDUI_VIEW_SPECS
+#define ANATIRRA_CURSEDUI_VIEW_SPECS
 
 #include "base/util.hpp"
 #include "cursedui/dim.hpp"
@@ -58,4 +58,4 @@ inline auto measure_exactly_or(gfx::dim_t value) {
 
 }  // namespace cursedui::view
 
-#endif  // CURSEDUI_VIEW_SPECS_HPP
+#endif  // ANATIRRA_CURSEDUI_VIEW_SPECS

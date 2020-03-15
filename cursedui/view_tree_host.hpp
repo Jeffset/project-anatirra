@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/15/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef CURSEDUI_VIEW_ROOT_HPP
-#define CURSEDUI_VIEW_ROOT_HPP
+#ifndef ANATIRRA_CURSEDUI_VIEW_TREE_HOST
+#define ANATIRRA_CURSEDUI_VIEW_TREE_HOST
 
 #include "base/macro.hpp"
 #include "cursedui/input.hpp"
@@ -48,4 +48,4 @@ class ViewTreeHost {
 
 }  // namespace cursedui::view
 
-#endif  // CURSEDUI_VIEW_ROOT_HPP
+#endif  // ANATIRRA_CURSEDUI_VIEW_TREE_HOST

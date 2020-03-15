@@ -1,3 +1,7 @@
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
 #include "cursedui/drawable.hpp"
 
 #include "cursedui/rendering.hpp"

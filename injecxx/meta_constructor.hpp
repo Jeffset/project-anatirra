@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/26/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef INJECXX_META_CONSTRUCTOR_HPP
-#define INJECXX_META_CONSTRUCTOR_HPP
+#ifndef ANATIRRA_INJECXX_META_CONSTRUCTOR
+#define ANATIRRA_INJECXX_META_CONSTRUCTOR
 
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
@@ -120,4 +120,4 @@ constexpr auto deduce_constructor_arg_types(meta::ta<Subject> subject,
 
 }  // namespace injecxx::detail
 
-#endif  // INJECXX_META_CONSTRUCTOR_HPP
+#endif  // ANATIRRA_INJECXX_META_CONSTRUCTOR

@@ -1,3 +1,7 @@
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
 #include "injecxx/injecxx_context.hpp"
 #include "third-party/googletest/gmock.hpp"
 #include "third-party/googletest/gtest.hpp"

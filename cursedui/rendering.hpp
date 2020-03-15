@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/9/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef CURSEDUI_RENDERING_HPP
-#define CURSEDUI_RENDERING_HPP
+#ifndef ANATIRRA_CURSEDUI_RENDERING
+#define ANATIRRA_CURSEDUI_RENDERING
 
 #include "base/macro.hpp"
 #include "base/ref_ptr.hpp"
@@ -84,4 +84,4 @@ void fill(Canvas& canvas, wchar_t ch, const gfx::Rect& area);
 
 }  // namespace cursedui::render
 
-#endif  // CURSEDUI_RENDERING_HPP
+#endif  // ANATIRRA_CURSEDUI_RENDERING

@@ -1,6 +1,6 @@
-//
-// Created by jeffset on 12/8/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
 #include "cursedui/view.hpp"
 

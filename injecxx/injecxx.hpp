@@ -1,7 +1,9 @@
-// Created by jeffset on 12/23/19.
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef INJECXX_INJECXX_HPP
-#define INJECXX_INJECXX_HPP
+#ifndef ANATIRRA_INJECXX_INJECXX
+#define ANATIRRA_INJECXX_INJECXX
 
 #include "base/macro.hpp"
 
@@ -48,4 +50,4 @@ class lazy {
 
 }  // namespace injecxx
 
-#endif  // INJECXX_INJECXX_HPP
+#endif  // ANATIRRA_INJECXX_INJECXX

@@ -1,9 +1,9 @@
-//
-// Created by jeffset on 12/15/19.
-//
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
 
-#ifndef CURSEDUI_VIEW_GROUP_HPP
-#define CURSEDUI_VIEW_GROUP_HPP
+#ifndef ANATIRRA_CURSEDUI_VIEW_GROUP
+#define ANATIRRA_CURSEDUI_VIEW_GROUP
 
 #include "base/macro.hpp"
 #include "cursedui/color.hpp"
@@ -84,4 +84,4 @@ class LayoutParams {
 
 }  // namespace cursedui::view
 
-#endif  // CURSEDUI_VIEW_GROUP_HPP
+#endif  // ANATIRRA_CURSEDUI_VIEW_GROUP

@@ -1,5 +1,9 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+// This software is a part of the Anatirra Project.
+// "Nothing is certain, but we shall hope."
+
+#ifndef ANATIRRA_CURSEDUI_INPUT
+#define ANATIRRA_CURSEDUI_INPUT
 
 #include "cursedui/dim.hpp"
 
@@ -89,4 +93,4 @@ using ViewFocus = std::variant<Focusable, NotFocusable>;
 
 }  // namespace cursedui::input
 
-#endif  // INPUT_HPP
+#endif  // ANATIRRA_CURSEDUI_INPUT

@@ -33,7 +33,7 @@ def get_copyright(comment_begin):
 
 
 def to_project_path(path: str):
-    if not path.startswith(base.PROJECT_SRC_PATH):
+    if not path.startswith(base.PROJECT_ROOT_PATH):
         raise GenerateError(
             'Path "{}" does not belong to project.'.format(path))
     return os.path.relpath(path, base.PROJECT_ROOT_PATH)

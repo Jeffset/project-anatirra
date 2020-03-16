@@ -23,7 +23,7 @@ def main():
 
     command = ('gn', 'ls', args.outdir)
     output = subprocess.check_output(command, universal_newlines=True,
-                                     cwd=base.PROJECT_SRC_PATH)
+                                     cwd=base.PROJECT_ROOT_PATH)
     logging.debug('Result of %s is:\n%s', command, output)
 
     targets = [target[2:] for target in output.split()
@@ -32,10 +32,10 @@ def main():
 
     build_command = ('ninja', '-C', args.outdir, *targets)
     logging.debug('Build command is %s', build_command)
-    subprocess.check_call(build_command, cwd=base.PROJECT_SRC_PATH)
+    subprocess.check_call(build_command, cwd=base.PROJECT_ROOT_PATH)
     logging.debug('Targets are built.')
 
-    build_dir = os.path.join(base.PROJECT_SRC_PATH, args.outdir)
+    build_dir = os.path.join(base.PROJECT_ROOT_PATH, args.outdir)
     for target in targets:
         _, _, binary_name = target.rpartition(':')
         if args.targets is not None and binary_name not in args.targets:

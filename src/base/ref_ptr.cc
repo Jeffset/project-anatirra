@@ -44,6 +44,7 @@ ref_ptr_base& ref_ptr_base::operator=(const ref_ptr_base& rp) noexcept {
 
 ref_ptr_base& ref_ptr_base::operator=(std::nullptr_t) noexcept {
   this->~ref_ptr_base();
+  ptr_ = nullptr;
   return *this;
 }
 
@@ -51,17 +52,14 @@ ref_ptr_base& ref_ptr_base::operator=(ref_ptr_base&& rp) noexcept {
   if (ptr_ != rp.ptr_) {
     this->~ref_ptr_base();
     ptr_ = rp.ptr_;
-    if (ptr_)
-      ++ptr_->refs_;
     rp.ptr_ = nullptr;
   }
   return *this;
 }
 
 ref_ptr_base::~ref_ptr_base() {
-  if (!ptr_) {
+  if (!ptr_)
     return;
-  }
   ptr_->refs_ -= 1;
   if (ptr_->refs_ == 0) {
     delete ptr_;
@@ -82,6 +80,24 @@ weak_ref_base::weak_ref_base(const WeakReferenced* ptr) {
   if (!ptr)
     return;
   control_block_ = ptr->control_block();
+}
+
+weak_ref_base& weak_ref_base::operator=(WeakReferenced* ptr) {
+  if (ptr) {
+    control_block_ = ptr->control_block();
+  } else {
+    control_block_ = nullptr;
+  }
+  return *this;
+}
+
+weak_ref_base& weak_ref_base::operator=(const WeakReferenced* ptr) {
+  if (ptr) {
+    control_block_ = ptr->control_block();
+  } else {
+    control_block_ = nullptr;
+  }
+  return *this;
 }
 
 }  // namespace internal

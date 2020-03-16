@@ -7,6 +7,7 @@
 
 #include "base/macro.hpp"
 
+#include <cstddef>
 #include <functional>
 #include <type_traits>
 #include <utility>
@@ -111,19 +112,23 @@ class ref_ptr final : public internal::ref_ptr_base {
 
   T const& operator*() const { return static_cast<T const&>(*ptr_); }
 
-  bool operator==(const ref_ptr& other) { return ptr_ == other.ptr_; }
+  bool operator==(const ref_ptr& other) const { return ptr_ == other.ptr_; }
 
   template <class D, REQUIRES(is_compatible_v<D>)>
-  bool operator==(D* other) {
+  bool operator==(D* other) const {
     return ptr_ == other;
   }
 
-  bool operator!=(const ref_ptr& other) { return ptr_ != other.ptr_; }
+  bool operator==(std::nullptr_t) const { return ptr_ == nullptr; }
+
+  bool operator!=(const ref_ptr& other) const { return ptr_ != other.ptr_; }
 
   template <class D, REQUIRES(is_compatible_v<D>)>
-  bool operator!=(D* other) {
+  bool operator!=(D* other) const {
     return ptr_ != other;
   }
+
+  bool operator!=(std::nullptr_t) const { return ptr_ != nullptr; }
 };
 
 template <class T, class... Args>
@@ -163,6 +168,9 @@ class weak_ref_base {
   weak_ref_base(WeakReferenced* ptr);
   weak_ref_base(const WeakReferenced* ptr);
 
+  weak_ref_base& operator=(WeakReferenced* ptr);
+  weak_ref_base& operator=(const WeakReferenced* ptr);
+
   base::ref_ptr<WeakRefControlBlock> control_block_;
 };
 
@@ -199,6 +207,12 @@ class weak_ref : public internal::weak_ref_base {
   }
 
   template <class D, REQUIRES(is_compatible_v<D>)>
+  weak_ref& operator=(const ref_ptr<D>& ptr) {
+    base::operator=(ptr.get());
+    return *this;
+  }
+
+  template <class D, REQUIRES(is_compatible_v<D>)>
   weak_ref& operator=(weak_ref<D>&& wp) noexcept {
     base::operator=(std::move(wp));
     return *this;
@@ -215,13 +229,29 @@ class weak_ref : public internal::weak_ref_base {
   ref_ptr<T> get_ref_ptr() {
     return ref_ptr<T>(this->get());
   }
+
+  bool operator==(const weak_ref& other) const {
+    return control_block_ == other.control_block_;
+  }
+
+  bool operator==(std::nullptr_t) const {
+    return control_block_ == nullptr || control_block_->ptr_ == nullptr;
+  }
+
+  bool operator!=(const weak_ref& other) const {
+    return control_block_ != other.control_block_;
+  }
+
+  bool operator!=(std::nullptr_t) const {
+    return control_block_ != nullptr && control_block_->ptr_ != nullptr;
+  }
 };
 
 template <class D>
 weak_ref(const ref_ptr<D>&)->weak_ref<const D>;
 
 template <class D>
-weak_ref(ref_ptr<D>&)->weak_ref<const D>;
+weak_ref(ref_ptr<D>&)->weak_ref<D>;
 
 }  // namespace base
 

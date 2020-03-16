@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_BASE_NULLABLE
-#define ANATIRRA_SRC_BASE_NULLABLE
+#ifndef ANATIRRA_BASE_NULLABLE
+#define ANATIRRA_BASE_NULLABLE
 
 #include "base/macro.hpp"
 
@@ -70,4 +70,4 @@ bool operator!=(T* a, nullable<T> b) {
 
 }  // namespace base
 
-#endif  // ANATIRRA_SRC_BASE_NULLABLE
+#endif  // ANATIRRA_BASE_NULLABLE

@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_CURSEDUI_INPUT
-#define ANATIRRA_SRC_CURSEDUI_INPUT
+#ifndef ANATIRRA_CURSEDUI_INPUT
+#define ANATIRRA_CURSEDUI_INPUT
 
 #include "cursedui/dim.hpp"
 
@@ -93,4 +93,4 @@ using ViewFocus = std::variant<Focusable, NotFocusable>;
 
 }  // namespace cursedui::input
 
-#endif  // ANATIRRA_SRC_CURSEDUI_INPUT
+#endif  // ANATIRRA_CURSEDUI_INPUT

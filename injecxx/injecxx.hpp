@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_INJECXX_INJECXX
-#define ANATIRRA_SRC_INJECXX_INJECXX
+#ifndef ANATIRRA_INJECXX_INJECXX
+#define ANATIRRA_INJECXX_INJECXX
 
 #include "base/macro.hpp"
 
@@ -50,4 +50,4 @@ class lazy {
 
 }  // namespace injecxx
 
-#endif  // ANATIRRA_SRC_INJECXX_INJECXX
+#endif  // ANATIRRA_INJECXX_INJECXX

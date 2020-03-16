@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_INJECXX_DEPENDENCY_GRAPH
-#define ANATIRRA_SRC_INJECXX_DEPENDENCY_GRAPH
+#ifndef ANATIRRA_INJECXX_DEPENDENCY_GRAPH
+#define ANATIRRA_INJECXX_DEPENDENCY_GRAPH
 
 #include "base/type_array.hpp"
 #include "injecxx/injecxx.hpp"
@@ -175,4 +175,4 @@ constexpr auto make_graph(meta::ta<Ts...>) {
 
 }  // namespace injecxx::detail
 
-#endif  // ANATIRRA_SRC_INJECXX_DEPENDENCY_GRAPH
+#endif  // ANATIRRA_INJECXX_DEPENDENCY_GRAPH

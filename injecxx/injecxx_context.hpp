@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_INJECXX_INJECXX_CONTEXT
-#define ANATIRRA_SRC_INJECXX_INJECXX_CONTEXT
+#ifndef ANATIRRA_INJECXX_INJECXX_CONTEXT
+#define ANATIRRA_INJECXX_INJECXX_CONTEXT
 
 #include "base/macro.hpp"
 #include "injecxx/dependency_graph.hpp"
@@ -230,4 +230,4 @@ auto make_context(ParentContext& parent) {
 
 }  // namespace injecxx
 
-#endif  // ANATIRRA_SRC_INJECXX_INJECXX_CONTEXT
+#endif  // ANATIRRA_INJECXX_INJECXX_CONTEXT

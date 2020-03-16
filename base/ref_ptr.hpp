@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_BASE_REF_PTR
-#define ANATIRRA_SRC_BASE_REF_PTR
+#ifndef ANATIRRA_BASE_REF_PTR
+#define ANATIRRA_BASE_REF_PTR
 
 #include "base/macro.hpp"
 
@@ -255,4 +255,4 @@ weak_ref(ref_ptr<D>&)->weak_ref<D>;
 
 }  // namespace base
 
-#endif  // ANATIRRA_SRC_BASE_REF_PTR
+#endif  // ANATIRRA_BASE_REF_PTR

@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_CURSEDUI_DRAWABLE
-#define ANATIRRA_SRC_CURSEDUI_DRAWABLE
+#ifndef ANATIRRA_CURSEDUI_DRAWABLE
+#define ANATIRRA_CURSEDUI_DRAWABLE
 
 #include "cursedui/color.hpp"
 #include "cursedui/dim.hpp"
@@ -90,4 +90,4 @@ class BorderDrawable : public Drawable {
 
 }  // namespace cursedui
 
-#endif  // ANATIRRA_SRC_CURSEDUI_DRAWABLE
+#endif  // ANATIRRA_CURSEDUI_DRAWABLE

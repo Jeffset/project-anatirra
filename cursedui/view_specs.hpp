@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_CURSEDUI_VIEW_SPECS
-#define ANATIRRA_SRC_CURSEDUI_VIEW_SPECS
+#ifndef ANATIRRA_CURSEDUI_VIEW_SPECS
+#define ANATIRRA_CURSEDUI_VIEW_SPECS
 
 #include "base/util.hpp"
 #include "cursedui/dim.hpp"
@@ -58,4 +58,4 @@ inline auto measure_exactly_or(gfx::dim_t value) {
 
 }  // namespace cursedui::view
 
-#endif  // ANATIRRA_SRC_CURSEDUI_VIEW_SPECS
+#endif  // ANATIRRA_CURSEDUI_VIEW_SPECS

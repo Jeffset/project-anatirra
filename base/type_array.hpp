@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_BASE_TYPE_ARRAY
-#define ANATIRRA_SRC_BASE_TYPE_ARRAY
+#ifndef ANATIRRA_BASE_TYPE_ARRAY
+#define ANATIRRA_BASE_TYPE_ARRAY
 
 #include <type_traits>
 
@@ -184,4 +184,4 @@ constexpr auto filter_not_null(ta<Ts...> array) {
 
 }  // namespace base::meta
 
-#endif  // ANATIRRA_SRC_BASE_TYPE_ARRAY
+#endif  // ANATIRRA_BASE_TYPE_ARRAY

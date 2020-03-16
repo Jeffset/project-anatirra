@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_CURSEDUI_DIM
-#define ANATIRRA_SRC_CURSEDUI_DIM
+#ifndef ANATIRRA_CURSEDUI_DIM
+#define ANATIRRA_CURSEDUI_DIM
 
 #include "base/macro.hpp"
 
@@ -64,4 +64,4 @@ gfx::Rect gravitated_rect(const gfx::Rect& rect, gfx::Size size, Gravity gravity
 
 }  // namespace cursedui::gfx
 
-#endif  // ANATIRRA_SRC_CURSEDUI_DIM
+#endif  // ANATIRRA_CURSEDUI_DIM

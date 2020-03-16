@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_CURSEDUI_RENDERING
-#define ANATIRRA_SRC_CURSEDUI_RENDERING
+#ifndef ANATIRRA_CURSEDUI_RENDERING
+#define ANATIRRA_CURSEDUI_RENDERING
 
 #include "base/macro.hpp"
 #include "base/ref_ptr.hpp"
@@ -84,4 +84,4 @@ void fill(Canvas& canvas, wchar_t ch, const gfx::Rect& area);
 
 }  // namespace cursedui::render
 
-#endif  // ANATIRRA_SRC_CURSEDUI_RENDERING
+#endif  // ANATIRRA_CURSEDUI_RENDERING

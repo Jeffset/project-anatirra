@@ -8,7 +8,6 @@
 #include "gmock/gmock-spec-builders.h"
 #include "third-party/googletest/gmock.hpp"
 #include "third-party/googletest/gtest.hpp"
-#include "third-party/googletest/src/googletest/include/gtest/gtest.h"
 
 class Object : public base::RefCounted {
  public:

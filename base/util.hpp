@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_BASE_UTIL
-#define ANATIRRA_SRC_BASE_UTIL
+#ifndef ANATIRRA_BASE_UTIL
+#define ANATIRRA_BASE_UTIL
 
 #include <memory>
 #include <optional>
@@ -43,4 +43,4 @@ constexpr auto identity_map = [](T v) { return v; };
 
 }  // namespace base
 
-#endif  // ANATIRRA_SRC_BASE_UTIL
+#endif  // ANATIRRA_BASE_UTIL

@@ -2,8 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#ifndef ANATIRRA_SRC_CURSEDUI_VIEWS_FRAME_LAYOUT
-#define ANATIRRA_SRC_CURSEDUI_VIEWS_FRAME_LAYOUT
+#ifndef ANATIRRA_CURSEDUI_VIEWS_FRAME_LAYOUT
+#define ANATIRRA_CURSEDUI_VIEWS_FRAME_LAYOUT
 
 #include "cursedui/view_group.hpp"
 
@@ -17,4 +17,4 @@ class FrameLayout : public ViewGroup {
 
 }  // namespace cursedui::view
 
-#endif  // ANATIRRA_SRC_CURSEDUI_VIEWS_FRAME_LAYOUT
+#endif  // ANATIRRA_CURSEDUI_VIEWS_FRAME_LAYOUT

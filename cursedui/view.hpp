@@ -7,7 +7,7 @@
 
 #include "base/macro.hpp"
 #include "base/nullable.hpp"
-#include "base/ref_ptr.hpp"
+#include "base/weak_ref.hpp"
 #include "cursedui/color.hpp"
 #include "cursedui/dim.hpp"
 #include "cursedui/input.hpp"

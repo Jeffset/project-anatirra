@@ -6,6 +6,8 @@ shared_library("base") {
     "nullable.hpp",
     "ref_ptr.cc",
     "ref_ptr.hpp",
+    "weak_ref.cc",
+    "weak_ref.hpp",
     "type_array.hpp",
     "util.hpp",
   ]
@@ -14,6 +16,7 @@ shared_library("base") {
 gtest_binary("base_tests") {
   sources = [
     "ref_ptr_unittest.cc",
+    "weak_ref_unittest.cc",
   ]
   deps = [
     ":base",

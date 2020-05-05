@@ -8,7 +8,6 @@
 #include "cursedui/drawable.hpp"
 
 #include <algorithm>
-#include <cassert>
 
 namespace cursedui::view {
 

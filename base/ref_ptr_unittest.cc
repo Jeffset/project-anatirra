@@ -9,10 +9,19 @@
 #include "third-party/googletest/gmock.hpp"
 #include "third-party/googletest/gtest.hpp"
 
+namespace {
+
 class Object : public base::RefCounted {
  public:
   int data;
+
+  void action() {}
+  void action_const() const {}
 };
+
+class Object2 : public base::RefCounted {};
+
+class DerivedObject : public Object {};
 
 class ObjectWithDestroy : public base::RefCounted {
  public:
@@ -22,6 +31,8 @@ class ObjectWithDestroy : public base::RefCounted {
 
   ~ObjectWithDestroy() noexcept { destroy(); }
 };
+
+}  // namespace
 
 TEST(RefPtrTest, NullByDefault) {
   base::ref_ptr<Object> ptr;
@@ -119,4 +130,28 @@ TEST(RefPtrTest, Reset) {
 
   p = base::make_ref_ptr<ObjectWithDestroy>();
   EXPECT_CALL(*p, destroy());
+}
+
+TEST(RefPtrTest, ConstTest) {
+  auto p = base::make_ref_ptr<Object>();
+  p->action();
+  p->action_const();
+
+  const auto cp = base::make_ref_ptr<Object>();
+  cp->action();
+  cp->action_const();
+
+  const auto pc = base::make_ref_ptr<const Object>();
+  //  pc->action();
+  pc->action_const();
+}
+
+TEST(RefPtrTest, DerivedTest) {
+  auto d1 = base::make_ref_ptr<DerivedObject>();
+  auto dd = base::make_ref_ptr<Object2>();
+  base::ref_ptr<Object> p1{base::make_ref_ptr<DerivedObject>()};
+  base::ref_ptr<Object> p2{d1};
+  p1 = base::make_ref_ptr<DerivedObject>();
+  p1 = d1;
+  p1 = std::move(d1);
 }

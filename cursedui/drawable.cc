@@ -4,9 +4,8 @@
 
 #include "cursedui/drawable.hpp"
 
+#include "base/debug.hpp"
 #include "cursedui/rendering.hpp"
-
-#include <cassert>
 
 namespace cursedui {
 
@@ -69,7 +68,7 @@ gfx::dim_t BorderDrawable::border_width() const {
     case NO_BORDER:
       return 0;
     default:
-      assert(false);
+      ASSERT(false) << "Not reached";
   }
 }
 

@@ -35,7 +35,7 @@ config("death_march_mode") {
 config("debug_config") {
   cflags = [
     "-g",
-    "-Og",
+    "-O0",
     "-fasynchronous-unwind-tables",
   ]
   defines = [ "DEBUG" ]

@@ -4,13 +4,13 @@
 
 #include "cursedui/view.hpp"
 
+#include "base/debug.hpp"
 #include "base/util.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/rendering.hpp"
 #include "cursedui/view_group.hpp"
 #include "cursedui/view_tree_host.hpp"
 
-#include <cassert>
 #include <iostream>
 
 namespace cursedui::view {
@@ -27,7 +27,7 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
     on_measure(width_spec, height_spec);
   }
 
-  assert(measured_size_.has_value());
+  ASSERT(measured_size_.has_value());
 
   if (double_border_width > 0) {
     measured_size_->width += double_border_width;

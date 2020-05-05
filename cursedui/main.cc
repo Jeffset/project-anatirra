@@ -2,6 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
+#include "base/debug.hpp"
+#include "base/meta_string.hpp"
 #include "cursedui/context.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/text_view.hpp"
@@ -9,7 +11,6 @@
 #include "cursedui/views/linear_layout.hpp"
 
 #include <algorithm>
-#include <cassert>
 #include <codecvt>
 #include <fstream>
 #include <iostream>
@@ -22,7 +23,7 @@ class Factory {
  public:
   base::ref_ptr<cursedui::view::View> create() {
     auto view = base::make_ref_ptr<cursedui::view::TextView>();
-    weaks_.push_back(base::weak_ref(view));
+    weaks_.emplace_back(view);
     weaks_.push_back(base::weak_ref(view));
     return view;
   }
@@ -35,6 +36,15 @@ class Factory {
  private:
   std::vector<base::weak_ref<cursedui::view::View>> weaks_;
 };
+
+void meta_string_test() {
+  using namespace base::meta_literals;
+  constexpr auto s1 = "foo bar expr"_meta + " ext"_meta;
+  static_assert(s1.value[0] == 'f');
+  static_assert(s1 == "foo bar expr ext"_meta);
+
+  auto s2 = base::map(s1, [](auto c) { return c + "|"_meta; });
+}
 
 [[noreturn]] int main() {
   using namespace cursedui;
@@ -94,12 +104,12 @@ class Factory {
   ll->set_weight(0.5f);
 
   Factory factory;
-  assert(factory.weak_count() == 0);
+  ASSERT(factory.weak_count() == 0);
   {
     auto v = factory.create();
-    assert(factory.weak_count() == 2);
+    ASSERT(factory.weak_count() == 2);
   }
-  assert(factory.weak_count() == 0);
+  ASSERT(factory.weak_count() == 0);
 
   Context context;
   view::ViewTreeHost view_root{};

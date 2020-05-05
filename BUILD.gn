@@ -2,6 +2,7 @@ group("all") {
   testonly = true
 
   deps = [
+    "//avada",
     "//cursedui:cursedui_test_bin",
     "//injecxx",
     "//third-party/googletest:gmock_main",

@@ -1,0 +1,21 @@
+shared_library("avada") {
+  sources = [
+    "avada.cc",
+    "avada.hpp",
+    "buffer.cc",
+    "buffer.hpp",
+  ]
+  deps = [
+    "//base",
+  ]
+}
+
+executable("avada_demo") {
+  deps = [
+    ":avada",
+    "//base",
+  ]
+  sources = [
+    "demo.cc",
+  ]
+}

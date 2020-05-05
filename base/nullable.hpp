@@ -5,9 +5,8 @@
 #ifndef ANATIRRA_BASE_NULLABLE
 #define ANATIRRA_BASE_NULLABLE
 
+#include "base/debug.hpp"
 #include "base/macro.hpp"
-
-#include <cassert>
 
 namespace base {
 
@@ -18,22 +17,22 @@ namespace base {
 template <class T>
 class nullable {
  public:
-  /* implicit */ nullable(std::nullptr_t) noexcept : ptr_(nullptr) {}
-  /* implicit */ nullable(T* ptr) : ptr_(ptr) {}
+  /* implicit */ inline nullable(std::nullptr_t) noexcept : ptr_(nullptr) {}
+  /* implicit */ inline nullable(T* ptr) : ptr_(ptr) {}
 
-  operator bool() const noexcept { return ptr_ != nullptr; }
+  inline operator bool() const noexcept { return ptr_ != nullptr; }
 
   NONNULL
   inline T* get() noexcept {
-    assert(ptr_);
+    ASSERT(ptr_);
     return ptr_;
   }
 
   inline T* get_nullable() noexcept { return ptr_; }
 
-  bool operator==(nullable other) const noexcept { return ptr_ == other.ptr_; }
+  inline bool operator==(nullable other) const noexcept { return ptr_ == other.ptr_; }
 
-  bool operator!=(nullable other) const noexcept { return ptr_ != other.ptr_; }
+  inline bool operator!=(nullable other) const noexcept { return ptr_ != other.ptr_; }
 
   template <class D>
   friend bool operator==(nullable<D> a, D* b);
@@ -49,22 +48,22 @@ class nullable {
 };
 
 template <class T>
-bool operator==(nullable<T> a, T* b) {
+inline bool operator==(nullable<T> a, T* b) {
   return a.ptr_ == b;
 }
 
 template <class T>
-bool operator==(T* a, nullable<T> b) {
+inline bool operator==(T* a, nullable<T> b) {
   return a == b.ptr_;
 }
 
 template <class T>
-bool operator!=(nullable<T> a, T* b) {
+inline bool operator!=(nullable<T> a, T* b) {
   return a.ptr_ != b;
 }
 
 template <class T>
-bool operator!=(T* a, nullable<T> b) {
+inline bool operator!=(T* a, nullable<T> b) {
   return a != b.ptr_;
 }
 

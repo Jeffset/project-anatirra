@@ -8,28 +8,10 @@ namespace base {
 
 namespace internal {
 
-weak_ref_base::weak_ref_base(WeakReferenced* ptr) {
-  if (!ptr)
-    return;
-  control_block_ = ptr->control_block();
-}
+weak_ref_base::weak_ref_base(WeakReferenced* ptr) noexcept
+    : control_block_(ptr ? ptr->control_block() : nullptr) {}
 
-weak_ref_base::weak_ref_base(const WeakReferenced* ptr) {
-  if (!ptr)
-    return;
-  control_block_ = ptr->control_block();
-}
-
-weak_ref_base& weak_ref_base::operator=(WeakReferenced* ptr) {
-  if (ptr) {
-    control_block_ = ptr->control_block();
-  } else {
-    control_block_ = nullptr;
-  }
-  return *this;
-}
-
-weak_ref_base& weak_ref_base::operator=(const WeakReferenced* ptr) {
+weak_ref_base& weak_ref_base::operator=(WeakReferenced* ptr) noexcept {
   if (ptr) {
     control_block_ = ptr->control_block();
   } else {
@@ -40,8 +22,6 @@ weak_ref_base& weak_ref_base::operator=(const WeakReferenced* ptr) {
 
 }  // namespace internal
 
-WeakReferenced::WeakReferenced() noexcept : control_block_(nullptr) {}
-
 WeakReferenced::~WeakReferenced() noexcept {
   if (control_block_)
     control_block_->ptr_ = nullptr;
@@ -49,15 +29,7 @@ WeakReferenced::~WeakReferenced() noexcept {
 
 ref_ptr<internal::WeakRefControlBlock> WeakReferenced::control_block() noexcept {
   if (!control_block_)
-    control_block_ =
-        make_ref_ptr<internal::WeakRefControlBlock>(const_cast<WeakReferenced*>(this));
-  return control_block_;
-}
-
-ref_ptr<internal::WeakRefControlBlock> WeakReferenced::control_block() const noexcept {
-  if (!control_block_)
-    control_block_ =
-        make_ref_ptr<internal::WeakRefControlBlock>(const_cast<WeakReferenced*>(this));
+    control_block_ = make_ref_ptr<internal::WeakRefControlBlock>(this);
   return control_block_;
 }
 

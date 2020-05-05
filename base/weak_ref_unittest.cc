@@ -9,6 +9,8 @@
 #include "third-party/googletest/gmock.hpp"
 #include "third-party/googletest/gtest.hpp"
 
+namespace {
+
 class ObjectWithDestroy : public base::RefCounted {
  public:
   int data;
@@ -22,8 +24,17 @@ class ObjectWithDestroyAndWeak : public ObjectWithDestroy, public base::WeakRefe
  public:
   MOCK_METHOD(void, destroy, ());
 
-  ~ObjectWithDestroyAndWeak() noexcept { destroy(); }
+  virtual ~ObjectWithDestroyAndWeak() noexcept { destroy(); }
 };
+
+class Object : public base::WeakReferenced, public base::RefCounted {};
+
+class DerivedObject : public Object {
+ public:
+  ~DerivedObject() override = default;
+};
+
+}  // namespace
 
 TEST(WeakRefTest, WeakSimple) {
   auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
@@ -112,9 +123,12 @@ TEST(WeakRefTest, MultipleWeakNullatesIfRefDestroyed) {
   auto wp1 = base::weak_ref(p);
   auto wp2 = wp1;
   auto wp3 = std::move(wp1);
+  base::weak_ref<ObjectWithDestroyAndWeak> wp4;
+  wp4 = wp3;
 
   EXPECT_EQ(wp, wp2);
   EXPECT_EQ(wp, wp3);
+  EXPECT_EQ(wp, wp4);
   EXPECT_EQ(wp1, nullptr);
 
   EXPECT_CALL(*p, destroy());
@@ -141,4 +155,20 @@ TEST(WeakRefTest, OtherWeaksAreIntactWhenOneIsDestroyed) {
   }
 
   EXPECT_EQ(wp.get_ref_ptr(), p);
+}
+
+TEST(WeakRefTest, DerivedTest) {
+  base::weak_ref<Object> wp0;
+  auto rp = base::make_ref_ptr<DerivedObject>();
+  base::weak_ref<Object> wp = rp;
+  wp0 = rp;
+  auto wp2 = wp;
+  auto p = rp;
+  wp = p;
+  wp0 = wp;
+}
+
+TEST(WeakRefTest, ConstTest) {
+  auto rp = base::make_ref_ptr<const Object>();
+  auto wp = base::weak_ref(rp);
 }

@@ -23,45 +23,17 @@ ref_ptr_base::ref_ptr_base(RefCounted* ptr) noexcept : ptr_(ptr) {
     ++ptr_->refs_;
 }
 
-ref_ptr_base::ref_ptr_base(const ref_ptr_base& rp) noexcept : ptr_(rp.ptr_) {
+ref_ptr_base::ref_ptr_base(const ref_ptr_base& rhs) noexcept : ptr_(rhs.ptr_) {
   if (ptr_)
     ++ptr_->refs_;
 }
 
-ref_ptr_base::ref_ptr_base(ref_ptr_base&& rp) noexcept : ptr_(rp.ptr_) {
-  rp.ptr_ = nullptr;
-}
-
-ref_ptr_base& ref_ptr_base::operator=(const ref_ptr_base& rp) noexcept {
-  if (ptr_ != rp.ptr_) {
-    this->~ref_ptr_base();
-    ptr_ = rp.ptr_;
-    if (ptr_)
-      ++ptr_->refs_;
-  }
-  return *this;
-}
-
-ref_ptr_base& ref_ptr_base::operator=(std::nullptr_t) noexcept {
-  this->~ref_ptr_base();
-  ptr_ = nullptr;
-  return *this;
-}
-
-ref_ptr_base& ref_ptr_base::operator=(ref_ptr_base&& rp) noexcept {
-  if (ptr_ != rp.ptr_) {
-    this->~ref_ptr_base();
-    ptr_ = rp.ptr_;
-    rp.ptr_ = nullptr;
-  }
-  return *this;
+ref_ptr_base::ref_ptr_base(ref_ptr_base&& rhs) noexcept : ptr_(rhs.ptr_) {
+  rhs.ptr_ = nullptr;
 }
 
 ref_ptr_base::~ref_ptr_base() {
-  if (!ptr_)
-    return;
-  ptr_->refs_ -= 1;
-  if (ptr_->refs_ == 0) {
+  if (ptr_ && --ptr_->refs_ == 0) {
     delete ptr_;
   }
 }

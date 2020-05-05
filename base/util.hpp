@@ -20,7 +20,7 @@ struct overloaded : Ts... {
   using Ts::operator()...;
 };
 template <class... Ts>
-overloaded(Ts...)->overloaded<Ts...>;
+overloaded(Ts...) -> overloaded<Ts...>;
 
 template <class TargetVariant, class... SourceVariants>
 TargetVariant subvariant(const std::variant<SourceVariants...>& source) {
@@ -36,6 +36,16 @@ bool holds_alternative(
 template <class Type, class... VariantTypes>
 inline bool holds_alternative(const std::variant<VariantTypes...>& variant) noexcept {
   return std::holds_alternative<Type>(variant);
+}
+
+template <class... Ts, class T>
+bool operator==(const std::variant<Ts...>& var, const T& t) {
+  return std::holds_alternative<T>(var) && std::get<T>(var) == t;
+}
+
+template <class... Ts, class T>
+bool operator!=(const std::variant<Ts...>& var, const T& t) {
+  return !std::holds_alternative<T>(var) || std::get<T>(var) != t;
 }
 
 template <class T>

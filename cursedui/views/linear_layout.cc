@@ -4,9 +4,9 @@
 
 #include "cursedui/views/linear_layout.hpp"
 
+#include "base/debug.hpp"
 #include "base/util.hpp"
 
-#include <cassert>
 #include <cmath>
 #include <utility>
 
@@ -158,7 +158,7 @@ std::string_view LinearLayout::LayoutParams::tag() const noexcept {
 const char* LinearLayout::LayoutParams::TAG = "LinearLayout";
 
 void LinearLayout::LayoutParams::set_weight(float weight) {
-  assert(weight > 0.f);
+  ASSERT(weight > 0.f);
   weight_ = weight;
 }
 

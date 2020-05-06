@@ -44,6 +44,7 @@ config("debug_config") {
 config("release_config") {
   cflags = [ "-O2" ]
   defines = [ "NDEBUG" ]
+  ldflags = [ "-use-lto" ]
 }
 
 config("default_include_dirs") {
@@ -58,5 +59,11 @@ config("executable_ldconfig") {
   ldflags = [
     "-Wl,-rpath=\$ORIGIN/",
     "-Wl,-rpath-link=",
+  ]
+}
+
+config("executable_debug_ldconfig") {
+  ldflags = [
+    "-Wl,-export-dynamic",
   ]
 }

@@ -16,6 +16,8 @@ shared_library("base") {
     "type_array.hpp",
     "util.hpp",
   ]
+
+  libs = [ "dl" ]
 }
 
 gtest_binary("base_tests") {

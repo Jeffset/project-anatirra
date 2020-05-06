@@ -15,7 +15,10 @@ namespace base {
 class exception : public std::exception {
  public:
   template <class... Args>
-  explicit exception(Args&&... args) : message_(std::forward<Args>(args)...) {
+  explicit exception(Args&&... args)
+      : message_{
+            static_cast<const std::ostringstream&>((std::ostringstream() << ... << args))
+                .str()} {
     init();
   }
 

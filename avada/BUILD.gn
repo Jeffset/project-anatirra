@@ -4,6 +4,8 @@ shared_library("avada") {
     "avada.hpp",
     "buffer.cc",
     "buffer.hpp",
+    "input.cc",
+    "input.hpp",
   ]
   deps = [
     "//base",

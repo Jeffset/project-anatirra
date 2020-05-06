@@ -4,17 +4,19 @@
 
 #include "avada/avada.hpp"
 #include "base/debug.hpp"
+#include "base/exception.hpp"
 #include "base/util.hpp"
 
 class EventHandler {
  public:
-  EventHandler(avada::Context& context) : context_(context), color_{128, 0, 255} {}
+  EventHandler(avada::Context& context)
+      : context_(context), color_{128, 0, 255}, should_exit_(false), is_drawing_(false) {}
 
   void operator()(avada::input::ResizeEvent resize) {
     LOG() << "ResizeEvent: " << resize.rows << " x " << resize.columns;
     context_.render_buffer().clear();
     render_scene(context_.render_buffer(), '$');
-    context_.swap_buffers();
+    context_.render();
   }
 
   void operator()(avada::input::ServiceEvent) {}
@@ -24,11 +26,11 @@ class EventHandler {
     if (ev == KeyboardEvent{L'q', KeyboardEvent::CTRL}) {
       should_exit_ = true;
     } else if (ev == L'p') {
-      render_scene(context_.render_buffer(), '#');
-      context_.swap_buffers();
+      render_scene(context_.render_buffer(), L'\u2588');
+      context_.render();
     } else if (ev == L'o') {
       render_scene(context_.render_buffer(), '@');
-      context_.swap_buffers();
+      context_.render();
     }
     LOG() << "KeyboardEvent: " << ev.to_string();
   }
@@ -45,11 +47,13 @@ class EventHandler {
                                     draw(context_.render_buffer(), ev.x, ev.y);
                                 },
                                 [this](MouseEvent::Scroll scroll) {
+                                  LOG() << "old green: " << (int)color_.green();
                                   if (scroll == MouseEvent::Scroll::UP) {
-                                    color_.g = std::min(color_.g + 1, 255);
+                                    color_.green() = std::min(color_.green() + 1, 255);
                                   } else {
-                                    color_.g = std::max(color_.g - 1, 0);
+                                    color_.green() = std::max(color_.green() - 1, 0);
                                   }
+                                  LOG() << "new green: " << (int)color_.green();
                                 }},
                ev.data);
     LOG() << "MouseEvent: " << ev.to_string();
@@ -61,13 +65,14 @@ class EventHandler {
   void draw(avada::render::Buffer& buffer, int x, int y) {
     using namespace avada::render;
     auto& cell = buffer(y - 1, x - 1);
-    cell.set_data('0');
+    cell.set_data(L'◷');
     cell.set_fg_color(color_);
+    cell.set_bg_color({0, 0, 128});
     cell.set_attributes(Buffer::ATTRIB_BOLD);
-    context_.swap_buffers();
+    context_.render();
   }
 
-  void render_scene(avada::render::Buffer& buffer, char c) {
+  void render_scene(avada::render::Buffer& buffer, wchar_t c) {
     int w = buffer.columns() / 2;
     int h = buffer.rows() / 2;
 
@@ -99,7 +104,11 @@ int main() {
 
     EventHandler hander{context};
     while (!hander.should_exit()) {
-      std::visit(hander, context.poll_event());
+      try {
+        std::visit(hander, context.poll_event());
+      } catch (avada::input::unparsed_exception& e) {
+        LOG() << "Unparsed exception: " << e.what();
+      }
     }
 
     LOG() << "Nice exit";

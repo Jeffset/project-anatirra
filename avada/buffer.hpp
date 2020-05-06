@@ -5,21 +5,32 @@
 #ifndef ANATIRRA_AVADA_BUFFER
 #define ANATIRRA_AVADA_BUFFER
 
+#include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 
 namespace avada::render {
 
-struct Color {
-  uint8_t r, g, b;
+union Color {
+  uint32_t data_;
+  alignas(uint32_t) uint8_t rgba_[4];
 
-  bool operator==(const Color& rhs) const noexcept {
-    return r == rhs.r && g == rhs.g && b == rhs.b;
-  }
-  bool operator!=(const Color& rhs) const noexcept {
-    return r != rhs.r || g != rhs.g || b != rhs.b;
-  }
+  inline Color(uint8_t red, uint8_t green, uint8_t blue) : rgba_{red, green, blue, 255} {}
+  inline explicit Color(uint32_t rgb) : data_{rgb} {}
+  inline Color() : data_(0) {}
+
+  inline uint8_t red() const noexcept { return rgba_[0]; }
+  inline uint8_t green() const noexcept { return rgba_[1]; }
+  inline uint8_t blue() const noexcept { return rgba_[2]; }
+
+  inline uint8_t& red() noexcept { return rgba_[0]; }
+  inline uint8_t& green() noexcept { return rgba_[1]; }
+  inline uint8_t& blue() noexcept { return rgba_[2]; }
+
+  inline bool operator==(const Color& rhs) const noexcept { return data_ == rhs.data_; }
+  inline bool operator!=(const Color& rhs) const noexcept { return data_ != rhs.data_; }
 };
 
 class Buffer {
@@ -29,6 +40,8 @@ class Buffer {
   static constexpr uint8_t ATTRIB_UNDERLINE = 1 << 2;
 
  public:
+  Buffer() noexcept;
+
   int rows() const noexcept { return rows_; }
   int columns() const noexcept { return columns_; }
 
@@ -41,9 +54,10 @@ class Buffer {
     Cell() noexcept;
 
     bool operator==(const Cell& rhs) const noexcept;
-    bool operator!=(const Cell& rhs) const noexcept;
 
-    std::string_view data() const noexcept { return data_; }
+    std::string_view data() const noexcept {
+      return std::string_view{data_.data(), static_cast<size_t>(data_len_)};
+    }
     Color fg_color() const noexcept { return fg_color_; }
     Color bg_color() const noexcept { return bg_color_; }
     uint8_t attributes() const noexcept { return attributes_; }
@@ -58,7 +72,8 @@ class Buffer {
     void clear_dirty() noexcept { dirty_ = false; }
 
    private:
-    std::string data_;
+    std::array<char, sizeof(wchar_t)> data_;
+    uint8_t data_len_;
     Color fg_color_;
     Color bg_color_;
     uint8_t attributes_;
@@ -87,5 +102,26 @@ class Buffer {
 };
 
 }  // namespace avada::render
+
+namespace std {
+using namespace avada::render;
+
+template <>
+struct hash<Color> {
+  size_t operator()(const Color& color) const noexcept { return color.data_; }
+};
+
+template <>
+struct hash<std::pair<Color, Color>> {
+  size_t operator()(const std::pair<Color, Color>&) const noexcept;
+};
+
+}  // namespace std
+
+namespace avada::internal {
+
+std::string escape_for_log(std::string code);
+
+}  // namespace avada::internal
 
 #endif  // ANATIRRA_AVADA_BUFFER

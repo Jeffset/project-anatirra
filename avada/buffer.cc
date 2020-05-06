@@ -5,19 +5,22 @@
 #include "avada/buffer.hpp"
 
 #include "base/debug.hpp"
+#include "base/exception.hpp"
 
 #include <algorithm>
 #include <codecvt>
 #include <locale>
 #include <optional>
 #include <unistd.h>
+#include <unordered_map>
 
 #define CSI "\x1B["
 
 namespace avada::render {
 
 Buffer::Cell::Cell() noexcept
-    : data_(),
+    : data_{0},
+      data_len_{0},
       fg_color_{255, 255, 255},
       bg_color_{0, 0, 0},
       attributes_(0x0),
@@ -26,32 +29,44 @@ Buffer::Cell::Cell() noexcept
 bool Buffer::Cell::operator==(const Buffer::Cell& rhs) const noexcept {
   // dirty flag is ignored here.
 
-  if (data_.size() == 0 && rhs.data_.size() == 0) {
+  if (data_len_ != rhs.data_len_)
+    return false;
+
+  if (data_len_ == 0) {
     // If there is nothing to draw in the foreground, then only compare background colors.
     return bg_color_ == rhs.bg_color_;
   }
-  return data_ == rhs.data_ && fg_color_ == rhs.fg_color_ && bg_color_ == rhs.bg_color_ &&
+
+  for (int i = 0; i < data_len_; ++i) {
+    if (data_[i] != rhs.data_[i])
+      return false;
+  }
+
+  return fg_color_ == rhs.fg_color_ && bg_color_ == rhs.bg_color_ &&
          attributes_ == rhs.attributes_;
 }
 
-bool Buffer::Cell::operator!=(const Buffer::Cell& rhs) const noexcept {
-  // dirty flag is ignored here.
-  return !(*this == rhs);  // TODO: maybe optimize this.
-}
-
 void Buffer::Cell::set_data(char ch) noexcept {
-  if (data_.size() == 1 && data_[0] == ch)
+  if (data_len_ == 1 && data_[0] == ch) {
     return;
-  data_ = ch;
+  }
+  data_[0] = ch;
   dirty_ = true;
 }
 
 void Buffer::Cell::set_data(wchar_t wch) noexcept {
+  // TODO: [perf] maybe do not create it each time.
   std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_cvt_;
   auto chars = utf8_cvt_.to_bytes(wch);
-  if (data_ == chars)
+  const auto new_size = chars.size();
+  ASSERT(new_size <= data_.size());
+
+  if (new_size == data_len_ &&
+      std::equal(std::begin(data_), std::begin(data_) + data_len_, std::begin(chars)))
     return;
-  data_ = chars;
+
+  std::copy(std::begin(chars), std::end(chars), std::begin(data_));
+  data_len_ = new_size;
   dirty_ = true;
 }
 
@@ -76,7 +91,13 @@ void Buffer::Cell::set_attributes(uint8_t attributes) noexcept {
   dirty_ = true;
 }
 
+Buffer::Buffer() noexcept
+    : row_capacity_(0), column_capacity_(0), rows_(0), columns_(0) {}
+
 void Buffer::resize(int rows, int columns) noexcept {
+  // No content manpulation is done here.
+  // All rubbish will be dealt with in |render| method.
+
   if (columns > column_capacity_) {
     column_capacity_ = columns * 2;
     for (auto& row : contents_) {
@@ -89,53 +110,61 @@ void Buffer::resize(int rows, int columns) noexcept {
     contents_.resize(row_capacity_, std::vector<Cell>(column_capacity_));
   }
   rows_ = rows;
-
-  // TODO: if extending region, maybe need to clear garbage data out?
 }
 
 namespace {
 
-std::string escape_for_log(std::string code) {
-  std::replace(std::begin(code), std::end(code), '\x1b', '^');
-  return code;
-}
-
 class Renderer {
  public:
-  Renderer() noexcept = default;
+  Renderer() noexcept : output_(std::ios::in | std::ios::out), rle_state_{} {}
 
   void add(int i, int j, const Buffer::Cell& cell) noexcept {
-    // TODO: Implement optimizations:
-    // 1. RLE-like coding.
-    // 2. attribute (color) splitting via multiple renderers.
-
     // Handle position
     if (position_ != std::pair{i, j - 1}) {
-      // Change position to target
-      output_ << CSI << i + 1 << ';' << j + 1 << 'H';
+      flush_rle_sequence();
+
+      do {
+        if (position_) {
+          auto [ci, cj] = position_.value();
+          if (ci == i) {  // we are on the same row
+            // use CUF
+            auto distance = j - cj;
+            ASSERT(distance >= 2);
+            output_ << CSI;
+            if (distance > 2)
+              output_ << distance - 1;
+            output_ << 'C';
+            break;
+          }
+        }
+        // Change position to target
+        output_ << CSI << i + 1 << ';' << j + 1 << 'H';
+      } while (false);
     }
     position_ = std::pair{i, j};
 
     bool empty_contents = false;
     do {  // Handle mode
-      ModeChange mode_change{output_};
+      ModeChange mode_change{*this};
 
       const auto cell_bg_color = cell.bg_color();
       if (bg_color_ != cell_bg_color) {
-        mode_change << 48 << 2 << cell_bg_color.r << cell_bg_color.g << cell_bg_color.b;
+        mode_change << 48 << 2 << cell_bg_color.red() << cell_bg_color.green()
+                    << cell_bg_color.blue();
         bg_color_ = cell_bg_color;
       }
 
       if (cell.data().empty() || cell.data()[0] == ' ') {
         // We've only handled background color change, no need to check further.
-        // WARNING: this should be changed if INVERSE attribute is supported.
+        // WARNING: this should be changed if INVERSE attribute is ever supported.
         empty_contents = true;
         break;
       }
 
       const auto cell_fg_color = cell.fg_color();
       if (fg_color_ != cell_fg_color) {
-        mode_change << 38 << 2 << cell_fg_color.r << cell_fg_color.g << cell_fg_color.b;
+        mode_change << 38 << 2 << cell_fg_color.red() << cell_fg_color.green()
+                    << cell_fg_color.blue();
         fg_color_ = cell_fg_color;
       }
       const auto cell_attr = cell.attributes();
@@ -150,13 +179,31 @@ class Renderer {
     } while (false);
 
     // Issue contents
-    if (empty_contents)
-      output_ << ' ';
-    else
-      output_ << cell.data();
+    std::string_view contents = empty_contents ? " " : cell.data();
+    if (rle_state_.contents == contents) {
+      // New contents matches rle sequence, just increment sequence counter.
+      ++rle_state_.length;
+      // Nothing is rendered for now.
+    } else {
+      // Rle finished (if any), render it.
+      flush_rle_sequence();
+
+      // Setup new rle sequence
+      rle_state_ = RleState{contents};
+    }
+  }
+
+  void merge(Renderer&& renderer) {
+    renderer.flush_rle_sequence();
+
+    std::stringstream buffer;
+    std::swap(renderer.output_, buffer);
+    output_ << buffer.rdbuf();
   }
 
   void do_render() {
+    flush_rle_sequence();
+
     // Finish generating sequence by putting cursor to (0, 0).
     // NOTE: If this is not done, terminal will try to move our content on resize and
     // we'll be really messed up.
@@ -168,69 +215,150 @@ class Renderer {
       return;
     }
 
-    LOG() << "Render sequence: " << escape_for_log(code);
-    ::write(STDOUT_FILENO, code.data(), code.size());
+    LOG() << "Render sequence: " << ::avada::internal::escape_for_log(code);
+    LOG() << "Render sequence length: " << code.size();
+    const auto result = ::write(STDOUT_FILENO, code.data(), code.size());
+    if (result < 0)
+      throw base::system_exception("'write' operation failed");
+    else if (static_cast<size_t>(result) != code.size())
+      throw base::exception("Expected to write ", code.size(),
+                            " characters, but written only ", result);
   }
 
  private:
+  void flush_rle_sequence() {
+    if (rle_state_.length == 0)
+      return;
+
+    if (rle_state_.contents.size() * rle_state_.length < 5) {
+      // It's cheaper to repeat character 5 times, for REP sequence is 5 characters long
+      // itself.
+      for (int c = 0; c < rle_state_.length; ++c)
+        output_ << rle_state_.contents;
+    } else {
+      output_ << rle_state_.contents << CSI << rle_state_.length - 1 << 'b';
+    }
+    rle_state_ = RleState();
+  }
+
+ private:
+  friend class ModeChange;
+
   class ModeChange {
    public:
-    ModeChange(std::ostream& os) noexcept : os_(os), mode_change_started_(false) {}
+    ModeChange(Renderer& self) noexcept : self_(self), mode_change_started_(false) {}
 
     ModeChange& operator<<(int arg) noexcept {
       if (!mode_change_started_) {
-        os_ << CSI << arg;
+        self_.flush_rle_sequence();
+
+        self_.output_ << CSI << arg;
         mode_change_started_ = true;
       } else {
-        os_ << ';' << arg;
+        self_.output_ << ';' << arg;
       }
       return *this;
     }
 
     ~ModeChange() noexcept {
       if (mode_change_started_) {
-        os_ << "m";
+        self_.output_ << "m";
       }
     }
 
    private:
-    std::ostream& os_;
+    Renderer& self_;
     bool mode_change_started_;
   };
 
+  struct RleState {
+    std::string_view contents;
+    int length;
+
+    RleState() : contents{""}, length(0) {}
+    explicit RleState(std::string_view contents) : contents(contents), length(1) {}
+  };
+
  private:
-  std::ostringstream output_;
+  std::stringstream output_;
   std::optional<std::pair<int, int>> position_;
   std::optional<Color> bg_color_;
   std::optional<Color> fg_color_;
   std::optional<uint8_t> attributes_;
+
+  RleState rle_state_;
 };
 
 }  // namespace
 
 void Buffer::render(Buffer& screen_reference) {
-  Renderer renderer;
-  auto screen_rows = screen_reference.rows();
-  auto screen_columns = screen_reference.columns();
+  std::unordered_map<std::pair<Color, Color>, Renderer> renderers;
+  const auto screen_rows = screen_reference.rows();
+  const auto screen_columns = screen_reference.columns();
+
+  // Enlarge example:
+  //     _______________
+  //    |xxxxxxxxx|     |
+  //    |xxx A xxx|  B  |
+  //    |xxxxxxxxx|_____|
+  //    |               |
+  //    |       C       |
+  //    |_______________|
+  //
+  // A - previous screen size, it has valid screen contents which may be referenced.
+  // B, C - invalid screen zones, may not be referenced and should be overwritten with
+  //        buffer data even if it is not dirty.
+  // A+B+C - current buffer size.
+  //
+  // (shrink is basically the same, with B and C zones are empty, hence their loops will
+  // not be entered and whole buffer may be validated.
 
   screen_reference.resize(rows_, columns_);
 
-  for (int i = 0; i < rows_; ++i) {
+  const auto rows_with_reference = std::min(screen_rows, rows_);
+  const auto columns_with_reference = std::min(screen_columns, columns_);
+
+  for (int i = 0; i < rows_with_reference; ++i) {
+    auto& row = contents_[i];
+    for (int j = 0; j < columns_with_reference; ++j)  // Zone "A"
+      if (auto& cell = row[j]; cell.dirty()) {
+        cell.clear_dirty();
+        if (screen_reference(i, j) == cell) {
+          // cell passed screen reference validation, no need to redraw.
+          continue;
+        }
+        renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
+        screen_reference(i, j) = cell;
+      }
+
+    for (int j = columns_with_reference; j < columns_; ++j) {  // Zone "B"
+      auto& cell = row[j];
+      if (cell.dirty()) {
+        cell.clear_dirty();
+        renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
+      }
+      screen_reference(i, j) = cell;
+    }
+  }
+
+  for (int i = rows_with_reference; i < rows_; ++i) {  // Zone "C"
     auto& row = contents_[i];
     for (int j = 0; j < columns_; ++j) {
       auto& cell = row[j];
       if (cell.dirty()) {
-        if (i < screen_rows && j < screen_columns && screen_reference(i, j) == cell) {
-          // cell passed screen reference validation, no need to redraw.
-          continue;
-        }
-        renderer.add(i, j, cell);
-        screen_reference(i, j) = cell;
+        cell.clear_dirty();
+        renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
       }
-      cell.clear_dirty();
+      screen_reference(i, j) = cell;
     }
   }
-  renderer.do_render();
+
+  Renderer merged;
+  LOG() << "Got " << renderers.size() << " renderers";
+  for (auto& [_, renderer] : renderers) {
+    merged.merge(std::move(renderer));
+  }
+  merged.do_render();
 }
 
 void Buffer::clear() {
@@ -254,3 +382,28 @@ const Buffer::Cell& Buffer::operator()(int i, int j) const noexcept {
   return contents_[i][j];
 }
 }  // namespace avada::render
+
+namespace std {
+using namespace avada::render;
+
+size_t hash<pair<Color, Color>>::operator()(
+    const pair<Color, Color>& pair) const noexcept {
+  hash<Color> hasher;
+  static_assert(sizeof(size_t) == 4 || sizeof(size_t) == 8);
+  if constexpr (sizeof(size_t) == 8) {
+    return (hasher(pair.first) << 32) | hasher(pair.second);
+  } else {
+    return (hasher(pair.first) << 8) ^ hasher(pair.second);
+  }
+}
+
+}  // namespace std
+
+namespace avada::internal {
+
+std::string escape_for_log(std::string code) {
+  std::replace(std::begin(code), std::end(code), '\x1b', '^');
+  return code;
+}
+
+}  // namespace avada::internal

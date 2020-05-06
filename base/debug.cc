@@ -57,7 +57,7 @@ std::string StackTrace::to_string() const noexcept {
 }
 
 std::string StackTrace::to_string(std::string_view preambula) const noexcept {
-  return std::string{preambula} + '\n' + oss_.str();
+  return std::string{preambula} + ' ' + oss_.str();
 }
 
 namespace internal {

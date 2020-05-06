@@ -35,6 +35,10 @@ set_defaults("executable") {
 
   # Executables get this additional configuration.
   configs += [ "//build:executable_ldconfig" ]
+
+  if (is_debug) {
+   configs += [ "//build:executable_debug_ldconfig" ]
+  }
 }
 set_defaults("static_library") {
   configs = _shared_binary_target_configs

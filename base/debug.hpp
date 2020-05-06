@@ -21,8 +21,7 @@ class StackTrace {
   constexpr static size_t MAX_TRACES = 32;
 
  private:
-  size_t trace_count_;
-  char* traces_[MAX_TRACES];
+  std::ostringstream oss_;
 };
 
 namespace internal {

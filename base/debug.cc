@@ -5,7 +5,9 @@
 #include "base/debug.hpp"
 
 #include <codecvt>
+#include <cxxabi.h>
 #include <execinfo.h>
+#include <link.h>
 #include <locale>
 #include <sstream>
 
@@ -13,31 +15,49 @@ namespace base::debug {
 
 StackTrace::StackTrace() noexcept {
   void* trace_elems[MAX_TRACES];
-  trace_count_ = ::backtrace(trace_elems, MAX_TRACES);
-  char** stack_syms = ::backtrace_symbols(trace_elems, trace_count_);
-  for (auto i = 0u; i < trace_count_; ++i) {
-    traces_[i] = stack_syms[i];
+  int count = ::backtrace(trace_elems, MAX_TRACES);
+  Dl_info* dlinfo = new Dl_info[count];
+  oss_ << "Stacktrace:\n";
+  for (int i = 0; i < count; ++i) {
+    oss_ << '#' << i << ' ';
+    ::dladdr(trace_elems[i], &dlinfo[i]);
+    if (auto* name = dlinfo[i].dli_sname) {
+      int demangle_status;
+      char* demangled = abi::__cxa_demangle(name, nullptr, nullptr, &demangle_status);
+      if (demangle_status != 0) {
+        // failed to demangle, use raw name.
+        oss_ << name;
+      } else {
+        // demangling succeded, use it.
+        oss_ << demangled;
+        ::free(demangled);
+      }
+    } else {
+      oss_ << "<unknown>";
+    }
+    if (auto* addr = dlinfo[i].dli_saddr) {
+      // Write address if present
+      oss_ << " (" << std::hex << addr << ')';
+    }
+    if (auto* obj_name = dlinfo[i].dli_fname) {
+      // Write shared object path if present.
+      oss_ << " [" << obj_name << ']';
+    }
+    if (auto* obj_addr = dlinfo[i].dli_fbase) {
+      oss_ << " (" << obj_addr << ')';
+    }
+    oss_ << '\n';
   }
 }
 
-StackTrace::~StackTrace() noexcept {
-  for (auto i = 0u; i < trace_count_; ++i) {
-    // FIXME: free memory.
-    // delete[] traces_[i];
-  }
-}
+StackTrace::~StackTrace() noexcept = default;
 
 std::string StackTrace::to_string() const noexcept {
   return to_string("");
 }
 
 std::string StackTrace::to_string(std::string_view preambula) const noexcept {
-  std::ostringstream trace;
-  trace << preambula << '\n';
-  for (auto i = 0u; i < trace_count_; ++i) {
-    trace << '#' << i << ' ' << traces_[i] << '\n';
-  }
-  return trace.str();
+  return std::string{preambula} + '\n' + oss_.str();
 }
 
 namespace internal {

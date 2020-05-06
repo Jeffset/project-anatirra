@@ -44,6 +44,7 @@ StackTrace::StackTrace() noexcept {
       oss_ << " [" << obj_name << ']';
     }
     if (auto* obj_addr = dlinfo[i].dli_fbase) {
+      // Write shared object address if present.
       oss_ << " (" << obj_addr << ')';
     }
     oss_ << '\n';
@@ -57,7 +58,7 @@ std::string StackTrace::to_string() const noexcept {
 }
 
 std::string StackTrace::to_string(std::string_view preambula) const noexcept {
-  return std::string{preambula} + ' ' + oss_.str();
+  return std::string{preambula} + " <- " + oss_.str();
 }
 
 namespace internal {

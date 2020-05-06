@@ -10,7 +10,7 @@
 class EventHandler {
  public:
   EventHandler(avada::Context& context)
-      : context_(context), color_{128, 0, 255}, should_exit_(false), is_drawing_(false) {}
+      : context_(context), color_{28, 0, 50}, should_exit_(false), is_drawing_(false) {}
 
   void operator()(avada::input::ResizeEvent resize) {
     LOG() << "ResizeEvent: " << resize.rows << " x " << resize.columns;
@@ -26,7 +26,7 @@ class EventHandler {
     if (ev == KeyboardEvent{L'q', KeyboardEvent::CTRL}) {
       should_exit_ = true;
     } else if (ev == L'p') {
-      render_scene(context_.render_buffer(), L'\u2588');
+      render_scene(context_.render_buffer(), L'\u2589');
       context_.render();
     } else if (ev == L'o') {
       render_scene(context_.render_buffer(), '@');
@@ -65,9 +65,9 @@ class EventHandler {
   void draw(avada::render::Buffer& buffer, int x, int y) {
     using namespace avada::render;
     auto& cell = buffer(y - 1, x - 1);
-    cell.set_data(L'◷');
+    cell.set_data(L'&');
     cell.set_fg_color(color_);
-    cell.set_bg_color({0, 0, 128});
+    cell.set_bg_color({255, 0, 140});
     cell.set_attributes(Buffer::ATTRIB_BOLD);
     context_.render();
   }
@@ -115,7 +115,7 @@ int main() {
     return 0;
 
   } catch (base::system_exception& e) {
-    LOG() << "System exception: " << e.what();
+    LOG() << "System exception: " << e.stack_trace().to_string(e.what());
     return 1;
   } catch (std::exception& e) {
     LOG() << "Unexpected exception: " << e.what();

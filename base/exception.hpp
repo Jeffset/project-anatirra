@@ -5,6 +5,8 @@
 #ifndef ANATIRRA_BASE_EXCEPTION
 #define ANATIRRA_BASE_EXCEPTION
 
+#include "base/debug.hpp"
+
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -18,14 +20,14 @@ class exception : public std::exception {
   explicit exception(Args&&... args)
       : message_{
             static_cast<const std::ostringstream&>((std::ostringstream() << ... << args))
-                .str()} {
-    init();
-  }
+                .str()} {}
 
   const char* what() const noexcept override;
 
+  const debug::StackTrace& stack_trace() const noexcept { return stack_trace_; }
+
  private:
-  void init();
+  debug::StackTrace stack_trace_;
 
  protected:
   std::string message_;

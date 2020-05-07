@@ -1,5 +1,6 @@
 declare_args() {
   is_debug = true
+  use_gcc = false
 }
 
 if (target_os == "") {
@@ -22,6 +23,10 @@ _shared_binary_target_configs = [
   "//build:default_include_dirs",
   "//build:complete_library",
 ]
+
+if (!use_gcc) {
+ _shared_binary_target_configs += [ "//build:death_march_mode_clang" ]
+}
 
 if (is_debug) {
   _shared_binary_target_configs += [ "//build:debug_config" ]
@@ -50,4 +55,8 @@ set_defaults("source_set") {
   configs = _shared_binary_target_configs
 }
 
-set_default_toolchain("//build/toolchain:linux_clang")
+if (use_gcc) {
+  set_default_toolchain("//build/toolchain:linux_gcc")
+} else {
+  set_default_toolchain("//build/toolchain:linux_clang")
+}

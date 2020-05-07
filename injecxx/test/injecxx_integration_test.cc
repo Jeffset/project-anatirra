@@ -12,7 +12,7 @@ using namespace injecxx;
 
 class Recorder {
  public:
-  Recorder() noexcept = default;
+  Recorder() noexcept {}
 
   MOCK_METHOD(void, created, (int));
   MOCK_METHOD(void, destroyed, (int));
@@ -20,7 +20,12 @@ class Recorder {
   MOCK_METHOD(void, act, (int));
 
   MAKE_FULLY_STATIONAR(Recorder);
+
+  ~Recorder() noexcept = default;
 };
+
+static_assert(std::is_constructible_v<Recorder>);
+static_assert(std::is_default_constructible_v<Recorder>);
 
 class RecordableComponent {
  protected:

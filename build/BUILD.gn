@@ -19,7 +19,9 @@ config("death_march_mode") {
     "-Wextra",
     "-Wpedantic",
   ]
+}
 
+config("death_march_mode_clang") {
   # TODO: These are probably specific to clang.
   warnings_as_errors = [
     "inconsistent-missing-override",
@@ -27,6 +29,7 @@ config("death_march_mode") {
     "return-type",
   ]
 
+  cflags = []
   foreach(warning, warnings_as_errors) {
     cflags += [ "-Werror=$warning" ]
   }

@@ -4,7 +4,7 @@
 
 #include "cursedui/views/linear_layout.hpp"
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "base/util.hpp"
 
 #include <cmath>

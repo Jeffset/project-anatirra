@@ -2,8 +2,12 @@ import("//build/test.gni")
 
 shared_library("base") {
   sources = [
-    "debug.cc",
-    "debug.hpp",
+    "debug/debug.cc",
+    "debug/debug.hpp",
+    "debug/stack_trace.cc",
+    "debug/stack_trace.hpp",
+    "debug/tracing.cc",
+    "debug/tracing.hpp",
     "exception.cc",
     "exception.hpp",
     "macro.hpp",
@@ -11,10 +15,10 @@ shared_library("base") {
     "nullable.hpp",
     "ref_ptr.cc",
     "ref_ptr.hpp",
-    "weak_ref.cc",
-    "weak_ref.hpp",
     "type_array.hpp",
     "util.hpp",
+    "weak_ref.cc",
+    "weak_ref.hpp",
   ]
 
   libs = [ "dl" ]

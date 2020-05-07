@@ -37,11 +37,11 @@ class Context {
  private:
   void update_size() /* may throw */;
 
-  class PrivateModeChanger {
+  class ScopedPrivateModeChange {
    public:
     void apply(std::initializer_list<int> to_enable,
                std::initializer_list<int> to_disable) /* may throw */;
-    ~PrivateModeChanger() noexcept;
+    ~ScopedPrivateModeChange() noexcept;
 
    private:
     static void format_control_sequence(std::ostream& os,
@@ -55,7 +55,7 @@ class Context {
 
  private:
   std::unique_ptr<termios> saved_context_;
-  PrivateModeChanger private_mode_changer_;
+  ScopedPrivateModeChange private_mode_changer_;
 
   input::InputParser input_parser_;
 

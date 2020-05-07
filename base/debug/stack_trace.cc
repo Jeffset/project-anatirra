@@ -2,14 +2,11 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#include "base/debug.hpp"
+#include "base/debug/stack_trace.hpp"
 
-#include <codecvt>
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <link.h>
-#include <locale>
-#include <sstream>
 
 namespace base::debug {
 
@@ -61,27 +58,4 @@ std::string StackTrace::to_string(std::string_view preambula) const noexcept {
   return std::string{preambula} + " <- " + oss_.str();
 }
 
-namespace internal {
-
-Logger::Logger(const char* file, int line, bool terminate) noexcept
-    : file_(file),
-      line_(line),
-      terminate_after_(terminate),
-      ss_(std::ios::in | std::ios::out) {}
-
-Logger::~Logger() noexcept {
-  std::cerr << file_ << ':' << line_ << ' ' << ss_.rdbuf() << std::endl;
-  if (terminate_after_) {
-    std::cerr << StackTrace().to_string("Terminated at:");
-    std::terminate();
-  }
-}
-
-}  // namespace internal
-
 }  // namespace base::debug
-
-std::ostream& std::operator<<(std::ostream& out, const wchar_t* wstr) {
-  std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_cvt_;
-  return out << utf8_cvt_.to_bytes(wstr);
-}

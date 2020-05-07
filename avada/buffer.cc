@@ -4,7 +4,8 @@
 
 #include "avada/buffer.hpp"
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
+#include "base/debug/tracing.hpp"
 #include "base/exception.hpp"
 
 #include <algorithm>
@@ -22,9 +23,7 @@ namespace {
 
 class Renderer {
  public:
-  Renderer() noexcept : output_(std::ios::in | std::ios::out), rle_state_{} {
-    // output_ << CSI << 0 << 'm';
-  }
+  Renderer() noexcept : output_(std::ios::in | std::ios::out), rle_state_{} {}
 
   void add(int i, int j, const Buffer::Cell& cell) noexcept {
     // Handle position
@@ -54,12 +53,12 @@ class Renderer {
 
     bool empty_contents = false;
     do {  // Handle mode
-      ModeChange mode_change{*this};
+      ScopedModeChange mode_change{*this};
 
       {  // Background color
         const auto cell_bg_color = cell.bg_color();
         if (bg_color_ != cell_bg_color) {
-          auto encoder = BgColorEncoder{mode_change};
+          auto encoder = BgColorEncodeVisitor{mode_change};
           std::visit(encoder, cell_bg_color);
 
           bg_color_ = cell_bg_color;
@@ -76,7 +75,7 @@ class Renderer {
       {  // Foreground color
         const auto cell_fg_color = cell.fg_color();
         if (fg_color_ != cell_fg_color) {
-          auto encoder = FgColorEncoder{mode_change};
+          auto encoder = FgColorEncodeVisitor{mode_change};
           std::visit(encoder, cell_fg_color);
           fg_color_ = cell_fg_color;
         }
@@ -157,13 +156,14 @@ class Renderer {
   }
 
  private:
-  friend class ModeChange;
+  friend class ScopedModeChange;
 
-  class ModeChange {
+  class ScopedModeChange {
    public:
-    ModeChange(Renderer& self) noexcept : self_(self), mode_change_started_(false) {}
+    ScopedModeChange(Renderer& self) noexcept
+        : self_(self), mode_change_started_(false) {}
 
-    ModeChange& operator<<(int arg) noexcept {
+    ScopedModeChange& operator<<(int arg) noexcept {
       if (!mode_change_started_) {
         self_.flush_rle_sequence();
 
@@ -175,7 +175,7 @@ class Renderer {
       return *this;
     }
 
-    ~ModeChange() noexcept {
+    ~ScopedModeChange() noexcept {
       if (mode_change_started_) {
         self_.output_ << "m";
       }
@@ -187,8 +187,8 @@ class Renderer {
   };
 
   template <bool background>
-  struct ColorEncoder {
-    ModeChange& mode_change;
+  struct ColorEncodeVisitor {
+    ScopedModeChange& mode_change;
 
     void operator()(ColorRGB color) const noexcept {
       mode_change << (background ? 48 : 38) << 2 << color.red() << color.green()
@@ -200,15 +200,16 @@ class Renderer {
     }
   };
 
-  using FgColorEncoder = ColorEncoder<false>;
-  using BgColorEncoder = ColorEncoder<true>;
+  using FgColorEncodeVisitor = ColorEncodeVisitor<false>;
+  using BgColorEncodeVisitor = ColorEncodeVisitor<true>;
 
   struct RleState {
     std::string_view contents;
     int length;
 
-    RleState() : contents{""}, length(0) {}
-    explicit RleState(std::string_view contents) : contents(contents), length(1) {}
+    RleState() noexcept : contents{}, length(0) {}
+    explicit RleState(std::string_view contents) noexcept
+        : contents(contents), length(1) {}
   };
 
  private:
@@ -318,6 +319,8 @@ void Buffer::resize(int rows, int columns) noexcept {
 }
 
 void Buffer::render(Buffer& screen_reference) {
+  base::debug::ScopedTrace trace{__PRETTY_FUNCTION__};
+
   std::unordered_map<std::pair<Color, Color>, Renderer> renderers;
   const auto screen_rows = screen_reference.rows();
   const auto screen_columns = screen_reference.columns();

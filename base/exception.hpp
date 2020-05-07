@@ -5,7 +5,7 @@
 #ifndef ANATIRRA_BASE_EXCEPTION
 #define ANATIRRA_BASE_EXCEPTION
 
-#include "base/debug.hpp"
+#include "base/debug/stack_trace.hpp"
 
 #include <sstream>
 #include <stdexcept>

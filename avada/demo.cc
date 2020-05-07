@@ -3,7 +3,7 @@
 // "Nothing is certain, but we shall hope."
 
 #include "avada/avada.hpp"
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "base/exception.hpp"
 #include "base/util.hpp"
 
@@ -98,6 +98,9 @@ class EventHandler {
 };
 
 int main() {
+  base::debug::LoggerToStdErr logger;
+  base::debug::setup_logging(&logger);
+
   try {
     LOG() << "Start";
     avada::Context context;

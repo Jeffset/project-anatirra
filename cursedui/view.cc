@@ -4,7 +4,7 @@
 
 #include "cursedui/view.hpp"
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "base/util.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/rendering.hpp"

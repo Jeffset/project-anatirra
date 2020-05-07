@@ -2,7 +2,7 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "base/meta_string.hpp"
 #include "cursedui/context.hpp"
 #include "cursedui/drawable.hpp"

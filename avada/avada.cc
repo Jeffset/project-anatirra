@@ -4,7 +4,7 @@
 
 #include "avada/avada.hpp"
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "base/exception.hpp"
 #include "base/macro.hpp"
 
@@ -142,8 +142,8 @@ void Context::update_size() {
   back_buffer_.resize(rows_, columns_);
 }
 
-void Context::PrivateModeChanger::apply(std::initializer_list<int> to_enable,
-                                        std::initializer_list<int> to_disable) {
+void Context::ScopedPrivateModeChange::apply(std::initializer_list<int> to_enable,
+                                             std::initializer_list<int> to_disable) {
   to_enable_ = to_enable;
   to_disable_ = to_disable;
 
@@ -160,7 +160,7 @@ void Context::PrivateModeChanger::apply(std::initializer_list<int> to_enable,
     throw base::exception("'write' wrote less than expected");
 }
 
-Context::PrivateModeChanger::~PrivateModeChanger() noexcept {
+Context::ScopedPrivateModeChange::~ScopedPrivateModeChange() noexcept {
   std::ostringstream oss;
   // Restore saved modes.
   format_control_sequence(oss, to_enable_, 'l');
@@ -171,9 +171,10 @@ Context::PrivateModeChanger::~PrivateModeChanger() noexcept {
 }
 
 // static
-void Context::PrivateModeChanger::format_control_sequence(std::ostream& os,
-                                                          const std::vector<int>& modes,
-                                                          char action) noexcept {
+void Context::ScopedPrivateModeChange::format_control_sequence(
+    std::ostream& os,
+    const std::vector<int>& modes,
+    char action) noexcept {
   if (modes.empty())
     return;
 

@@ -4,7 +4,7 @@
 
 #include "cursedui/drawable.hpp"
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "cursedui/rendering.hpp"
 
 namespace cursedui {

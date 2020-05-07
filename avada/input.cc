@@ -4,7 +4,7 @@
 
 #include "avada/input.hpp"
 
-#include "base/debug.hpp"
+#include "base/debug/debug.hpp"
 #include "base/util.hpp"
 
 #include <sstream>

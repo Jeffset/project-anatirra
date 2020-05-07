@@ -18,105 +18,13 @@
 
 namespace avada::render {
 
-Buffer::Cell::Cell() noexcept
-    : data_{0},
-      data_len_{0},
-      fg_color_{255, 255, 255},
-      bg_color_{0, 0, 0},
-      attributes_(0x0),
-      dirty_(true) {}
-
-bool Buffer::Cell::operator==(const Buffer::Cell& rhs) const noexcept {
-  // dirty flag is ignored here.
-
-  if (data_len_ != rhs.data_len_)
-    return false;
-
-  if (data_len_ == 0) {
-    // If there is nothing to draw in the foreground, then only compare background colors.
-    return bg_color_ == rhs.bg_color_;
-  }
-
-  for (int i = 0; i < data_len_; ++i) {
-    if (data_[i] != rhs.data_[i])
-      return false;
-  }
-
-  return fg_color_ == rhs.fg_color_ && bg_color_ == rhs.bg_color_ &&
-         attributes_ == rhs.attributes_;
-}
-
-void Buffer::Cell::set_data(char ch) noexcept {
-  if (data_len_ == 1 && data_[0] == ch) {
-    return;
-  }
-  data_[0] = ch;
-  dirty_ = true;
-}
-
-void Buffer::Cell::set_data(wchar_t wch) noexcept {
-  // TODO: [perf] maybe do not create it each time.
-  std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_cvt_;
-  auto chars = utf8_cvt_.to_bytes(wch);
-  const auto new_size = chars.size();
-  ASSERT(new_size <= data_.size());
-
-  if (new_size == data_len_ &&
-      std::equal(std::begin(data_), std::begin(data_) + data_len_, std::begin(chars)))
-    return;
-
-  std::copy(std::begin(chars), std::end(chars), std::begin(data_));
-  data_len_ = new_size;
-  dirty_ = true;
-}
-
-void Buffer::Cell::set_fg_color(Color fg) noexcept {
-  if (fg == fg_color_)
-    return;
-  fg_color_ = fg;
-  dirty_ = true;
-}
-
-void Buffer::Cell::set_bg_color(Color bg) noexcept {
-  if (bg == bg_color_)
-    return;
-  bg_color_ = bg;
-  dirty_ = true;
-}
-
-void Buffer::Cell::set_attributes(uint8_t attributes) noexcept {
-  if (attributes == attributes_)
-    return;
-  attributes_ = attributes;
-  dirty_ = true;
-}
-
-Buffer::Buffer() noexcept
-    : row_capacity_(0), column_capacity_(0), rows_(0), columns_(0) {}
-
-void Buffer::resize(int rows, int columns) noexcept {
-  // No content manpulation is done here.
-  // All rubbish will be dealt with in |render| method.
-
-  if (columns > column_capacity_) {
-    column_capacity_ = columns * 2;
-    for (auto& row : contents_) {
-      row.resize(column_capacity_);
-    }
-  }
-  columns_ = columns;
-  if (rows > row_capacity_) {
-    row_capacity_ = rows * 2;
-    contents_.resize(row_capacity_, std::vector<Cell>(column_capacity_));
-  }
-  rows_ = rows;
-}
-
 namespace {
 
 class Renderer {
  public:
-  Renderer() noexcept : output_(std::ios::in | std::ios::out), rle_state_{} {}
+  Renderer() noexcept : output_(std::ios::in | std::ios::out), rle_state_{} {
+    // output_ << CSI << 0 << 'm';
+  }
 
   void add(int i, int j, const Buffer::Cell& cell) noexcept {
     // Handle position
@@ -129,6 +37,7 @@ class Renderer {
           if (ci == i) {  // we are on the same row
             // use CUF
             auto distance = j - cj;
+            // For now we know, that cells are added only with increasing i or j.
             ASSERT(distance >= 2);
             output_ << CSI;
             if (distance > 2)
@@ -147,11 +56,14 @@ class Renderer {
     do {  // Handle mode
       ModeChange mode_change{*this};
 
-      const auto cell_bg_color = cell.bg_color();
-      if (bg_color_ != cell_bg_color) {
-        mode_change << 48 << 2 << cell_bg_color.red() << cell_bg_color.green()
-                    << cell_bg_color.blue();
-        bg_color_ = cell_bg_color;
+      {  // Background color
+        const auto cell_bg_color = cell.bg_color();
+        if (bg_color_ != cell_bg_color) {
+          auto encoder = BgColorEncoder{mode_change};
+          std::visit(encoder, cell_bg_color);
+
+          bg_color_ = cell_bg_color;
+        }
       }
 
       if (cell.data().empty() || cell.data()[0] == ' ') {
@@ -161,12 +73,15 @@ class Renderer {
         break;
       }
 
-      const auto cell_fg_color = cell.fg_color();
-      if (fg_color_ != cell_fg_color) {
-        mode_change << 38 << 2 << cell_fg_color.red() << cell_fg_color.green()
-                    << cell_fg_color.blue();
-        fg_color_ = cell_fg_color;
+      {  // Foreground color
+        const auto cell_fg_color = cell.fg_color();
+        if (fg_color_ != cell_fg_color) {
+          auto encoder = FgColorEncoder{mode_change};
+          std::visit(encoder, cell_fg_color);
+          fg_color_ = cell_fg_color;
+        }
       }
+
       const auto cell_attr = cell.attributes();
       auto attr_diff = attributes_.value_or(~cell_attr) ^ cell_attr;
       if (attr_diff & Buffer::ATTRIB_BOLD)
@@ -271,6 +186,23 @@ class Renderer {
     bool mode_change_started_;
   };
 
+  template <bool background>
+  struct ColorEncoder {
+    ModeChange& mode_change;
+
+    void operator()(ColorRGB color) const noexcept {
+      mode_change << (background ? 48 : 38) << 2 << color.red() << color.green()
+                  << color.blue();
+    }
+
+    void operator()(SystemColor color) const noexcept {
+      mode_change << 0 << static_cast<int>(color) + (background ? 10 : 0);
+    }
+  };
+
+  using FgColorEncoder = ColorEncoder<false>;
+  using BgColorEncoder = ColorEncoder<true>;
+
   struct RleState {
     std::string_view contents;
     int length;
@@ -290,6 +222,100 @@ class Renderer {
 };
 
 }  // namespace
+
+Buffer::Cell::Cell() noexcept
+    : data_{0},
+      data_len_{0},
+      fg_color_{SystemColor::DEFAULT},
+      bg_color_{SystemColor::DEFAULT},
+      attributes_(0x0),
+      dirty_(true) {}
+
+bool Buffer::Cell::operator==(const Buffer::Cell& rhs) const noexcept {
+  // dirty flag is ignored here.
+
+  if (data_len_ != rhs.data_len_)
+    return false;
+
+  if (data_len_ == 0) {
+    // If there is nothing to draw in the foreground, then only compare background colors.
+    return bg_color_ == rhs.bg_color_;
+  }
+
+  for (int i = 0; i < data_len_; ++i) {
+    if (data_[i] != rhs.data_[i])
+      return false;
+  }
+
+  return fg_color_ == rhs.fg_color_ && bg_color_ == rhs.bg_color_ &&
+         attributes_ == rhs.attributes_;
+}
+
+void Buffer::Cell::set_data(char ch) noexcept {
+  if (data_len_ == 1 && data_[0] == ch) {
+    return;
+  }
+  data_[0] = ch;
+  dirty_ = true;
+}
+
+void Buffer::Cell::set_data(wchar_t wch) noexcept {
+  // TODO: [perf] maybe do not create it each time.
+  std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_cvt_;
+  auto chars = utf8_cvt_.to_bytes(wch);
+  const auto new_size = chars.size();
+  ASSERT(new_size <= data_.size());
+
+  if (new_size == data_len_ &&
+      std::equal(std::begin(data_), std::begin(data_) + data_len_, std::begin(chars)))
+    return;
+
+  std::copy(std::begin(chars), std::end(chars), std::begin(data_));
+  data_len_ = new_size;
+  dirty_ = true;
+}
+
+void Buffer::Cell::set_fg_color(Color fg) noexcept {
+  if (fg == fg_color_)
+    return;
+  fg_color_ = fg;
+  dirty_ = true;
+}
+
+void Buffer::Cell::set_bg_color(Color bg) noexcept {
+  if (bg == bg_color_)
+    return;
+  bg_color_ = bg;
+  dirty_ = true;
+}
+
+void Buffer::Cell::set_attributes(uint8_t attributes) noexcept {
+  if (attributes == attributes_)
+    return;
+  attributes_ = attributes;
+  dirty_ = true;
+}
+
+Buffer::Buffer() noexcept
+    : row_capacity_(0), column_capacity_(0), rows_(0), columns_(0) {}
+
+void Buffer::resize(int rows, int columns) noexcept {
+  // No content manpulation is done here.
+  // All rubbish will be dealt with in |render| method.
+
+  if (columns > column_capacity_) {
+    column_capacity_ = columns * 2;
+    for (auto& row : contents_) {
+      row.resize(column_capacity_);
+    }
+  }
+  columns_ = columns;
+  if (rows > row_capacity_) {
+    row_capacity_ = rows * 2;
+    contents_.resize(row_capacity_, std::vector<Cell>(column_capacity_));
+  }
+  rows_ = rows;
+}
 
 void Buffer::render(Buffer& screen_reference) {
   std::unordered_map<std::pair<Color, Color>, Renderer> renderers;

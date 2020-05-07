@@ -67,7 +67,7 @@ class EventHandler {
     auto& cell = buffer(y - 1, x - 1);
     cell.set_data(L'&');
     cell.set_fg_color(color_);
-    cell.set_bg_color({255, 0, 140});
+    cell.set_bg_color(ColorRGB{255, 0, 140});
     cell.set_attributes(Buffer::ATTRIB_BOLD);
     context_.render();
   }
@@ -92,7 +92,7 @@ class EventHandler {
 
  private:
   avada::Context& context_;
-  avada::render::Color color_;
+  avada::render::ColorRGB color_;
   bool should_exit_;
   bool is_drawing_;
 };

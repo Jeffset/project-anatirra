@@ -9,17 +9,19 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace avada::render {
 
-union Color {
+union ColorRGB {
   uint32_t data_;
   alignas(uint32_t) uint8_t rgba_[4];
 
-  inline Color(uint8_t red, uint8_t green, uint8_t blue) : rgba_{red, green, blue, 255} {}
-  inline explicit Color(uint32_t rgb) : data_{rgb} {}
-  inline Color() : data_(0) {}
+  inline ColorRGB(uint8_t red, uint8_t green, uint8_t blue)
+      : rgba_{red, green, blue, 255} {}
+  inline explicit ColorRGB(uint32_t rgb) : data_{rgb} {}
+  inline ColorRGB() : data_(0) {}
 
   inline uint8_t red() const noexcept { return rgba_[0]; }
   inline uint8_t green() const noexcept { return rgba_[1]; }
@@ -29,9 +31,27 @@ union Color {
   inline uint8_t& green() noexcept { return rgba_[1]; }
   inline uint8_t& blue() noexcept { return rgba_[2]; }
 
-  inline bool operator==(const Color& rhs) const noexcept { return data_ == rhs.data_; }
-  inline bool operator!=(const Color& rhs) const noexcept { return data_ != rhs.data_; }
+  inline bool operator==(const ColorRGB& rhs) const noexcept {
+    return data_ == rhs.data_;
+  }
+  inline bool operator!=(const ColorRGB& rhs) const noexcept {
+    return data_ != rhs.data_;
+  }
 };
+
+enum class SystemColor : uint8_t {
+  BLACK = 30,
+  RED,
+  GREEN,
+  YELLOW,
+  BLUE,
+  MAGENTA,
+  CYAN,
+  WHITE,
+  DEFAULT,
+};
+
+using Color = std::variant<ColorRGB, SystemColor>;
 
 class Buffer {
  public:
@@ -108,7 +128,16 @@ using namespace avada::render;
 
 template <>
 struct hash<Color> {
-  size_t operator()(const Color& color) const noexcept { return color.data_; }
+  size_t operator()(const Color& color) const noexcept {
+    return std::visit(Impl{}, color);
+  }
+
+  struct Impl {
+    size_t operator()(ColorRGB color) const noexcept { return color.data_; }
+    size_t operator()(SystemColor color) const noexcept {
+      return static_cast<size_t>(color);
+    }
+  };
 };
 
 template <>

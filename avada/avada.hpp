@@ -39,8 +39,9 @@ class Context {
 
   class ScopedPrivateModeChange {
    public:
-    void apply(std::initializer_list<int> to_enable,
-               std::initializer_list<int> to_disable) /* may throw */;
+    ScopedPrivateModeChange(std::initializer_list<int> to_enable,
+                            std::initializer_list<int> to_disable) /* may throw */;
+
     ~ScopedPrivateModeChange() noexcept;
 
    private:

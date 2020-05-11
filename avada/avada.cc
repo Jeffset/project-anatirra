@@ -36,7 +36,25 @@ extern "C" void handle_resize(int) {
 
 }  // namespace
 
-Context::Context() {
+Context::Context()
+    : private_mode_changer_{
+          {
+              // Enable:
+              1000,  // Send Mouse X & Y on button press and release.
+              1006,  // Report Mouse Move.
+              1003,  // Use All Motion Mouse Tracking.
+              1049,  // Save cursor and use Alternate Screen Buffer, clearing it first.
+              2004,  // Set bracketed paste mode. TODO: support bracketed paste mode.
+          },
+          {
+              // Disable:
+              7,     // No Wraparound Mode.
+              45,    // No Reverse-wraparound Mode.
+              25,    // Hide cursor.
+              30,    // Don't show scrollbar.
+              1010,  // Don’t scroll to bottom on tty output (rxvt).
+              1011,  // Don’t scroll to bottom on key press (rxvt).
+          }} {
   ASSERT(g_avada_context == nullptr) << "Only one AvadaContext is permitted to exist";
   std::signal(SIGWINCH, handle_resize);
 
@@ -57,25 +75,6 @@ Context::Context() {
   raw.c_cc[VTIME] = 0;
 
   SYSTEM_CALL_NON_ZERO(::tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw));
-
-  private_mode_changer_.apply(
-      {
-          // Enable:
-          1000,  // Send Mouse X & Y on button press and release.
-          1006,  // Report Mouse Move.
-          1003,  // Use All Motion Mouse Tracking.
-          1049,  // Save cursor and use Alternate Screen Buffer, clearing it first.
-          2004,  // Set bracketed paste mode. TODO: support bracketed paste mode.
-      },
-      {
-          // Disable:
-          7,     // No Wraparound Mode.
-          45,    // No Reverse-wraparound Mode.
-          25,    // Hide cursor.
-          30,    // Don't show scrollbar.
-          1010,  // Don’t scroll to bottom on tty output (rxvt).
-          1011,  // Don’t scroll to bottom on key press (rxvt).
-      });
 
   internal::write_stdout(
       "\x1b[H"  // Position at (0,0)
@@ -139,11 +138,10 @@ void Context::update_size() {
   back_buffer_.resize(rows_, columns_);
 }
 
-void Context::ScopedPrivateModeChange::apply(std::initializer_list<int> to_enable,
-                                             std::initializer_list<int> to_disable) {
-  to_enable_ = to_enable;
-  to_disable_ = to_disable;
-
+Context::ScopedPrivateModeChange::ScopedPrivateModeChange(
+    std::initializer_list<int> to_enable,
+    std::initializer_list<int> to_disable)
+    : to_enable_(to_enable), to_disable_(to_disable) {
   std::ostringstream oss;
   // Change modes.
   format_control_sequence(oss, to_enable_, 'h');

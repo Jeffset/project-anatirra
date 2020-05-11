@@ -134,6 +134,7 @@ void ViewTreeHost::layout_tree() {
 
   // Step IV: Perform actual layout on every final detected root.
   for (auto* view : roots_needing_layout) {
+    LOG() << "ViewTreeHost layout: layouting " << view->debug_name();
     const auto size = view->size();
     view->measure(view::MeasureExactly{{size.width}},
                   view::MeasureExactly{{size.height}});

@@ -86,6 +86,11 @@ class View : public base::RefCounted, public base::WeakReferenced {
   virtual void visit_down(ViewTreeVisitor& visitor);
   void visit_up(ViewTreeVisitor& visitor);
 
+  const std::string& debug_name() const noexcept { return debug_name_; }
+  void set_debug_name(std::string debug_name) noexcept {
+    debug_name_ = std::move(debug_name);
+  }
+
  protected:
   virtual void on_tree_host_set();
 
@@ -110,6 +115,8 @@ class View : public base::RefCounted, public base::WeakReferenced {
   ViewGroup* parent_;
 
   base::EnumFlags<NeedsLayout> needs_layout_;
+
+  std::string debug_name_;
 
  public:
   base::EnumFlags<NeedsLayout> layout_propagation_mask;

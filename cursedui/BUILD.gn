@@ -7,8 +7,6 @@ shared_library("cursedui") {
     "dim.hpp",
     "drawable.cc",
     "drawable.hpp",
-    "text_view.cc",
-    "text_view.hpp",
     "view.cc",
     "view.hpp",
     "view_group.cc",
@@ -21,6 +19,8 @@ shared_library("cursedui") {
     "views/frame_layout.hpp",
     "views/linear_layout.cc",
     "views/linear_layout.hpp",
+    "views/text_view.cc",
+    "views/text_view.hpp",
   ]
 
   public_deps = [

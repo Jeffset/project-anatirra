@@ -2,7 +2,7 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
-#include "cursedui/text_view.hpp"
+#include "cursedui/views/text_view.hpp"
 
 #include "avada/input.hpp"
 #include "base/util.hpp"

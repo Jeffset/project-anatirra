@@ -5,9 +5,9 @@
 #include "avada/color.hpp"
 #include "base/debug/debug.hpp"
 #include "cursedui/drawable.hpp"
-#include "cursedui/text_view.hpp"
 #include "cursedui/view_tree_host.hpp"
 #include "cursedui/views/linear_layout.hpp"
+#include "cursedui/views/text_view.hpp"
 
 #include <algorithm>
 #include <codecvt>
@@ -43,14 +43,18 @@ class Factory {
   base::debug::setup_logging(&logger);
 
   auto lin_layout = base::make_ref_ptr<view::LinearLayout>();
+  lin_layout->set_debug_name("root-hor-linear-layout");
+
   lin_layout->set_background_color(avada::render::ColorRGB{33, 20, 20});
   auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();
   lin_layout2->set_orientation(view::LinearLayout::VERTICAL);
+  lin_layout2->set_debug_name("child-ver-linear-layout");
 
   auto view1 = base::make_ref_ptr<view::TextView>();
   auto view2 = base::make_ref_ptr<view::TextView>();
   view1->set_gravity(static_cast<gfx::Gravity>(gfx::GRAVITY_TOP | gfx::GRAVITY_BOTTOM));
-  view1->set_text(L"Test ◕ string");
+  view1->set_text(L"Test ◕ string A");
+  view1->set_debug_name("text-view-A");
   std::wifstream ifs{"/home/jeffset/text.txt"};
   ifs.imbue(std::locale(""));
   std::wstring wstring{std::istreambuf_iterator<wchar_t>{ifs}, {}};
@@ -60,7 +64,8 @@ class Factory {
 
   view1->set_background_color(avada::render::ColorRGB{100, 34, 40});
   view1->set_text_color(avada::render::ColorRGB{0, 0, 0});
-  view2->set_text(L"◕ Prod ◕ string ◕ long");
+  view2->set_text(L"◕ Prod ◕ string ◕ long B");
+  view2->set_debug_name("text-view-B");
 
   view2->border()->set_style(BorderDrawable::Style::DOUBLE);
 
@@ -84,8 +89,10 @@ class Factory {
   view3->set_text(L"Test ◕ string");
   view3->set_multiline(true);
   view3->set_text(std::move(wstring));
+  view3->set_debug_name("text-view-file");
 
-  view4->set_text(L"◕ Prod ◕ string ◕ long");
+  view4->set_text(L"◕ Prod ◕ string ◕ long C");
+  view4->set_debug_name("text-view-C");
   lin_layout2->add_child(view3);
   lin_layout2->add_child(view4);
   auto* lp3 = (view::LinearLayout::LayoutParams*)view3->layout_params().get();

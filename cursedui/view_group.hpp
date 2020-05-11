@@ -5,8 +5,8 @@
 #ifndef ANATIRRA_CURSEDUI_VIEW_GROUP
 #define ANATIRRA_CURSEDUI_VIEW_GROUP
 
+#include "avada/color.hpp"
 #include "base/macro.hpp"
-#include "cursedui/color.hpp"
 #include "cursedui/dim.hpp"
 #include "cursedui/view.hpp"
 
@@ -18,11 +18,6 @@
 
 namespace cursedui::view {
 
-class view_already_present : public view_exception {
- public:
-  const char* what() const noexcept override;
-};
-
 class LayoutParams;
 
 class ViewGroup : public View {
@@ -30,17 +25,15 @@ class ViewGroup : public View {
   ViewGroup() noexcept;
   ~ViewGroup() noexcept override;
 
-  void add_child(base::ref_ptr<View> child);
-  void remove_child(base::ref_ptr<View>& child);
+  void add_child(base::ref_ptr<View> child) noexcept;
+  void remove_child(base::ref_ptr<View>& child) noexcept;
 
   GETTER int child_count() const noexcept;
   GETTER View* get_child(int index);
 
-  void dispatch_mouse_event(const input::MouseEvent& event) override;
-  void dispatch_scroll_event(const input::ScrollEvent& event) override;
+  void dispatch_mouse_event(const avada::input::MouseEvent& event) override;
 
-  virtual bool intercept_mouse_event(const input::MouseEvent& event);
-  virtual bool intercept_scroll_event(const input::ScrollEvent& event);
+  virtual bool intercept_mouse_event(const avada::input::MouseEvent& event);
 
   virtual std::unique_ptr<LayoutParams> create_layout_params() const noexcept;
   virtual bool check_layout_params(LayoutParams* params) const noexcept;
@@ -54,8 +47,7 @@ class ViewGroup : public View {
 
   void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override = 0;
   void on_layout() override = 0;
-  void on_colorize(render::ColorPalette& palette) override;
-  render::BgColorState on_draw(render::Canvas& canvas) override;
+  void on_draw(paint::Canvas& canvas) override;
 
  private:
   std::vector<base::ref_ptr<View>> children_;

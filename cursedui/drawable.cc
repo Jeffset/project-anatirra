@@ -4,93 +4,101 @@
 
 #include "cursedui/drawable.hpp"
 
+#include "avada/color.hpp"
 #include "base/debug/debug.hpp"
-#include "cursedui/rendering.hpp"
+
+#include <array>
 
 namespace cursedui {
 
-Drawable::Drawable() noexcept = default;
+namespace {
 
+struct BorderSet {
+  wchar_t top_left;
+  wchar_t top_right;
+  wchar_t bottom_left;
+  wchar_t bottom_right;
+
+  wchar_t horizontal;
+  wchar_t vertical;
+
+  void draw(paint::Canvas& canvas,
+            const paint::Pen& pen,
+            const gfx::Rect& bounds) const noexcept {
+    canvas.draw(top_left, {bounds.left, bounds.top}, pen);
+    canvas.draw(top_right, {bounds.right, bounds.top}, pen);
+    canvas.draw(bottom_left, {bounds.left, bounds.bottom}, pen);
+    canvas.draw(bottom_right, {bounds.right, bounds.bottom}, pen);
+    const auto size = bounds.size();
+
+    canvas.draw_line(horizontal, {bounds.left + 1, bounds.top},
+                     paint::Direction::HORIZONTAL, size.width - 2, pen);
+    canvas.draw_line(horizontal, {bounds.left + 1, bounds.bottom},
+                     paint::Direction::HORIZONTAL, size.width - 2, pen);
+
+    canvas.draw_line(vertical, {bounds.left, bounds.top + 1}, paint::Direction::VERTICAL,
+                     size.height - 2, pen);
+    canvas.draw_line(vertical, {bounds.right, bounds.top + 1}, paint::Direction::VERTICAL,
+                     size.height - 2, pen);
+  }
+};
+
+const BorderSet SINGLE_BORDER{L'┌', L'┐', L'└', L'┘', L'─', L'│'};
+const BorderSet DOUBLE_BORDER{L'╔', L'╗', L'╚', L'╝', L'═', L'║'};
+
+}  // namespace
+
+Drawable::Drawable() noexcept = default;
 Drawable::~Drawable() noexcept = default;
 
-void Drawable::set_bounds(const gfx::Rect& bounds) {
-  bounds_ = bounds;
-}
-
-void Drawable::colorize(render::ColorPalette& palette) {
-  background_ = palette.obtain_color(render::SystemColor::BLACK);
-}
-
 SolidColorDrawable::SolidColorDrawable() noexcept
-    : color_descr_(render::SystemColor::BLACK) {}
+    : SolidColorDrawable(avada::render::SystemColor::DEFAULT) {}
 
-SolidColorDrawable::SolidColorDrawable(render::ColorDescr color_descr) noexcept
-    : color_descr_(color_descr) {}
+SolidColorDrawable::SolidColorDrawable(avada::render::Color color) noexcept
+    : pen_(avada::render::Colors::TRANSPARENT, color) {}
 
-void SolidColorDrawable::colorize(render::ColorPalette& palette) {
-  background_ = palette.obtain_color(color_descr_);
-}
-
-render::BgColorState SolidColorDrawable::draw(render::Canvas& canvas) {
+void SolidColorDrawable::draw(paint::Canvas& canvas) noexcept {
   if (!bounds().has_area())
-    return render::BgColorState{};
-  auto _bg = canvas.set_background_color(background_.get());
-  render::fill(canvas, ' ', bounds());
-  return _bg;
+    return;
+  canvas.fill(' ', bounds(), pen_);
 }
 
 BorderDrawable::BorderDrawable() noexcept
-    : color_descr_(render::SystemColor::WHITE), background_descr_(), style_(SINGLE) {}
+    : pen_(avada::render::SystemColor::DEFAULT, avada::render::Colors::TRANSPARENT),
+      style_(Style::SINGLE) {}
 
-void BorderDrawable::set_style(BorderDrawable::Style style) {
+void BorderDrawable::set_style(BorderDrawable::Style style) noexcept {
   if (style_ == style)
     return;
   style_ = style;
-  if (style_ == NO_BORDER) {
-    background_ = nullptr;
-    foreground_ = nullptr;
-  }
 }
 
-void BorderDrawable::set_background_color(std::optional<render::ColorDescr> color_descr) {
-  background_descr_ = color_descr;
-  if (!background_descr_.has_value()) {
-    background_ = nullptr;
-  }
-}
-
-gfx::dim_t BorderDrawable::border_width() const {
+gfx::dim_t BorderDrawable::border_width() const noexcept {
   switch (style_) {
-    case SINGLE:
+    case Style::SINGLE:
+    case Style::DOUBLE:
       return 1;
-    case DOUBLE:
-      return 2;
-    case NO_BORDER:
+    case Style::NO_BORDER:
       return 0;
     default:
       ASSERT(false) << "Not reached";
   }
 }
 
-void BorderDrawable::colorize(render::ColorPalette& palette) {
-  if (style_ != NO_BORDER) {
-    if (background_descr_.has_value())
-      background_ = palette.obtain_color(background_descr_.value());
-    foreground_ = palette.obtain_color(color_descr_);
-  }
-}
+void BorderDrawable::draw(paint::Canvas& canvas) noexcept {
+  if (style_ == Style::NO_BORDER || !bounds().has_area())
+    return;
 
-render::BgColorState BorderDrawable::draw(render::Canvas& canvas) {
-  if (style_ == NO_BORDER || !bounds().has_area())
-    return render::BgColorState{};
-  render::BgColorState bg;
-  if (background_) {
-    bg = canvas.set_background_color(background_.get());
+  switch (style_) {
+    case Style::SINGLE:
+      SINGLE_BORDER.draw(canvas, pen_, bounds());
+      break;
+    case Style::DOUBLE:
+      DOUBLE_BORDER.draw(canvas, pen_, bounds());
+      break;
+    default:
+      ASSERT(false) << "Not reached";
   }
-  canvas.set_foreground_color(foreground_.get());
-  // FIXME: use border style
-  canvas << render::Box{bounds(), &render::BorderStyles::Single};
-  return bg;
 }
 
 }  // namespace cursedui

@@ -37,7 +37,7 @@ namespace base::debug {
 
 class LoggerBase {
  public:
-  virtual void log(const std::streambuf* message) noexcept = 0;
+  virtual void log(std::streambuf* message) noexcept = 0;
 
  protected:
   ~LoggerBase() noexcept;
@@ -45,7 +45,7 @@ class LoggerBase {
 
 class LoggerToStdErr : public LoggerBase {
  public:
-  void log(const std::streambuf* message) noexcept final;
+  void log(std::streambuf* message) noexcept final;
 };
 
 // Main function used to setup logging.

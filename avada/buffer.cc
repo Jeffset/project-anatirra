@@ -7,8 +7,10 @@
 #include "base/debug/debug.hpp"
 #include "base/debug/tracing.hpp"
 #include "base/exception.hpp"
+#include "base/util.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <codecvt>
 #include <locale>
 #include <optional>
@@ -55,14 +57,13 @@ class Renderer {
     do {  // Handle mode
       ScopedModeChange mode_change{*this};
 
-      {  // Background color
-        const auto cell_bg_color = cell.bg_color();
-        if (bg_color_ != cell_bg_color) {
-          auto encoder = BgColorEncodeVisitor{mode_change};
-          std::visit(encoder, cell_bg_color);
+      // Background color
+      const auto cell_bg_color = cell.bg_color();
+      if (bg_color_ != cell_bg_color) {
+        auto encoder = BgColorEncodeVisitor{mode_change};
+        std::visit(encoder, cell_bg_color);
 
-          bg_color_ = cell_bg_color;
-        }
+        bg_color_ = cell_bg_color;
       }
 
       if (cell.data().empty() || cell.data()[0] == ' ') {
@@ -73,7 +74,7 @@ class Renderer {
       }
 
       {  // Foreground color
-        const auto cell_fg_color = cell.fg_color();
+        const auto cell_fg_color = alpha_blend(cell.fg_color(), cell_bg_color);
         if (fg_color_ != cell_fg_color) {
           auto encoder = FgColorEncodeVisitor{mode_change};
           std::visit(encoder, cell_fg_color);
@@ -83,12 +84,12 @@ class Renderer {
 
       const auto cell_attr = cell.attributes();
       auto attr_diff = attributes_.value_or(~cell_attr) ^ cell_attr;
-      if (attr_diff & Buffer::ATTRIB_BOLD)
-        mode_change << (cell_attr & Buffer::ATTRIB_BOLD ? 1 : 22);
-      if (attr_diff & Buffer::ATTRIB_ITALIC)
-        mode_change << (cell_attr & Buffer::ATTRIB_ITALIC ? 3 : 23);
-      if (attr_diff & Buffer::ATTRIB_UNDERLINE)
-        mode_change << (cell_attr & Buffer::ATTRIB_UNDERLINE ? 4 : 24);
+      if (attr_diff & RenderAttributes::BOLD)
+        mode_change << (cell_attr & RenderAttributes::BOLD ? 1 : 22);
+      if (attr_diff & RenderAttributes::ITALIC)
+        mode_change << (cell_attr & RenderAttributes::ITALIC ? 3 : 23);
+      if (attr_diff & RenderAttributes::UNDERLINE)
+        mode_change << (cell_attr & RenderAttributes::UNDERLINE ? 4 : 24);
       attributes_ = cell_attr;
     } while (false);
 
@@ -196,7 +197,10 @@ class Renderer {
     }
 
     void operator()(SystemColor color) const noexcept {
-      mode_change << 0 << static_cast<int>(color) + (background ? 10 : 0);
+      int code = static_cast<int>(color) + (background ? 40 : 30);
+      if (color == SystemColor::DEFAULT)
+        code += 1;
+      mode_change << code;
     }
   };
 
@@ -297,6 +301,32 @@ void Buffer::Cell::set_attributes(uint8_t attributes) noexcept {
   dirty_ = true;
 }
 
+void Buffer::Cell::blend(const Buffer::Cell& rhs) noexcept {
+  // Copy data as is.
+  bool changed = data() != rhs.data();
+  data_ = rhs.data_;
+  data_len_ = rhs.data_len_;
+
+  // Blend colors.
+  changed |= fg_color_ != (fg_color_ = alpha_blend(rhs.fg_color(), fg_color_));
+  changed |= bg_color_ != (bg_color_ = alpha_blend(rhs.bg_color(), bg_color_));
+
+  // Merge attributes.
+  const auto attributes = attributes_ | rhs.attributes();
+  changed |= attributes_ != attributes;
+  attributes_ = attributes;
+
+  dirty_ |= changed;
+}
+
+void Buffer::Cell::assign(const Buffer::Cell& rhs) noexcept {
+  if (*this == rhs)
+    return;
+
+  *this = rhs;
+  dirty_ = true;
+}
+
 Buffer::Buffer() noexcept
     : row_capacity_(0), column_capacity_(0), rows_(0), columns_(0) {}
 
@@ -319,7 +349,7 @@ void Buffer::resize(int rows, int columns) noexcept {
 }
 
 void Buffer::render(Buffer& screen_reference) {
-  base::debug::ScopedTrace trace{__PRETTY_FUNCTION__};
+  base::debug::ScopedTrace trace{"Buffer::render"};
 
   std::unordered_map<std::pair<Color, Color>, Renderer> renderers;
   const auto screen_rows = screen_reference.rows();
@@ -362,10 +392,8 @@ void Buffer::render(Buffer& screen_reference) {
 
     for (int j = columns_with_reference; j < columns_; ++j) {  // Zone "B"
       auto& cell = row[j];
-      if (cell.dirty()) {
-        cell.clear_dirty();
-        renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
-      }
+      cell.clear_dirty();
+      renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
       screen_reference(i, j) = cell;
     }
   }
@@ -374,10 +402,8 @@ void Buffer::render(Buffer& screen_reference) {
     auto& row = contents_[i];
     for (int j = 0; j < columns_; ++j) {
       auto& cell = row[j];
-      if (cell.dirty()) {
-        cell.clear_dirty();
-        renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
-      }
+      cell.clear_dirty();
+      renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
       screen_reference(i, j) = cell;
     }
   }
@@ -410,6 +436,7 @@ const Buffer::Cell& Buffer::operator()(int i, int j) const noexcept {
   ASSERT(j >= 0 && j <= columns_) << "j:" << j;
   return contents_[i][j];
 }
+
 }  // namespace avada::render
 
 namespace std {

@@ -5,17 +5,11 @@
 #ifndef ANATIRRA_CURSEDUI_DRAWABLE
 #define ANATIRRA_CURSEDUI_DRAWABLE
 
-#include "cursedui/color.hpp"
+#include "avada/color.hpp"
+#include "cursedui/canvas.hpp"
 #include "cursedui/dim.hpp"
 
-#include <variant>
-
 namespace cursedui {
-
-namespace render {
-class Canvas;
-class ColorPalette;
-}  // namespace render
 
 class Drawable {
  protected:
@@ -24,16 +18,10 @@ class Drawable {
  public:
   virtual ~Drawable() noexcept;
 
-  void set_bounds(const gfx::Rect& bounds);
+  void set_bounds(const gfx::Rect& bounds) noexcept { bounds_ = bounds; }
+  GETTER gfx::Rect bounds() const noexcept { return bounds_; }
 
-  virtual void colorize(render::ColorPalette& palette);
-  NODISCARD virtual render::BgColorState draw(render::Canvas&) = 0;
-
-  GETTER base::ref_ptr<render::Color> background_color() const { return background_; }
-  GETTER gfx::Rect bounds() const { return bounds_; }
-
- protected:
-  base::ref_ptr<render::Color> background_;
+  virtual void draw(paint::Canvas&) noexcept = 0;
 
  private:
   gfx::Rect bounds_;
@@ -42,21 +30,21 @@ class Drawable {
 class SolidColorDrawable : public Drawable {
  public:
   SolidColorDrawable() noexcept;
-  explicit SolidColorDrawable(render::ColorDescr color_descr) noexcept;
-  void set_color(render::ColorDescr color_descr) { color_descr_ = color_descr; }
-  GETTER render::ColorDescr color() const { return color_descr_; }
+  explicit SolidColorDrawable(avada::render::Color color) noexcept;
+
+  void set_color(avada::render::Color color) noexcept { pen_.bg_color = color; }
+  GETTER avada::render::Color color() const noexcept { return pen_.bg_color; }
 
  public:
-  void colorize(render::ColorPalette& palette) override;
-  NODISCARD render::BgColorState draw(render::Canvas& canvas) override;
+  void draw(paint::Canvas& canvas) noexcept override;
 
  private:
-  render::ColorDescr color_descr_;
+  paint::Pen pen_;
 };
 
 class BorderDrawable : public Drawable {
  public:
-  enum Style {
+  enum class Style {
     NO_BORDER = 0,
     SINGLE = 1,
     DOUBLE = 2,
@@ -64,28 +52,25 @@ class BorderDrawable : public Drawable {
 
   BorderDrawable() noexcept;
 
-  void set_style(Style style);
-  GETTER Style style() const { return style_; }
+  void set_style(Style style) noexcept;
+  GETTER Style style() const noexcept { return style_; }
 
-  void set_color(render::ColorDescr color_descr) { color_descr_ = color_descr; }
-  GETTER render::ColorDescr color() const { return color_descr_; }
+  void set_color(avada::render::Color color) noexcept { pen_.fg_color = color; }
+  GETTER avada::render::Color color() const noexcept { return pen_.fg_color; }
 
-  void set_background_color(std::optional<render::ColorDescr> color_descr);
-  GETTER std::optional<render::ColorDescr> background_color() const {
-    return background_descr_;
+  void set_background_color(avada::render::Color color) noexcept {
+    pen_.bg_color = color;
   }
+  GETTER avada::render::Color background_color() const noexcept { return pen_.bg_color; }
 
-  GETTER gfx::dim_t border_width() const;
+  GETTER gfx::dim_t border_width() const noexcept;
 
  public:
-  void colorize(render::ColorPalette& palette) override;
-  render::BgColorState draw(render::Canvas& canvas) override;
+  void draw(paint::Canvas& canvas) noexcept override;
 
  private:
-  render::ColorDescr color_descr_;
-  std::optional<render::ColorDescr> background_descr_;
+  paint::Pen pen_;
   Style style_;
-  base::ref_ptr<render::Color> foreground_;
 };
 
 }  // namespace cursedui

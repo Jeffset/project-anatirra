@@ -19,6 +19,7 @@ shared_library("base") {
     "util.hpp",
     "weak_ref.cc",
     "weak_ref.hpp",
+    "enum_flags.hpp",
   ]
 
   libs = [ "dl" ]

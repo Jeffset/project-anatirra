@@ -5,6 +5,9 @@
 #ifndef ANATIRRA_AVADA_BUFFER
 #define ANATIRRA_AVADA_BUFFER
 
+#include "avada/color.hpp"
+#include "base/nullable.hpp"
+
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -14,51 +17,7 @@
 
 namespace avada::render {
 
-union ColorRGB {
-  uint32_t data_;
-  alignas(uint32_t) uint8_t rgba_[4];
-
-  inline ColorRGB(uint8_t red, uint8_t green, uint8_t blue)
-      : rgba_{red, green, blue, 255} {}
-  inline explicit ColorRGB(uint32_t rgb) : data_{rgb} {}
-  inline ColorRGB() : data_(0) {}
-
-  inline uint8_t red() const noexcept { return rgba_[0]; }
-  inline uint8_t green() const noexcept { return rgba_[1]; }
-  inline uint8_t blue() const noexcept { return rgba_[2]; }
-
-  inline uint8_t& red() noexcept { return rgba_[0]; }
-  inline uint8_t& green() noexcept { return rgba_[1]; }
-  inline uint8_t& blue() noexcept { return rgba_[2]; }
-
-  inline bool operator==(const ColorRGB& rhs) const noexcept {
-    return data_ == rhs.data_;
-  }
-  inline bool operator!=(const ColorRGB& rhs) const noexcept {
-    return data_ != rhs.data_;
-  }
-};
-
-enum class SystemColor : uint8_t {
-  BLACK = 30,
-  RED,
-  GREEN,
-  YELLOW,
-  BLUE,
-  MAGENTA,
-  CYAN,
-  WHITE,
-  DEFAULT,
-};
-
-using Color = std::variant<ColorRGB, SystemColor>;
-
 class Buffer {
- public:
-  static constexpr uint8_t ATTRIB_BOLD = 1 << 0;
-  static constexpr uint8_t ATTRIB_ITALIC = 1 << 1;
-  static constexpr uint8_t ATTRIB_UNDERLINE = 1 << 2;
-
  public:
   Buffer() noexcept;
 
@@ -89,6 +48,10 @@ class Buffer {
     void set_bg_color(Color bg) noexcept;
     void set_attributes(uint8_t attributes) noexcept;
 
+    void blend(const Cell& rhs) noexcept;
+    void assign(const Cell& rhs) noexcept;
+
+    void mark_dirty() noexcept { dirty_ = true; }
     void clear_dirty() noexcept { dirty_ = false; }
 
    private:
@@ -97,7 +60,7 @@ class Buffer {
     Color fg_color_;
     Color bg_color_;
     uint8_t attributes_;
-    bool dirty_;
+    bool dirty_;  // TODO [perf] Add a dirty region to the buffer.
   };
 
   Cell& operator()(int i, int j) noexcept;

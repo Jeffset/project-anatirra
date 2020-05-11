@@ -10,7 +10,10 @@
 class EventHandler {
  public:
   EventHandler(avada::Context& context)
-      : context_(context), color_{28, 0, 50}, should_exit_(false), is_drawing_(false) {}
+      : context_(context),
+        color_{255, 0, 255, 50},
+        should_exit_(false),
+        is_drawing_(false) {}
 
   void operator()(avada::input::ResizeEvent resize) {
     LOG() << "ResizeEvent: " << resize.rows << " x " << resize.columns;
@@ -64,11 +67,17 @@ class EventHandler {
  private:
   void draw(avada::render::Buffer& buffer, int x, int y) {
     using namespace avada::render;
+    using namespace base;
+
     auto& cell = buffer(y - 1, x - 1);
     cell.set_data(L'&');
-    cell.set_fg_color(color_);
-    cell.set_bg_color(ColorRGB{255, 0, 140});
-    cell.set_attributes(Buffer::ATTRIB_BOLD);
+    if (cell.fg_color() == SystemColor::DEFAULT) {
+      auto cl = color_;
+      cl.alpha() = 0;
+      cell.set_fg_color(cl);
+    }
+    cell.set_fg_color(alpha_blend(color_, cell.fg_color()));
+    cell.set_attributes(RenderAttributes::BOLD);
     context_.render();
   }
 

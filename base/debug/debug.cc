@@ -25,7 +25,7 @@ void setup_logging(LoggerBase* logger) noexcept {
   g_logger = logger;
 }
 
-void LoggerToStdErr::log(const std::streambuf* message) noexcept {
+void LoggerToStdErr::log(std::streambuf* message) noexcept {
   std::cerr << message << std::endl;
 }
 

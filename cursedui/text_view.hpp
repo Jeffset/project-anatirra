@@ -11,11 +11,6 @@
 #include <string_view>
 #include <vector>
 
-namespace cursedui::render {
-class Canvas;
-class ColorPalette;
-}  // namespace cursedui::render
-
 namespace cursedui::view {
 
 class TextView : public View {
@@ -33,19 +28,18 @@ class TextView : public View {
   void set_multiline(bool multiline) noexcept;
   bool multiline() const noexcept { return multiline_; }
 
-  void set_text_color(render::ColorDescr descr) noexcept;
-  GETTER render::ColorDescr text_color() const noexcept { return text_color_descr_; }
+  void set_text_color(avada::render::Color color) noexcept;
+  GETTER avada::render::Color text_color() const noexcept { return text_color_; }
 
   bool focusable() const noexcept override { return true; }
 
  protected:
   void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
-  void on_colorize(render::ColorPalette& palette) override;
 
-  void on_key_event(const input::KeyEvent& event) override;
+  void on_key_event(const avada::input::KeyboardEvent& event) override;
 
-  render::BgColorState on_draw(render::Canvas& canvas) override;
+  void on_draw(paint::Canvas& canvas) override;
 
  private:
   gfx::Size measure_text(gfx::dim_t max_width, gfx::dim_t max_height) const noexcept;
@@ -55,15 +49,12 @@ class TextView : public View {
   std::wstring text_;
   gfx::Gravity gravity_;
   bool multiline_;
-  render::ColorDescr text_color_descr_;
+  avada::render::Color text_color_;
 
   // layout scoped attributes:
   std::vector<std::wstring_view> lines_to_render_;
   gfx::Point text_pos_;
   bool ellipsize_;
-
-  // colors:
-  base::ref_ptr<render::Color> text_color_;
 };
 
 }  // namespace cursedui::view

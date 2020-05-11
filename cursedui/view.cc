@@ -4,18 +4,15 @@
 
 #include "cursedui/view.hpp"
 
+#include "avada/input.hpp"
 #include "base/debug/debug.hpp"
 #include "base/util.hpp"
+#include "cursedui/canvas.hpp"
 #include "cursedui/drawable.hpp"
-#include "cursedui/rendering.hpp"
 #include "cursedui/view_group.hpp"
 #include "cursedui/view_tree_host.hpp"
 
-#include <iostream>
-
 namespace cursedui::view {
-
-PIMPL_DEFINE(View){};
 
 void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   measured_size_.reset();
@@ -38,24 +35,24 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   // NOTE: Think: is this actually right idea to enforce it?
   std::visit(base::overloaded{
                  [this](const MeasureExactly& exactly) {
-                   if (measured_size_->width != exactly.dim)
-                     throw measure_spec_violated_exception();
+                   ASSERT(measured_size_->width == exactly.dim)
+                       << "Measure exactly width spec is violated";
                  },
                  [this](const MeasureAtMost& at_most) {
-                   if (measured_size_->width > at_most.dim)
-                     throw measure_spec_violated_exception();
+                   ASSERT(measured_size_->width <= at_most.dim)
+                       << "At most width spec is violated";
                  },
                  [](MeasureUnlimited) {},
              },
              width_spec);
   std::visit(base::overloaded{
                  [this](const MeasureExactly& exactly) {
-                   if (measured_size_->height != exactly.dim)
-                     throw measure_spec_violated_exception();
+                   ASSERT(measured_size_->height == exactly.dim)
+                       << "Measure exactly height spec is violated";
                  },
                  [this](const MeasureAtMost& at_most) {
-                   if (measured_size_->height > at_most.dim)
-                     throw measure_spec_violated_exception();
+                   ASSERT(measured_size_->height <= at_most.dim)
+                       << "At most height spec is violated";
                  },
                  [](MeasureUnlimited) {},
              },
@@ -72,54 +69,40 @@ void View::layout(const gfx::Rect& area) {
   on_layout();
 }
 
-void View::colorize(render::ColorPalette& palette) {
-  if (background_)
-    background_->colorize(palette);
-  if (border_)
-    border_->colorize(palette);
-  on_colorize(palette);
+void View::draw(paint::Canvas& canvas) {
+  on_draw(canvas);
 }
 
-render::BgColorState View::draw(render::Canvas& canvas) {
-  try {
-    return on_draw(canvas);
-  } catch (render::render_exception& e) {
-    std::cerr << e.what() << '\n';
-    return {};
-  }
-}
-
-void View::dispatch_mouse_event(const input::MouseEvent& event) {
-  std::wcerr << L"mevent " << (int)event.event_code << L'\n';
-  if (focusable() && event.is_mouse_down()) {
-    focus();
-  }
+void View::dispatch_mouse_event(const avada::input::MouseEvent& event) {
+  using namespace avada::input;
+  LOG() << "Mouse event" << event.to_string();
+  std::visit(base::overloaded{
+                 [this](MouseEvent::ButtonEvent be) {
+                   if (be.code == MouseEvent::Button::LEFT &&
+                       be.state == MouseEvent::State::PRESSED && focusable()) {
+                     focus();
+                   }
+                 },
+                 [](auto) {},
+             },
+             event.data);
   on_mouse_event(event);
 }
 
-void View::dispatch_scroll_event(const input::ScrollEvent& event) {
-  on_scroll_event(event);
-}
+void View::on_key_event(const avada::input::KeyboardEvent&) {}
 
-void View::on_key_event(const input::KeyEvent&) {}
-
-void View::on_mouse_event(const input::MouseEvent&) {}
-
-void View::on_scroll_event(const input::ScrollEvent&) {}
+void View::on_mouse_event(const avada::input::MouseEvent&) {}
 
 bool View::focused() const noexcept {
   return view_tree_host_ && view_tree_host_->focused_view() == this;
 }
 
 void View::focus() {
-  std::wcerr << "focus()\n";
-  if (!focusable())
-    throw view_exception();  // FIXME: throw proper exception type here
+  ASSERT(focusable());
   if (!view_tree_host_)
     return;
   if (focused())
     return;
-  std::wcerr << "focus2()\n";
   if (auto focused_view = view_tree_host_->focused_view()) {
     focused_view->unfocus();
   }
@@ -140,8 +123,7 @@ View::View()
       border_(new BorderDrawable()),
       parent_(nullptr),
       needs_layout_(NEEDS_LAYOUT_SIZE),
-      layout_propagation_mask(NEEDS_LAYOUT_SIZE),
-      PIMPL_INIT(View) {}
+      layout_propagation_mask(NEEDS_LAYOUT_SIZE) {}
 
 base::nullable<LayoutParams> View::layout_params() const noexcept {
   return layout_params_.get();
@@ -156,7 +138,7 @@ void View::set_background(std::unique_ptr<Drawable> drawable) {
   background_ = std::move(drawable);
 }
 
-void View::set_background_color(render::ColorDescr color) {
+void View::set_background_color(avada::render::Color color) {
   background_ = std::make_unique<SolidColorDrawable>(color);
 }
 
@@ -215,21 +197,15 @@ void View::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
 
 void View::on_layout() {}
 
-void View::on_colorize(render::ColorPalette&) {}
+void View::on_draw(paint::Canvas& canvas) {
+  if (!outer_bounds().has_area())
+    return;
 
-render::BgColorState View::on_draw(render::Canvas& canvas) {
-  if (!outer_bounds().has_area()) {
-    return {};
-  }
-
-  render::BgColorState bg;
   if (background_)
-    bg = background_->draw(canvas);
+    background_->draw(canvas);
 
   if (border_)
     border_->draw(canvas);
-
-  return bg;
 }
 
 gfx::Rect View::inner_bounds() const noexcept {
@@ -240,10 +216,6 @@ gfx::Rect View::inner_bounds() const noexcept {
 
 gfx::Rect View::outer_bounds() const noexcept {
   return bounds_.value();
-}
-
-const char* measure_spec_violated_exception::what() const noexcept {
-  return "Measure spec has been violated";
 }
 
 ViewTreeVisitor::~ViewTreeVisitor() = default;

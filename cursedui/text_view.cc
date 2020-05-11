@@ -4,9 +4,10 @@
 
 #include "cursedui/text_view.hpp"
 
+#include "avada/input.hpp"
 #include "base/util.hpp"
+#include "cursedui/canvas.hpp"
 #include "cursedui/drawable.hpp"
-#include "cursedui/rendering.hpp"
 
 #include <iostream>
 #include <limits>
@@ -23,8 +24,8 @@ std::wstring_view create_view(std::wstring::const_iterator begin,
 
 }  // namespace
 
-gfx::Size TextView::measure_text(gfx::dim_t max_width, gfx::dim_t max_height) const
-    noexcept {
+gfx::Size TextView::measure_text(gfx::dim_t max_width,
+                                 gfx::dim_t max_height) const noexcept {
   if (!multiline_) {
     auto newline_pos = text_.find_first_of('\n');
     auto line_len = newline_pos == std::wstring::npos ? text_.size() : newline_pos;
@@ -153,37 +154,38 @@ void TextView::on_layout() {
   text_pos_ = gfx::gravitated_rect(bounds, text_block_size, gravity_).position();
 }
 
-void TextView::on_colorize(render::ColorPalette& palette) {
-  text_color_ = palette.obtain_color(text_color_descr_);
+void TextView::on_key_event(const avada::input::KeyboardEvent& event) {
+  std::visit(base::overloaded{
+                 [this](wchar_t key) { set_text(text_ + key); },
+                 [this](avada::input::KeyboardKey key) {
+                   if (key == avada::input::KeyboardKey::BACKSPACE) {
+                     set_text(text_.substr(0, text_.size() - 1));
+                   }
+                 },
+             },
+             event.key);
 }
 
-void TextView::on_key_event(const input::KeyEvent& event) {
-  if (event.key_char) {
-    set_text(text_ + event.key_char.value());
-  } else if (event.key_code == input::Key::BACKSPACE) {
-    set_text(text_.substr(0, text_.size() - 1));
-  }
-}
+void TextView::on_draw(paint::Canvas& canvas) {
+  View::on_draw(canvas);
 
-render::BgColorState TextView::on_draw(render::Canvas& canvas) {
-  auto bg = View::on_draw(canvas);
-  canvas.set_foreground_color(text_color_.get());
-
+  const paint::Pen pen{text_color_, avada::render::Colors::TRANSPARENT};
   auto pos = text_pos_;
   for (auto& line : lines_to_render_) {
-    canvas << pos << line;
+    canvas.draw(line, pos, pen);
     ++pos.y;
   }
   if (ellipsize_) {
-    canvas << L'…';
+    --pos.y;
+    pos.x += lines_to_render_.back().size();
+    canvas.draw(L'…', pos, pen);
   }
-  return bg;
 }
 
 TextView::TextView()
     : gravity_(gfx::GRAVITY_CENTER),
       multiline_(false),
-      text_color_descr_(render::SystemColor::WHITE) {}
+      text_color_(avada::render::SystemColor::DEFAULT) {}
 
 void TextView::set_text(const std::wstring& str) {
   lines_to_render_.clear();
@@ -211,8 +213,8 @@ void TextView::set_multiline(bool multiline) noexcept {
   mark_needs_layout(NEEDS_LAYOUT_SIZE);
 }
 
-void TextView::set_text_color(render::ColorDescr descr) noexcept {
-  text_color_descr_ = descr;
+void TextView::set_text_color(avada::render::Color color) noexcept {
+  text_color_ = color;
 }
 
 }  // namespace cursedui::view

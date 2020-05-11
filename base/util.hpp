@@ -51,6 +51,11 @@ bool operator!=(const std::variant<Ts...>& var, const T& t) {
 template <class T>
 constexpr auto identity_map = [](T v) { return v; };
 
+template <class T>
+auto clamp(const T& value, const T& min, const T& max) {
+  return std::max(min, std::min(value, max));
+}
+
 }  // namespace base
 
 #endif  // ANATIRRA_BASE_UTIL

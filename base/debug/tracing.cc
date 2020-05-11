@@ -15,7 +15,7 @@ ScopedTrace::~ScopedTrace() noexcept {
   using namespace std::chrono;
   auto duration = high_resolution_clock::now() - start_;
   TRACE() << "trace (" << name_ << "): " << duration_cast<microseconds>(duration).count()
-          << L"μs";
+          << L" μs";
 }
 
 }  // namespace base::debug

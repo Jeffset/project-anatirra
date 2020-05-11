@@ -9,6 +9,7 @@
 #include "base/macro.hpp"
 
 #include <csignal>
+#include <regex>
 #include <sstream>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
@@ -33,7 +34,7 @@ inline void write_stdout(const char (&data)[N]) {
 volatile std::sig_atomic_t g_pending_resize = 0;
 Context* g_avada_context;
 
-void handle_resize(int) {
+extern "C" void handle_resize(int) {
   g_pending_resize = 1;
 }
 

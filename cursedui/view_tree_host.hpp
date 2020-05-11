@@ -5,47 +5,43 @@
 #ifndef ANATIRRA_CURSEDUI_VIEW_TREE_HOST
 #define ANATIRRA_CURSEDUI_VIEW_TREE_HOST
 
+#include "avada/avada.hpp"
 #include "base/macro.hpp"
-#include "cursedui/input.hpp"
 #include "cursedui/view.hpp"
 
 #include <memory>
 
-namespace cursedui::render {
+namespace paint {
 class Canvas;
-class ColorPalette;
-}  // namespace cursedui::render
+}
 
-namespace cursedui::view {
+namespace cursedui {
 
 class ViewTreeHost {
  public:
-  ViewTreeHost() noexcept;
+  ViewTreeHost(base::ref_ptr<view::View> root);
 
-  void set_view_root(base::ref_ptr<View> root) noexcept;
+  void set_focused_view(base::ref_ptr<view::View> focused_view) noexcept;
+  GETTER base::ref_ptr<view::View> focused_view() noexcept;
 
-  void set_focused_view(base::ref_ptr<View> focused_view) noexcept;
-  GETTER base::ref_ptr<View> focused_view() noexcept;
-
-  void dispatch_key_event(const input::KeyEvent& event);
-  void dispatch_mouse_event(const input::MouseEvent& event);
-  void dispatch_scroll_event(const input::ScrollEvent& event);
-
-  void on_terminal_resize(const gfx::Size& screen_size);
-
-  void poll(render::Canvas& canvas, render::ColorPalette& palette);
+  void run();
 
  private:
   void layout_tree();
+  void paint_tree(paint::Canvas& canvas);
 
  private:
-  base::ref_ptr<View> root_;
+  void handle_root_size(const gfx::Size& size);
 
-  base::weak_ref<View> focused_view_;
+ private:
+  avada::Context avada_;
+
+  const base::ref_ptr<view::View> root_;
+  base::weak_ref<view::View> focused_view_;
 
   DISABLE_COPY_AND_ASSIGN(ViewTreeHost);
 };
 
-}  // namespace cursedui::view
+}  // namespace cursedui
 
 #endif  // ANATIRRA_CURSEDUI_VIEW_TREE_HOST

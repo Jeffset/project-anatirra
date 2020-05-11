@@ -2,9 +2,8 @@
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
+#include "avada/color.hpp"
 #include "base/debug/debug.hpp"
-#include "base/meta_string.hpp"
-#include "cursedui/context.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/text_view.hpp"
 #include "cursedui/view_tree_host.hpp"
@@ -13,7 +12,6 @@
 #include <algorithm>
 #include <codecvt>
 #include <fstream>
-#include <iostream>
 #include <iterator>
 #include <locale>
 #include <unordered_map>
@@ -37,20 +35,15 @@ class Factory {
   std::vector<base::weak_ref<cursedui::view::View>> weaks_;
 };
 
-void meta_string_test() {
-  using namespace base::meta_literals;
-  constexpr auto s1 = "foo bar expr"_meta + " ext"_meta;
-  static_assert(s1.value[0] == 'f');
-  static_assert(s1 == "foo bar expr ext"_meta);
-
-  auto s2 = base::map(s1, [](auto c) { return c + "|"_meta; });
-}
-
 [[noreturn]] int main() {
   using namespace cursedui;
   std::setlocale(LC_ALL, "");
 
+  base::debug::LoggerToStdErr logger;
+  base::debug::setup_logging(&logger);
+
   auto lin_layout = base::make_ref_ptr<view::LinearLayout>();
+  lin_layout->set_background_color(avada::render::ColorRGB{33, 20, 20});
   auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();
   lin_layout2->set_orientation(view::LinearLayout::VERTICAL);
 
@@ -61,13 +54,15 @@ void meta_string_test() {
   std::wifstream ifs{"/home/jeffset/text.txt"};
   ifs.imbue(std::locale(""));
   std::wstring wstring{std::istreambuf_iterator<wchar_t>{ifs}, {}};
-  std::wcerr << "SOURCE TEXT: " << wstring << '\n';
+  LOG() << "SOURCE TEXT: " << wstring << '\n';
   view1->set_text(wstring);
   view1->set_multiline(true);
 
-  view1->set_background_color(render::RGB8Data{100, 34, 40});
-  view1->set_text_color(render::RGB8Data{0, 0, 0});
+  view1->set_background_color(avada::render::ColorRGB{100, 34, 40});
+  view1->set_text_color(avada::render::ColorRGB{0, 0, 0});
   view2->set_text(L"◕ Prod ◕ string ◕ long");
+
+  view2->border()->set_style(BorderDrawable::Style::DOUBLE);
 
   lin_layout->add_child(view1);
   lin_layout->add_child(lin_layout2);
@@ -82,10 +77,10 @@ void meta_string_test() {
   lp2->set_height_layout_spec(view::LayoutMatchParent{});
 
   auto view3 = base::make_ref_ptr<view::TextView>();
-  view3->border()->set_color(render::RGB8Data{0, 255, 200});
+  view3->border()->set_color(avada::render::ColorRGB{0, 255, 200});
   auto view4 = base::make_ref_ptr<view::TextView>();
-  view4->border()->set_color(render::RGB8Data{0, 50, 18});
-  view4->border()->set_background_color(render::RGB8Data{128, 255, 255});
+  view4->border()->set_color(avada::render::ColorRGB{0, 50, 18});
+  view4->border()->set_background_color(avada::render::ColorRGB{128, 255, 255});
   view3->set_text(L"Test ◕ string");
   view3->set_multiline(true);
   view3->set_text(std::move(wstring));
@@ -111,9 +106,9 @@ void meta_string_test() {
   }
   ASSERT(factory.weak_count() == 0);
 
-  Context context;
-  view::ViewTreeHost view_root{};
-  view_root.set_view_root(lin_layout);
-
-  context.run(view_root);
+  try {
+    ViewTreeHost{lin_layout}.run();
+  } catch (base::exception& e) {
+    LOG() << e.stack_trace().to_string(e.what());
+  }
 }

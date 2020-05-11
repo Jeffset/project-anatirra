@@ -1,5 +1,7 @@
 shared_library("avada") {
   sources = [
+    "color.cc",
+    "color.hpp",
     "avada.cc",
     "avada.hpp",
     "buffer.cc",

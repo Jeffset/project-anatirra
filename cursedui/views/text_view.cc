@@ -183,7 +183,7 @@ void TextView::on_draw(paint::Canvas& canvas) {
 }
 
 TextView::TextView()
-    : gravity_(gfx::GRAVITY_CENTER),
+    : gravity_(gfx::Gravity::CENTER),
       multiline_(false),
       text_color_(avada::render::SystemColor::DEFAULT) {}
 
@@ -199,7 +199,7 @@ void TextView::set_text(std::wstring&& str) {
   mark_needs_layout(multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH);
 }
 
-void TextView::set_gravity(gfx::Gravity gravity) noexcept {
+void TextView::set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept {
   if (gravity_ == gravity)
     return;
   gravity_ = gravity;

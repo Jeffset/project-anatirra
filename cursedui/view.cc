@@ -36,7 +36,9 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   std::visit(base::overloaded{
                  [this](const MeasureExactly& exactly) {
                    ASSERT(measured_size_->width == exactly.dim)
-                       << "Measure exactly width spec is violated";
+                       << "Measure exactly width spec is violated: "
+                       << measured_size_->width << " vs " << exactly.dim << " in '"
+                       << debug_name() << '\'';
                  },
                  [this](const MeasureAtMost& at_most) {
                    ASSERT(measured_size_->width <= at_most.dim)
@@ -48,7 +50,9 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   std::visit(base::overloaded{
                  [this](const MeasureExactly& exactly) {
                    ASSERT(measured_size_->height == exactly.dim)
-                       << "Measure exactly height spec is violated";
+                       << "Measure exactly height spec is violated: "
+                       << measured_size_->height << " vs " << exactly.dim << " in '"
+                       << debug_name() << '\'';
                  },
                  [this](const MeasureAtMost& at_most) {
                    ASSERT(measured_size_->height <= at_most.dim)
@@ -62,7 +66,7 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
 void View::layout(const gfx::Rect& area) {
   bounds_ = area;
   if (background_)
-    background_->set_bounds(inner_bounds());
+    background_->set_bounds(outer_bounds());
   if (border_)
     border_->set_bounds(outer_bounds());
   needs_layout_ = NeedsLayout::NOT;

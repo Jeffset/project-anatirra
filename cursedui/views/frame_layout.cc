@@ -29,10 +29,12 @@ void FrameLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
 
 void FrameLayout::on_layout() {
   const auto count = child_count();
-  auto position = inner_bounds().position();
   for (int i = 0; i < count; ++i) {
     auto* child = get_child(i);
-    child->layout(gfx::rect_from(position, child->measured_size()));
+    auto* lp = child->layout_params().get();
+    auto rect =
+        gfx::gravitated_rect(inner_bounds(), child->measured_size(), lp->gravity());
+    child->layout(rect);
   }
 }
 

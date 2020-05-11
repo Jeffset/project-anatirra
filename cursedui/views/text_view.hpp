@@ -22,8 +22,8 @@ class TextView : public View {
 
   GETTER std::wstring_view get_text() const { return text_; }
 
-  void set_gravity(gfx::Gravity gravity) noexcept;
-  GETTER gfx::Gravity gravity() const noexcept { return gravity_; }
+  void set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept;
+  GETTER base::EnumFlags<gfx::Gravity> gravity() const noexcept { return gravity_; }
 
   void set_multiline(bool multiline) noexcept;
   bool multiline() const noexcept { return multiline_; }
@@ -47,7 +47,7 @@ class TextView : public View {
  private:
   // view attributes:
   std::wstring text_;
-  gfx::Gravity gravity_;
+  base::EnumFlags<gfx::Gravity> gravity_;
   bool multiline_;
   avada::render::Color text_color_;
 

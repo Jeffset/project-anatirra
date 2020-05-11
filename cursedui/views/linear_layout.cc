@@ -29,7 +29,7 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
       oriented_spec);
 
   gfx::Size this_size{};
-  this_size.*oriented_dim =
+  this_size.*orthogonal_dim =
       std::visit(base::overloaded{
                      [](const MeasureExactly& exactly) { return exactly.dim; },
                      [](const auto&) { return 0; },
@@ -121,7 +121,13 @@ void LinearLayout::on_layout() {
   for (int i = 0; i < count; ++i) {
     auto* child = get_child(i);
     const auto child_size = child->measured_size();
-    child->layout(gfx::rect_from(position, child_size));
+    auto available_size = is_horizontal
+                              ? gfx::Size{child_size.width, inner_bounds().height()}
+                              : gfx::Size{inner_bounds().width(), child_size.height};
+    auto available_rect = gfx::rect_from(position, available_size);
+    auto* lp = child->layout_params().get();
+    auto child_rect = gfx::gravitated_rect(available_rect, child_size, lp->gravity());
+    child->layout(child_rect);
     if (is_horizontal)
       position.x += child_size.width;
     else

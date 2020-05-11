@@ -57,21 +57,23 @@ class LayoutParams {
  public:
   static const char* TAG;
 
-  GETTER LayoutSpec width_layout_spec() const noexcept;
-  GETTER LayoutSpec height_layout_spec() const noexcept;
+  GETTER LayoutSpec width_layout_spec() const noexcept { return width_; }
+  GETTER LayoutSpec height_layout_spec() const noexcept { return height_; }
+  GETTER base::EnumFlags<gfx::Gravity> gravity() const noexcept { return gravity_; }
 
-  void set_width_layout_spec(const LayoutSpec& spec) noexcept;
-  void set_height_layout_spec(const LayoutSpec& spec) noexcept;
+  void set_width_layout_spec(const LayoutSpec& spec) noexcept { width_ = spec; }
+  void set_height_layout_spec(const LayoutSpec& spec) noexcept { height_ = spec; }
+  void set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept { gravity_ = gravity; }
 
-  virtual ~LayoutParams() noexcept;
-
-  GETTER virtual std::string_view tag() const noexcept;
+  GETTER virtual std::string_view tag() const noexcept { return TAG; }
 
   LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept;
+  virtual ~LayoutParams() noexcept;
 
  private:
   LayoutSpec width_;
   LayoutSpec height_;
+  base::EnumFlags<gfx::Gravity> gravity_;
 };
 
 }  // namespace cursedui::view

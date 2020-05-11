@@ -55,7 +55,8 @@ void ViewGroup::dispatch_mouse_event(const avada::input::MouseEvent& event) {
     return;
   }
   auto pos = gfx::Point{event.x, event.y};
-  for (auto& child : children_) {
+  for (auto it = children_.rbegin(); it != children_.rend(); ++it) {
+    auto& child = *it;
     if (child->outer_bounds().contains(pos)) {
       child->dispatch_mouse_event(event);
       break;
@@ -106,30 +107,10 @@ void ViewGroup::on_draw(paint::Canvas& canvas) {
   }
 }
 
-LayoutSpec LayoutParams::width_layout_spec() const noexcept {
-  return width_;
-}
-
-LayoutSpec LayoutParams::height_layout_spec() const noexcept {
-  return height_;
-}
-
-void LayoutParams::set_width_layout_spec(const LayoutSpec& spec) noexcept {
-  width_ = spec;
-}
-
-void LayoutParams::set_height_layout_spec(const LayoutSpec& spec) noexcept {
-  height_ = spec;
-}
-
-std::string_view LayoutParams::tag() const noexcept {
-  return TAG;
-}
-
 const char* LayoutParams::TAG = "LayoutParams";
 
 LayoutParams::LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept
-    : width_(width), height_(height) {}
+    : width_(width), height_(height), gravity_(gfx::Gravity::CENTER) {}
 
 LayoutParams::~LayoutParams() noexcept = default;
 

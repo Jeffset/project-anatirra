@@ -6,6 +6,7 @@
 #include "base/debug/debug.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/view_tree_host.hpp"
+#include "cursedui/views/frame_layout.hpp"
 #include "cursedui/views/linear_layout.hpp"
 #include "cursedui/views/text_view.hpp"
 
@@ -37,13 +38,28 @@ class Factory {
 
 [[noreturn]] int main() {
   using namespace cursedui;
+  using namespace base::operators;
+
   std::setlocale(LC_ALL, "");
 
   base::debug::LoggerToStdErr logger;
   base::debug::setup_logging(&logger);
 
+  auto root = base::make_ref_ptr<view::FrameLayout>();
+  root->set_debug_name("root-frame");
+
   auto lin_layout = base::make_ref_ptr<view::LinearLayout>();
   lin_layout->set_debug_name("root-hor-linear-layout");
+  lin_layout->set_layout_params(std::make_unique<view::LayoutParams>(
+      view::LayoutMatchParent{}, view::LayoutMatchParent{}));
+  root->add_child(lin_layout);
+
+  auto overlay = base::make_ref_ptr<view::TextView>();
+  overlay->set_layout_params(std::make_unique<view::LayoutParams>(
+      view::LayoutWrapContent{}, view::LayoutWrapContent{}));
+  overlay->set_text(L"Hello world!");
+  overlay->set_background_color(avada::render::ColorRGB{255, 0, 255, 128});
+  root->add_child(overlay);
 
   lin_layout->set_background_color(avada::render::ColorRGB{33, 20, 20});
   auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();
@@ -52,7 +68,7 @@ class Factory {
 
   auto view1 = base::make_ref_ptr<view::TextView>();
   auto view2 = base::make_ref_ptr<view::TextView>();
-  view1->set_gravity(static_cast<gfx::Gravity>(gfx::GRAVITY_TOP | gfx::GRAVITY_BOTTOM));
+  view1->set_gravity(gfx::Gravity::TOP | gfx::Gravity::BOTTOM);
   view1->set_text(L"Test ◕ string A");
   view1->set_debug_name("text-view-A");
   std::wifstream ifs{"/home/jeffset/text.txt"};
@@ -114,7 +130,7 @@ class Factory {
   ASSERT(factory.weak_count() == 0);
 
   try {
-    ViewTreeHost{lin_layout}.run();
+    ViewTreeHost{root}.run();
   } catch (base::exception& e) {
     LOG() << e.stack_trace().to_string(e.what());
   }

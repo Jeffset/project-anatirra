@@ -4,6 +4,7 @@
 
 #include "avada/buffer.hpp"
 
+#include "avada/write.hpp"
 #include "base/debug/debug.hpp"
 #include "base/debug/tracing.hpp"
 #include "base/exception.hpp"
@@ -132,12 +133,7 @@ class Renderer {
 
     LOG() << "Render sequence: " << ::avada::internal::escape_for_log(code);
     LOG() << "Render sequence length: " << code.size();
-    const auto result = ::write(STDOUT_FILENO, code.data(), code.size());
-    if (result < 0)
-      throw base::system_exception("'write' operation failed");
-    else if (static_cast<size_t>(result) != code.size())
-      throw base::exception("Expected to write ", code.size(),
-                            " characters, but written only ", result);
+    internal::write_stdout(code);
   }
 
  private:

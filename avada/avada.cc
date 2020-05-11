@@ -4,6 +4,7 @@
 
 #include "avada/avada.hpp"
 
+#include "avada/write.hpp"
 #include "base/debug/debug.hpp"
 #include "base/exception.hpp"
 #include "base/macro.hpp"
@@ -25,11 +26,6 @@ namespace {
 #define SYSTEM_CALL_NON_ZERO(call) \
   if ((call) != 0)                 \
   throw ::base::system_exception(#call)
-
-template <int N>
-inline void write_stdout(const char (&data)[N]) {
-  ::write(STDOUT_FILENO, data, N);
-}
 
 volatile std::sig_atomic_t g_pending_resize = 0;
 Context* g_avada_context;
@@ -81,7 +77,7 @@ Context::Context() {
           1011,  // Don’t scroll to bottom on key press (rxvt).
       });
 
-  write_stdout(
+  internal::write_stdout(
       "\x1b[H"  // Position at (0,0)
       "\x1b%G"  // UTF-8
       "\x1b=");
@@ -154,11 +150,7 @@ void Context::ScopedPrivateModeChange::apply(std::initializer_list<int> to_enabl
   format_control_sequence(oss, to_disable_, 'l');
   auto sequence = oss.str();
   LOG() << "Change mode sequence: " << internal::escape_for_log(sequence);
-  auto result = ::write(STDOUT_FILENO, sequence.data(), sequence.size());
-  if (result < 0)
-    throw base::system_exception("'write' operation failed");
-  if (static_cast<size_t>(result) != sequence.size())
-    throw base::exception("'write' wrote less than expected");
+  internal::write_stdout(sequence);
 }
 
 Context::ScopedPrivateModeChange::~ScopedPrivateModeChange() noexcept {
@@ -168,7 +160,7 @@ Context::ScopedPrivateModeChange::~ScopedPrivateModeChange() noexcept {
   format_control_sequence(oss, to_disable_, 'h');
   auto sequence = oss.str();
   LOG() << "Restore mode sequence: " << internal::escape_for_log(sequence);
-  ::write(STDOUT_FILENO, sequence.data(), sequence.size());
+  internal::write_stdout(sequence);
 }
 
 // static

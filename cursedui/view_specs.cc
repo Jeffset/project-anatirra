@@ -50,25 +50,30 @@ MeasureSpec shrink_measure_spec(MeasureSpec spec, gfx::dim_t dim) noexcept {
       spec);
 }
 
-NeedsLayoutMarkBin make_layout_propagation_mask(const LayoutSpec& layout,
-                                                MeasureSpec parent_measure,
-                                                NeedsLayoutMarkBin mark) noexcept {
+base::EnumFlags<NeedsLayout> make_layout_propagation_mask(
+    const LayoutSpec& layout,
+    MeasureSpec parent_measure,
+    base::EnumFlags<NeedsLayout> mark) noexcept {
   return std::visit(
       base::overloaded{
           // layout exactly never needs propagating size change.
-          [](LayoutExactly) -> NeedsLayoutMarkBin { return 0; },
+          [](LayoutExactly) -> base::EnumFlags<NeedsLayout> { return NeedsLayout::NOT; },
           // wrap_content always propagates size change.
-          [mark](LayoutWrapContent) -> NeedsLayoutMarkBin { return mark; },
+          [mark](LayoutWrapContent) -> base::EnumFlags<NeedsLayout> { return mark; },
           // match_parent is more complex case
-          [&parent_measure, mark](LayoutMatchParent) -> NeedsLayoutMarkBin {
+          [&parent_measure, mark](LayoutMatchParent) -> base::EnumFlags<NeedsLayout> {
             return std::visit(
                 base::overloaded{
                     // if parent is laid out exactly, do not propagate layout.
-                    [](MeasureExactly) -> NeedsLayoutMarkBin { return 0; },
+                    [](MeasureExactly) -> base::EnumFlags<NeedsLayout> {
+                      return NeedsLayout::NOT;
+                    },
                     // if for every other spec size may influence, so do propagate.
-                    [mark](auto) -> NeedsLayoutMarkBin { return mark; }},
+                    [mark](auto) -> base::EnumFlags<NeedsLayout> { return mark; },
+                },
                 parent_measure);
-          }},
+          },
+      },
       layout);
 }
 

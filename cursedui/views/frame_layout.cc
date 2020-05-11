@@ -19,9 +19,9 @@ void FrameLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
                    make_measure_spec(lp->height_layout_spec(), height_spec));
     child->layout_propagation_mask =
         make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
-                                     NEEDS_LAYOUT_WIDTH) |
+                                     NeedsLayout::WIDTH) |
         make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
-                                     NEEDS_LAYOUT_HEIGHT);
+                                     NeedsLayout::HEIGHT);
     size = gfx::max(size, child->measured_size());
   }
   set_measured_size(size);

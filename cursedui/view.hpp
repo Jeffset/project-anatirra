@@ -80,8 +80,8 @@ class View : public base::RefCounted, public base::WeakReferenced {
   GETTER base::nullable<ViewGroup> get_parent();
   void set_parent(base::nullable<ViewGroup> parent);
 
-  void mark_needs_layout(NeedsLayoutMarkBin mark) noexcept;
-  NeedsLayoutMarkBin needs_layout() const noexcept { return needs_layout_; }
+  void mark_needs_layout(base::EnumFlags<NeedsLayout> mark) noexcept;
+  base::EnumFlags<NeedsLayout> needs_layout() const noexcept { return needs_layout_; }
 
   virtual void visit_down(ViewTreeVisitor& visitor);
   void visit_up(ViewTreeVisitor& visitor);
@@ -109,10 +109,10 @@ class View : public base::RefCounted, public base::WeakReferenced {
 
   ViewGroup* parent_;
 
-  NeedsLayoutMarkBin needs_layout_;
+  base::EnumFlags<NeedsLayout> needs_layout_;
 
  public:
-  NeedsLayoutMarkBin layout_propagation_mask;
+  base::EnumFlags<NeedsLayout> layout_propagation_mask;
 };
 
 class ViewTreeVisitor {

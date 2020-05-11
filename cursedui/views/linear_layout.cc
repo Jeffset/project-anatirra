@@ -49,9 +49,9 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
                      make_measure_spec(lp->height_layout_spec(), height_spec));
       child->layout_propagation_mask =
           make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
-                                       NEEDS_LAYOUT_WIDTH) |
+                                       NeedsLayout::WIDTH) |
           make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
-                                       NEEDS_LAYOUT_HEIGHT);
+                                       NeedsLayout::HEIGHT);
       weightless_children_size += child->measured_size().*oriented_dim;
 
       this_size.*orthogonal_dim =
@@ -89,16 +89,16 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
         child->measure(MeasureExactly{{dim}},
                        make_measure_spec(lp->height_layout_spec(), height_spec));
         child->layout_propagation_mask =
-            NEEDS_LAYOUT_WIDTH |
+            NeedsLayout::WIDTH |
             make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
-                                         NEEDS_LAYOUT_HEIGHT);
+                                         NeedsLayout::HEIGHT);
       } else {
         child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
                        MeasureExactly{{dim}});
         child->layout_propagation_mask =
             make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
-                                         NEEDS_LAYOUT_WIDTH) |
-            NEEDS_LAYOUT_HEIGHT;
+                                         NeedsLayout::WIDTH) |
+            NeedsLayout::HEIGHT;
       }
 
       this_size.*orthogonal_dim =

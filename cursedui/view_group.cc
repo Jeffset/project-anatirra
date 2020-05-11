@@ -84,7 +84,7 @@ void ViewGroup::visit_down(ViewTreeVisitor& visitor) {
 }
 
 void ViewGroup::propagate_needs_layout_mark(View* child) {
-  auto propagated_mark = child->needs_layout() & ~child->layout_propagation_mask;
+  auto propagated_mark = child->needs_layout().has(child->layout_propagation_mask);
   mark_needs_layout(propagated_mark);
 }
 

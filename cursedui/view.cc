@@ -65,7 +65,7 @@ void View::layout(const gfx::Rect& area) {
     background_->set_bounds(inner_bounds());
   if (border_)
     border_->set_bounds(outer_bounds());
-  needs_layout_ = NEEDS_LAYOUT_NOT;
+  needs_layout_ = NeedsLayout::NOT;
   on_layout();
 }
 
@@ -122,8 +122,8 @@ View::View()
       background_(nullptr),
       border_(new BorderDrawable()),
       parent_(nullptr),
-      needs_layout_(NEEDS_LAYOUT_SIZE),
-      layout_propagation_mask(NEEDS_LAYOUT_SIZE) {}
+      needs_layout_(NeedsLayout::SIZE),
+      layout_propagation_mask(NeedsLayout::SIZE) {}
 
 base::nullable<LayoutParams> View::layout_params() const noexcept {
   return layout_params_.get();
@@ -131,7 +131,7 @@ base::nullable<LayoutParams> View::layout_params() const noexcept {
 
 void View::set_layout_params(std::unique_ptr<LayoutParams> layout_params) {
   layout_params_ = std::move(layout_params);
-  mark_needs_layout(NEEDS_LAYOUT_SIZE);
+  mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void View::set_background(std::unique_ptr<Drawable> drawable) {
@@ -165,8 +165,8 @@ void View::set_parent(base::nullable<ViewGroup> parent) {
   parent_ = parent.get_nullable();
 }
 
-void View::mark_needs_layout(NeedsLayoutMarkBin mark) noexcept {
-  needs_layout_ |= mark;
+void View::mark_needs_layout(base::EnumFlags<NeedsLayout> mark) noexcept {
+  needs_layout_.add(mark);
 }
 
 void View::visit_down(ViewTreeVisitor& visitor) {

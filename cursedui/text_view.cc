@@ -190,27 +190,27 @@ TextView::TextView()
 void TextView::set_text(const std::wstring& str) {
   lines_to_render_.clear();
   text_ = str;
-  mark_needs_layout(multiline_ ? NEEDS_LAYOUT_SIZE : NEEDS_LAYOUT_WIDTH);
+  mark_needs_layout(multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH);
 }
 
 void TextView::set_text(std::wstring&& str) {
   lines_to_render_.clear();
   text_ = std::move(str);
-  mark_needs_layout(multiline_ ? NEEDS_LAYOUT_SIZE : NEEDS_LAYOUT_WIDTH);
+  mark_needs_layout(multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH);
 }
 
 void TextView::set_gravity(gfx::Gravity gravity) noexcept {
   if (gravity_ == gravity)
     return;
   gravity_ = gravity;
-  mark_needs_layout(NEEDS_LAYOUT_CONTENT);
+  mark_needs_layout(NeedsLayout::CONTENT);
 }
 
 void TextView::set_multiline(bool multiline) noexcept {
   if (multiline_ == multiline)
     return;
   multiline_ = multiline;
-  mark_needs_layout(NEEDS_LAYOUT_SIZE);
+  mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void TextView::set_text_color(avada::render::Color color) noexcept {

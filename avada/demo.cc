@@ -67,7 +67,7 @@ class EventHandler {
  private:
   void draw(avada::render::Buffer& buffer, int x, int y) {
     using namespace avada::render;
-    using namespace base;
+    using namespace base::operators;
 
     auto& cell = buffer(y - 1, x - 1);
     cell.set_data(L'&');

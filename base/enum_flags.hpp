@@ -5,6 +5,8 @@
 #ifndef ANATIRRA_BASE_ENUM_FLAGS
 #define ANATIRRA_BASE_ENUM_FLAGS
 
+#include "base/macro.hpp"
+
 #include <initializer_list>
 #include <type_traits>
 
@@ -65,11 +67,33 @@ class EnumFlags {
     return EnumFlags(lhs.flags_ & rhs.flags_);
   }
 
+  friend constexpr bool operator==(EnumFlags lhs, EnumFlags rhs) noexcept {
+    return lhs.flags_ == rhs.flags_;
+  }
+
+  friend constexpr bool operator!=(EnumFlags lhs, EnumFlags rhs) noexcept {
+    return lhs.flags_ != rhs.flags_;
+  }
+
   constexpr operator bool() const noexcept { return flags_; }
 
  private:
   flags_t flags_;
 };
+
+namespace operators {
+
+template <class E, REQUIRES(std::is_enum_v<E>)>
+constexpr EnumFlags<E> operator|(E lhs, E rhs) {
+  return EnumFlags<E>(lhs) | EnumFlags<E>(rhs);
+}
+
+template <class E, REQUIRES(std::is_enum_v<E>)>
+constexpr EnumFlags<E> operator&(E lhs, E rhs) {
+  return EnumFlags<E>(lhs) & EnumFlags<E>(rhs);
+}
+
+}  // namespace operators
 
 }  // namespace base
 

@@ -38,6 +38,16 @@ inline bool holds_alternative(const std::variant<VariantTypes...>& variant) noex
   return std::holds_alternative<Type>(variant);
 }
 
+template <class T>
+constexpr auto identity_map = [](T v) { return v; };
+
+template <class T>
+auto clamp(const T& value, const T& min, const T& max) {
+  return std::max(min, std::min(value, max));
+}
+
+namespace operators {
+
 template <class... Ts, class T>
 bool operator==(const std::variant<Ts...>& var, const T& t) {
   return std::holds_alternative<T>(var) && std::get<T>(var) == t;
@@ -48,13 +58,7 @@ bool operator!=(const std::variant<Ts...>& var, const T& t) {
   return !std::holds_alternative<T>(var) || std::get<T>(var) != t;
 }
 
-template <class T>
-constexpr auto identity_map = [](T v) { return v; };
-
-template <class T>
-auto clamp(const T& value, const T& min, const T& max) {
-  return std::max(min, std::min(value, max));
-}
+}  // namespace operators
 
 }  // namespace base
 

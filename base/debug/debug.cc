@@ -38,7 +38,7 @@ LoggerProxy::LoggerProxy(const char* file, int line, bool terminate) noexcept
 
 LoggerProxy::~LoggerProxy() noexcept {
   if (terminate_after_)
-    ss_ << StackTrace().to_string("Terminating");
+    ss_ << '\n' << StackTrace().to_string("Terminating");
   if (g_logger)
     g_logger->log(ss_.rdbuf());
   if (terminate_after_)

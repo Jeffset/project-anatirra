@@ -19,7 +19,7 @@ class Recorder {
 
   MOCK_METHOD(void, act, (int));
 
-  MAKE_FULLY_STATIONAR(Recorder);
+  DISABLE_COPY_MOVE(Recorder);
 
   ~Recorder() noexcept = default;
 };
@@ -34,7 +34,7 @@ class RecordableComponent {
  public:
   RecordableComponent(Recorder& recorder) noexcept : recorder(recorder) {}
 
-  MAKE_FULLY_STATIONAR(RecordableComponent);
+  DISABLE_COPY_MOVE(RecordableComponent);
 
  protected:
   Recorder& recorder;

@@ -59,6 +59,7 @@ class Factory {
       view::LayoutWrapContent{}, view::LayoutWrapContent{}));
   overlay->set_text(L"Hello world!");
   overlay->set_background_color(avada::render::ColorRGB{255, 0, 255, 128});
+  overlay->set_debug_name("overlay");
   root->add_child(overlay);
 
   lin_layout->set_background_color(avada::render::ColorRGB{33, 20, 20});

@@ -74,9 +74,17 @@ dim_t Rect::height() const noexcept {
   return bottom - top + 1;
 }
 
-bool Rect::contains(Point point) const {
+bool Rect::contains(Point point) const noexcept {
   auto [x, y] = point;
   return x >= left && x <= right && y >= top && y <= bottom;
+}
+
+bool Rect::contains(const Rect& r) const noexcept {
+  return r.left >= left && r.top >= top && r.right <= right && r.bottom <= bottom;
+}
+
+bool Rect::intersects(const Rect& rhs) const noexcept {
+  return right >= rhs.left && left <= rhs.right && top <= rhs.bottom && bottom >= rhs.top;
 }
 
 Rect gravitated_rect(const Rect& rect,
@@ -118,6 +126,29 @@ Rect gravitated_rect(const Rect& rect,
   ASSERT(r.width() == size.width);
   ASSERT(r.height() == size.height);
   return r;
+}
+
+bool operator==(const Rect& lhs, const Rect& rhs) noexcept {
+  return std::tie(lhs.left, lhs.top, lhs.right, lhs.bottom) ==
+         std::tie(rhs.left, rhs.top, rhs.right, rhs.bottom);
+}
+
+bool operator!=(const Rect& lhs, const Rect& rhs) noexcept {
+  return std::tie(lhs.left, lhs.top, lhs.right, lhs.bottom) !=
+         std::tie(rhs.left, rhs.top, rhs.right, rhs.bottom);
+}
+
+bool operator==(const Size& lhs, const Size& rhs) noexcept {
+  return std::tie(lhs.width, lhs.height) == std::tie(rhs.width, rhs.height);
+}
+
+bool operator!=(const Size& lhs, const Size& rhs) noexcept {
+  return std::tie(lhs.width, lhs.height) != std::tie(rhs.width, rhs.height);
+}
+
+std::ostream& operators::operator<<(std::ostream& os, const Rect& rect) {
+  return os << '[' << rect.left << ", " << rect.top << ", " << rect.right << ", "
+            << rect.bottom << ']';
 }
 
 }  // namespace cursedui::gfx

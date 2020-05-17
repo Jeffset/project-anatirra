@@ -7,10 +7,11 @@
 
 #include "avada/color.hpp"
 #include "cursedui/dim.hpp"
+#include "cursedui/region.hpp"
 
 #include <array>
-#include <optional>
-#include <string>
+#include <stack>
+#include <string_view>
 #include <variant>
 
 namespace avada::render {
@@ -51,8 +52,21 @@ class Canvas {
  public:
   explicit Canvas(avada::render::Buffer& buffer) noexcept;
 
-  using any_string_view_t = std::variant<std::string_view, std::wstring_view>;
-  using any_char_t = std::variant<char, wchar_t>;
+  class ScopedClipHandle {
+   public:
+    ~ScopedClipHandle();
+    DISABLE_COPY_MOVE(ScopedClipHandle);
+
+    operator bool() const { return culled_; }
+
+   private:
+    friend class Canvas;
+
+    ScopedClipHandle(Canvas& canvas, bool culled) : self_(canvas), culled_(culled) {}
+
+    Canvas& self_;
+    const bool culled_;
+  };
 
   // Basic painting API:
   template <typename Char>
@@ -79,17 +93,20 @@ class Canvas {
             gfx::Point target_position,
             BlendMode blend_mode) noexcept;
 
-  void set_clip(gfx::Rect clip) noexcept;
-  void reset_clip() noexcept;
+  ScopedClipHandle push_clip(const gfx::Rect& rect) noexcept;
+  ScopedClipHandle push_clip(const paint::Region& region) noexcept;
 
   const avada::render::Buffer& buffer() const noexcept { return buffer_; }
 
  private:
-  bool apply_clip(gfx::Rect& rect) const noexcept;
-  void clip_to_buffer(gfx::Rect& rect) const noexcept;
+  void pop_clip() noexcept;
 
  private:
-  std::optional<gfx::Rect> clip_;
+  paint::Region apply_clip(const gfx::Rect& rect) const noexcept;
+  gfx::Rect clip_to_buffer(const gfx::Rect& rect) const noexcept;
+
+ private:
+  std::stack<paint::Region> clip_stack_;
   avada::render::Buffer& buffer_;
 };
 

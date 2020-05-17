@@ -19,8 +19,6 @@ LoggerBase* g_logger;
 
 }  // namespace
 
-LoggerBase::~LoggerBase() noexcept = default;
-
 void setup_logging(LoggerBase* logger) noexcept {
   g_logger = logger;
 }

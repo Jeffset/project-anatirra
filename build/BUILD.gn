@@ -45,7 +45,10 @@ config("debug_config") {
 }
 
 config("release_config") {
-  cflags = [ "-O2" ]
+  cflags = [
+    "-O2",
+    "-fno-asynchronous-unwind-tables",
+  ]
   defines = [ "NDEBUG" ]
   ldflags = [ "-use-lto" ]
 }

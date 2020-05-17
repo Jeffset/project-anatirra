@@ -13,7 +13,6 @@ namespace base::debug {
 class StackTrace {
  public:
   StackTrace() noexcept;
-  ~StackTrace() noexcept;
 
   std::string to_string() const noexcept;
   std::string to_string(std::string_view preambula) const noexcept;

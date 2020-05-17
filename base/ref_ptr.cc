@@ -16,31 +16,40 @@ RefCounted::~RefCounted() noexcept {
 
 namespace internal {
 
-ref_ptr_base::ref_ptr_base() noexcept : ptr_(nullptr) {}
+template <bool is_const>
+ref_ptr_base<is_const>::ref_ptr_base() noexcept : ptr_(nullptr) {}
 
-ref_ptr_base::ref_ptr_base(RefCounted* ptr) noexcept : ptr_(ptr) {
+template <bool is_const>
+ref_ptr_base<is_const>::ref_ptr_base(type* ptr) noexcept : ptr_(ptr) {
   if (ptr_)
     ++ptr_->refs_;
 }
 
-ref_ptr_base::ref_ptr_base(const ref_ptr_base& rhs) noexcept : ptr_(rhs.ptr_) {
+template <bool is_const>
+ref_ptr_base<is_const>::ref_ptr_base(const ref_ptr_base& rhs) noexcept : ptr_(rhs.ptr_) {
   if (ptr_)
     ++ptr_->refs_;
 }
 
-ref_ptr_base::ref_ptr_base(ref_ptr_base&& rhs) noexcept : ptr_(rhs.ptr_) {
+template <bool is_const>
+ref_ptr_base<is_const>::ref_ptr_base(ref_ptr_base&& rhs) noexcept : ptr_(rhs.ptr_) {
   rhs.ptr_ = nullptr;
 }
 
-ref_ptr_base::~ref_ptr_base() {
+template <bool is_const>
+ref_ptr_base<is_const>::~ref_ptr_base() {
   if (ptr_ && --ptr_->refs_ == 0) {
     delete ptr_;
   }
 }
 
-int ref_ptr_base::ref_count() const {
+template <bool is_const>
+int ref_ptr_base<is_const>::ref_count() const {
   return ptr_ ? ptr_->refs_ : 0;
 }
+
+template class ref_ptr_base<true>;
+template class ref_ptr_base<false>;
 
 }  // namespace internal
 

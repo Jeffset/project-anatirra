@@ -5,6 +5,7 @@
 #ifndef ANATIRRA_AVADA_COLOR
 #define ANATIRRA_AVADA_COLOR
 
+#include <array>
 #include <cstdint>
 #include <variant>
 
@@ -12,7 +13,7 @@ namespace avada::render {
 
 union ColorRGB {
   uint32_t data_;
-  alignas(uint32_t) uint8_t rgba_[4];
+  alignas(uint32_t) std::array<uint8_t, 4> rgba_;
 
   inline ColorRGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255)
       : rgba_{red, green, blue, alpha} {}

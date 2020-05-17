@@ -5,6 +5,8 @@
 #ifndef ANATIRRA_BASE_DEBUG_TRACING
 #define ANATIRRA_BASE_DEBUG_TRACING
 
+#include "base/macro.hpp"
+
 #include <chrono>
 #include <string_view>
 
@@ -14,6 +16,8 @@ class ScopedTrace {
  public:
   ScopedTrace(std::string_view name) noexcept;
   ~ScopedTrace() noexcept;
+
+  DISABLE_COPY_MOVE(ScopedTrace);
 
  private:
   std::string_view name_;

@@ -15,8 +15,8 @@
   Class(Class&&) = delete;             \
   Class& operator=(Class&&) = delete
 
-#define MAKE_FULLY_STATIONAR(Class) \
-  DISABLE_COPY_AND_ASSIGN(Class);   \
+#define DISABLE_COPY_MOVE(Class)  \
+  DISABLE_COPY_AND_ASSIGN(Class); \
   DISABLE_MOVE_AND_ASSIGN(Class)
 
 #define NODISCARD [[nodiscard]]
@@ -34,5 +34,8 @@
 #define PIMPL_INIT(Class) impl_(std::make_unique<Class##Impl>())
 
 #define PIMPL_DEFINE(Class) struct Class::Class##Impl
+
+#define LIKELY(cond) __builtin_expect(bool(cond), 1)
+#define UNLIKELY(cond) __builtin_expect(bool(cond), 0)
 
 #endif  // ANATIRRA_BASE_MACRO

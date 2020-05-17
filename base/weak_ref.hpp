@@ -22,14 +22,15 @@ class weak_ref_base;
 
 class WeakReferenced {
  protected:
-  WeakReferenced() noexcept = default;
+  WeakReferenced() noexcept;
   virtual ~WeakReferenced() noexcept;
 
-  ref_ptr<internal::WeakRefControlBlock> control_block() noexcept;
+  ref_ptr<internal::WeakRefControlBlock> control_block() const noexcept;
   friend class internal::weak_ref_base;
 
  private:
-  ref_ptr<internal::WeakRefControlBlock> control_block_;
+  WeakReferenced* mutable_this_;
+  mutable ref_ptr<internal::WeakRefControlBlock> control_block_;
 };
 
 namespace internal {
@@ -37,9 +38,9 @@ namespace internal {
 class weak_ref_base {
  protected:
   weak_ref_base() noexcept = default;
-  weak_ref_base(WeakReferenced* ptr) noexcept;
+  weak_ref_base(const WeakReferenced* ptr) noexcept;
 
-  weak_ref_base& operator=(WeakReferenced* ptr) noexcept;
+  weak_ref_base& operator=(const WeakReferenced* ptr) noexcept;
 
   base::ref_ptr<WeakRefControlBlock> control_block_;
 };
@@ -59,11 +60,10 @@ class weak_ref : public internal::weak_ref_base {
  public:
   weak_ref() noexcept = default;
   ~weak_ref() noexcept = default;
-  explicit weak_ref(T* ptr) noexcept : base(internal::const_cast_if_needed(ptr)) {}
+  explicit weak_ref(T* ptr) noexcept : base(ptr) {}
 
   template <class D, REQUIRES(is_compatible_v<D>)>
-  weak_ref(const ref_ptr<D>& ptr) noexcept
-      : base(internal::const_cast_if_needed(ptr.get())) {}
+  weak_ref(const ref_ptr<D>& ptr) noexcept : base(ptr.get()) {}
 
   template <class D, REQUIRES(is_compatible_v<D>)>
   weak_ref(const weak_ref<D>& wp) noexcept : base(wp) {}
@@ -102,7 +102,7 @@ class weak_ref : public internal::weak_ref_base {
 };
 
 template <class D>
-weak_ref(const ref_ptr<D>&)->weak_ref<D>;
+weak_ref(const ref_ptr<D>&) -> weak_ref<D>;
 
 }  // namespace base
 

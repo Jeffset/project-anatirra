@@ -5,6 +5,8 @@
 #ifndef ANATIRRA_BASE_DEBUG_LOGGING
 #define ANATIRRA_BASE_DEBUG_LOGGING
 
+#include "base/macro.hpp"
+
 #include <sstream>
 
 #if defined(DEBUG)
@@ -29,7 +31,7 @@
 
 #define ASSERT(condition)                                                     \
   CONDITIONAL_LOG_STREAM(                                                     \
-      ENABLE_ASSERTS && !(condition),                                         \
+      (ENABLE_ASSERTS) && UNLIKELY(!(condition)),                             \
       ::base::debug::internal::LoggerProxy(__FILE__, __LINE__, true).stream() \
           << "Assertion `" #condition "` failed: ")
 
@@ -40,7 +42,7 @@ class LoggerBase {
   virtual void log(std::streambuf* message) noexcept = 0;
 
  protected:
-  ~LoggerBase() noexcept;
+  ~LoggerBase() noexcept = default;
 };
 
 class LoggerToStdErr : public LoggerBase {
@@ -56,7 +58,10 @@ namespace internal {
 class LoggerProxy {
  public:
   LoggerProxy(const char* file, int line, bool terminate = false) noexcept;
+
   ~LoggerProxy() noexcept;
+
+  DISABLE_COPY_MOVE(LoggerProxy);
 
   std::ostream& stream() { return ss_; }
 

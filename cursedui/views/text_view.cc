@@ -187,16 +187,15 @@ TextView::TextView()
       multiline_(false),
       text_color_(avada::render::SystemColor::DEFAULT) {}
 
-void TextView::set_text(const std::wstring& str) {
-  lines_to_render_.clear();
-  text_ = str;
-  mark_needs_layout(multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH);
-}
-
-void TextView::set_text(std::wstring&& str) {
+void TextView::set_text(std::wstring str) {
+  using namespace base::operators;
+  if (text_ == str)
+    return;
   lines_to_render_.clear();
   text_ = std::move(str);
-  mark_needs_layout(multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH);
+  auto size_mark = multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH;
+  mark_needs_layout(size_mark | NeedsLayout::CONTENT);
+  mark_needs_paint();
 }
 
 void TextView::set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept {
@@ -211,10 +210,12 @@ void TextView::set_multiline(bool multiline) noexcept {
     return;
   multiline_ = multiline;
   mark_needs_layout(NeedsLayout::SIZE);
+  // do not mark for paint here, it'll be marked if layout actually changes.
 }
 
 void TextView::set_text_color(avada::render::Color color) noexcept {
   text_color_ = color;
+  mark_needs_paint();
 }
 
 }  // namespace cursedui::view

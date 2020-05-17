@@ -113,7 +113,7 @@ input::Event Context::poll_event() {
   }
 
   // Now data is ready, read it.
-  char raw_data[128] = {0};
+  std::array<char, 128> raw_data;
   ssize_t n_read = 0;
   while (n_read <= 0) {
     n_read = ::read(STDIN_FILENO, &raw_data, sizeof(raw_data));
@@ -121,7 +121,7 @@ input::Event Context::poll_event() {
       throw base::system_exception("'read' operation failed");
   }
 
-  std::string_view data{raw_data, static_cast<size_t>(n_read)};
+  std::string_view data{raw_data.data(), static_cast<size_t>(n_read)};
 
   return input_parser_.parse_event(data);
 }

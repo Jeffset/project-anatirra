@@ -8,6 +8,7 @@
 #include "base/debug/debug.hpp"
 #include "base/debug/tracing.hpp"
 #include "base/exception.hpp"
+#include "base/macro.hpp"
 #include "base/util.hpp"
 
 #include <algorithm>
@@ -34,7 +35,7 @@ class Renderer {
       flush_rle_sequence();
 
       do {
-        if (position_) {
+        if (LIKELY(position_)) {
           auto [ci, cj] = position_.value();
           if (ci == i) {  // we are on the same row
             // use CUF
@@ -60,7 +61,7 @@ class Renderer {
 
       // Background color
       const auto cell_bg_color = cell.bg_color();
-      if (bg_color_ != cell_bg_color) {
+      if (UNLIKELY(bg_color_ != cell_bg_color)) {
         auto encoder = BgColorEncodeVisitor{mode_change};
         std::visit(encoder, cell_bg_color);
 
@@ -76,7 +77,7 @@ class Renderer {
 
       {  // Foreground color
         const auto cell_fg_color = alpha_blend(cell.fg_color(), cell_bg_color);
-        if (fg_color_ != cell_fg_color) {
+        if (UNLIKELY(fg_color_ != cell_fg_color)) {
           auto encoder = FgColorEncodeVisitor{mode_change};
           std::visit(encoder, cell_fg_color);
           fg_color_ = cell_fg_color;
@@ -161,7 +162,7 @@ class Renderer {
         : self_(self), mode_change_started_(false) {}
 
     ScopedModeChange& operator<<(int arg) noexcept {
-      if (!mode_change_started_) {
+      if (UNLIKELY(!mode_change_started_)) {
         self_.flush_rle_sequence();
 
         self_.output_ << CSI << arg;
@@ -173,10 +174,12 @@ class Renderer {
     }
 
     ~ScopedModeChange() noexcept {
-      if (mode_change_started_) {
+      if (UNLIKELY(mode_change_started_)) {
         self_.output_ << "m";
       }
     }
+
+    DISABLE_COPY_MOVE(ScopedModeChange);
 
    private:
     Renderer& self_;

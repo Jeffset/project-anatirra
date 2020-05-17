@@ -9,6 +9,8 @@
 #include "base/macro.hpp"
 
 #include <cstdint>
+#include <ostream>
+#include <tuple>
 #include <type_traits>
 
 namespace cursedui::gfx {
@@ -46,8 +48,17 @@ struct Rect {
   GETTER dim_t width() const noexcept;
   GETTER dim_t height() const noexcept;
 
-  bool contains(Point point) const;
+  bool contains(Point point) const noexcept;
+  bool contains(const Rect& rect) const noexcept;
+
+  bool intersects(const Rect& rhs) const noexcept;
 };
+
+bool operator==(const Rect& lhs, const Rect& rhs) noexcept;
+bool operator!=(const Rect& lhs, const Rect& rhs) noexcept;
+
+bool operator==(const Size& lhs, const Size& rhs) noexcept;
+bool operator!=(const Size& lhs, const Size& rhs) noexcept;
 
 Rect rect_from(Point position, Size size) noexcept;
 
@@ -64,6 +75,12 @@ Rect shrink(const Rect& base, dim_t d) noexcept;
 gfx::Rect gravitated_rect(const gfx::Rect& rect,
                           gfx::Size size,
                           base::EnumFlags<Gravity> gravity) noexcept;
+
+namespace operators {
+
+std::ostream& operator<<(std::ostream& os, const Rect& rect);
+
+}
 
 }  // namespace cursedui::gfx
 

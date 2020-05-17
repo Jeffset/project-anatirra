@@ -7,6 +7,7 @@
 
 #include "avada/buffer.hpp"
 #include "avada/input.hpp"
+#include "base/macro.hpp"
 
 #include <codecvt>
 #include <locale>
@@ -23,6 +24,8 @@ class Context {
  public:
   Context() /* may throw */;
   ~Context() noexcept;
+
+  DISABLE_COPY_MOVE(Context);
 
   input::Event poll_event() /* may throw */;
 
@@ -43,6 +46,8 @@ class Context {
                             std::initializer_list<int> to_disable) /* may throw */;
 
     ~ScopedPrivateModeChange() noexcept;
+
+    DISABLE_COPY_MOVE(ScopedPrivateModeChange);
 
    private:
     static void format_control_sequence(std::ostream& os,

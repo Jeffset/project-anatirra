@@ -11,9 +11,10 @@
 
 #include <memory>
 
-namespace paint {
+namespace cursedui::paint {
 class Canvas;
-}
+class Region;
+}  // namespace cursedui::paint
 
 namespace cursedui {
 
@@ -27,17 +28,17 @@ class ViewTreeHost {
   void run();
 
  private:
-  void layout_tree();
-  void paint_tree(paint::Canvas& canvas);
-
- private:
-  void handle_root_size(const gfx::Size& size);
+  void layout_tree(paint::Region& repaint_region);
+  bool paint_tree(paint::Region& paint_region, paint::Canvas& canvas);
 
  private:
   avada::Context avada_;
 
   const base::ref_ptr<view::View> root_;
   base::weak_ref<view::View> focused_view_;
+
+  gfx::Size root_size_;
+  bool need_root_resize_;
 
   DISABLE_COPY_AND_ASSIGN(ViewTreeHost);
 };

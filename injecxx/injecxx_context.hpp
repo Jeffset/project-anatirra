@@ -31,7 +31,7 @@ constexpr bool is_plain_v = std::is_same_v<T, std::decay_t<T>>;
 template <typename... Ts>
 class context_impl : private detail::instance_holder<Ts>... {
  public:
-  MAKE_FULLY_STATIONAR(context_impl);
+  DISABLE_COPY_MOVE(context_impl);
 
   constexpr inline context_impl() noexcept {
     constexpr auto all_unwrapped_types =
@@ -167,7 +167,7 @@ class context_wrapper {
     context_.dispatch(*this, default_filter, dispatcher);
   }
 
-  MAKE_FULLY_STATIONAR(context_wrapper);
+  DISABLE_COPY_MOVE(context_wrapper);
 
  private:
   ParentContext& parent_context_;
@@ -212,7 +212,7 @@ class context_wrapper<void, Ts...> {
     context_.dispatch(*this, default_filter, dispatcher);
   }
 
-  MAKE_FULLY_STATIONAR(context_wrapper);
+  DISABLE_COPY_MOVE(context_wrapper);
 
  private:
   context_impl<Ts...> context_;

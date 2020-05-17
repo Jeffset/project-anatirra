@@ -38,7 +38,7 @@ class ViewGroup : public View {
   virtual std::unique_ptr<LayoutParams> create_layout_params() const noexcept;
   virtual bool check_layout_params(LayoutParams* params) const noexcept;
 
-  void visit_down(ViewTreeVisitor& visitor) override;
+  void visit_down(const ViewTreeVisitor& visitor) override;
 
   void propagate_needs_layout_mark(View* child);
 
@@ -46,6 +46,7 @@ class ViewGroup : public View {
   void on_tree_host_set() override;
 
   void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override = 0;
+  void dispatch_layout(bool changed) override;
   void on_layout() override = 0;
   void on_draw(paint::Canvas& canvas) override;
 
@@ -68,7 +69,7 @@ class LayoutParams {
   GETTER virtual std::string_view tag() const noexcept { return TAG; }
 
   LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept;
-  virtual ~LayoutParams() noexcept;
+  virtual ~LayoutParams() noexcept = default;
 
  private:
   LayoutSpec width_;

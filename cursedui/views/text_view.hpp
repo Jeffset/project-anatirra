@@ -17,8 +17,7 @@ class TextView : public View {
  public:
   TextView();
 
-  void set_text(const std::wstring& str);
-  void set_text(std::wstring&& str);
+  void set_text(std::wstring str);
 
   GETTER std::wstring_view get_text() const { return text_; }
 

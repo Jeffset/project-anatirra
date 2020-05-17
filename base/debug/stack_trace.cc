@@ -7,13 +7,14 @@
 #include <cxxabi.h>
 #include <execinfo.h>
 #include <link.h>
+#include <memory>
 
 namespace base::debug {
 
 StackTrace::StackTrace() noexcept {
   void* trace_elems[MAX_TRACES];
   int count = ::backtrace(trace_elems, MAX_TRACES);
-  Dl_info* dlinfo = new Dl_info[count];
+  std::unique_ptr<Dl_info[]> dlinfo{new Dl_info[count]};
   oss_ << "Stacktrace:\n";
   for (int i = 0; i < count; ++i) {
     oss_ << '#' << i << ' ';
@@ -47,8 +48,6 @@ StackTrace::StackTrace() noexcept {
     oss_ << '\n';
   }
 }
-
-StackTrace::~StackTrace() noexcept = default;
 
 std::string StackTrace::to_string() const noexcept {
   return to_string("");

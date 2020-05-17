@@ -11,44 +11,31 @@
 
 #include <forward_list>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 namespace cursedui {
 
 namespace {
 
-class ScanLayoutVisitor : public view::ViewTreeVisitor {
+template <class V>
+class ViewTreeVisitor : public view::ViewTreeVisitor {
  public:
-  ScanLayoutVisitor(std::forward_list<view::View*>& roots) noexcept : roots_(roots) {}
+  ViewTreeVisitor(V&& v) : visitor_(std::forward<V>(v)) {}
 
-  VisitResult visit(view::View* view) override {
-    if (view->needs_layout()) {
-      roots_.push_front(view);
-      return STOP_VISIT;
-    }
-    return CONTINUE_VISIT;
-  }
+  view::VisitResult visit(view::View* view) const final { return visitor_(view); }
 
  private:
-  std::forward_list<view::View*>& roots_;
-};
-
-class PropagateLayoutVisitor : public view::ViewTreeVisitor {
- public:
-  VisitResult visit(view::View* view) override {
-    if (auto* parent = view->get_parent().get_nullable()) {
-      parent->propagate_needs_layout_mark(view);
-      return parent->needs_layout() ? CONTINUE_VISIT : STOP_VISIT;
-    }
-    return STOP_VISIT;
-  }
+  V visitor_;
 };
 
 }  // namespace
 
-ViewTreeHost::ViewTreeHost(base::ref_ptr<view::View> root) : root_(std::move(root)) {
+ViewTreeHost::ViewTreeHost(base::ref_ptr<view::View> root)
+    : root_(std::move(root)),
+      root_size_{avada_.get_columns(), avada_.get_rows()},
+      need_root_resize_{true} {
   root_->set_tree_host(this);
-  handle_root_size({avada_.get_columns(), avada_.get_rows()});
 }
 
 void ViewTreeHost::set_focused_view(base::ref_ptr<view::View> focused_view) noexcept {
@@ -73,7 +60,11 @@ void ViewTreeHost::run() {
     using namespace avada::input;
     const auto visitor = base::overloaded{
         [this](const ResizeEvent& re) {
-          handle_root_size({re.columns, re.rows});
+          gfx::Size new_size{re.columns, re.rows};
+          if (new_size == root_size_)
+            return;
+          root_size_ = new_size;
+          need_root_resize_ = true;
         },
         [this, &should_exit](const KeyboardEvent& key) {
           if (key == KeyboardKey::TAB) {
@@ -99,22 +90,44 @@ void ViewTreeHost::run() {
     if (should_exit)
       break;
 
-    layout_tree();
-    paint_tree(canvas);
-    avada_.render();
+    paint::Region paint_region;
+    layout_tree(paint_region);
+    if (paint_tree(paint_region, canvas)) {
+      avada_.render();
+    }
 
     try {
       event = avada_.poll_event();
     } catch (avada::input::unparsed_exception& e) {
-      LOG() << e.what();
+      LOG() << "Unparsed input! See: " << e.what();
       event = ServiceEvent::IDLE;
     }
   };
 }
 
-void ViewTreeHost::layout_tree() {
+void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
+  if (UNLIKELY(need_root_resize_)) {
+    root_->measure(view::MeasureExactly{{root_size_.width}},
+                   view::MeasureExactly{{root_size_.height}});
+    auto measured_size = root_->measured_size();
+    gfx::Rect bounds = gfx::rect_from({0, 0}, measured_size);
+    root_->layout(bounds);
+    repaint_region.add(bounds);
+    need_root_resize_ = false;
+    return;
+  }
+
   std::forward_list<view::View*> roots_needing_layout;
-  ScanLayoutVisitor scan_visitor{roots_needing_layout};
+
+  auto scan_visitor = ViewTreeVisitor{
+      [&roots_needing_layout](view::View* view) {
+        if (view->needs_layout()) {
+          roots_needing_layout.push_front(view);
+          return view::VisitResult::STOP_VISIT;
+        }
+        return view::VisitResult::CONTINUE_VISIT;
+      },
+  };
 
   // Step I: obtain all sub-roots of the view hierarchy that explcitily need layout
   root_->visit_down(scan_visitor);
@@ -122,8 +135,20 @@ void ViewTreeHost::layout_tree() {
   if (roots_needing_layout.empty())
     return;
 
+  std::unordered_map<view::View*, gfx::Rect> old_bounds;
+
   // Step II: propagate layout need from every root up the tree.
-  PropagateLayoutVisitor propagate_visitor;
+  auto propagate_visitor = ViewTreeVisitor{
+      [&old_bounds](view::View* view) {
+        old_bounds[view] = view->outer_bounds();
+        if (auto* parent = view->get_parent().get_nullable()) {
+          parent->propagate_needs_layout_mark(view);
+          return parent->needs_layout() ? view::VisitResult::CONTINUE_VISIT
+                                        : view::VisitResult::STOP_VISIT;
+        }
+        return view::VisitResult::STOP_VISIT;
+      },
+  };
   for (auto& view : roots_needing_layout) {
     view->visit_up(propagate_visitor);
   }
@@ -140,18 +165,32 @@ void ViewTreeHost::layout_tree() {
                   view::MeasureExactly{{size.height}});
     view->layout(gfx::rect_from(view->position(), size));
   }
+
+  for (auto& [view, bounds] : old_bounds)
+    if (bounds != view->outer_bounds())
+      repaint_region.add(bounds);
 }
 
-void ViewTreeHost::paint_tree(paint::Canvas& canvas) {
-  // TODO: make this incremental like layout.
+bool ViewTreeHost::paint_tree(paint::Region& paint_region, paint::Canvas& canvas) {
+  std::forward_list<view::View*> roots_to_paint;
+  root_->visit_down(ViewTreeVisitor{
+      [&roots_to_paint](view::View* view) {
+        if (view->needs_paint()) {
+          roots_to_paint.push_front(view);
+          return view::VisitResult::STOP_VISIT;
+        }
+        return view::VisitResult::CONTINUE_VISIT;
+      },
+  });
+
+  if (roots_to_paint.empty())
+    return false;
+
+  for (auto* view : roots_to_paint)
+    paint_region.add(view->outer_bounds());
+  auto clip_handle = canvas.push_clip(paint_region);
   root_->draw(canvas);
-}
-
-void ViewTreeHost::handle_root_size(const gfx::Size& size) {
-  root_->measure(view::MeasureExactly{{size.width}}, view::MeasureExactly{{size.height}});
-  auto measured_size = root_->measured_size();
-  gfx::Rect bounds = gfx::rect_from({0, 0}, measured_size);
-  root_->layout(bounds);
+  return true;
 }
 
 }  // namespace cursedui

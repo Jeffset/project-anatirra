@@ -1,3 +1,4 @@
+import("//build/test.gni")
 
 shared_library("cursedui") {
   sources = [
@@ -7,6 +8,8 @@ shared_library("cursedui") {
     "dim.hpp",
     "drawable.cc",
     "drawable.hpp",
+    "region.cc",
+    "region.hpp",
     "view.cc",
     "view.hpp",
     "view_group.cc",
@@ -32,6 +35,15 @@ shared_library("cursedui") {
 executable("cursedui_test_bin") {
   sources = [
     "main.cc",
+  ]
+  deps = [
+    ":cursedui",
+  ]
+}
+
+gtest_binary("cursedui_tests") {
+  sources = [
+    "test/region_unittest.cc"
   ]
   deps = [
     ":cursedui",

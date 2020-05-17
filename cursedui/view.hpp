@@ -83,8 +83,11 @@ class View : public base::RefCounted, public base::WeakReferenced {
   void mark_needs_layout(base::EnumFlags<NeedsLayout> mark) noexcept;
   base::EnumFlags<NeedsLayout> needs_layout() const noexcept { return needs_layout_; }
 
-  virtual void visit_down(ViewTreeVisitor& visitor);
-  void visit_up(ViewTreeVisitor& visitor);
+  void mark_needs_paint() noexcept { needs_paint_ = true; }
+  bool needs_paint() const noexcept { return needs_paint_; }
+
+  virtual void visit_down(const ViewTreeVisitor& visitor);
+  void visit_up(const ViewTreeVisitor& visitor);
 
   const std::string& debug_name() const noexcept { return debug_name_; }
   void set_debug_name(std::string debug_name) noexcept {
@@ -99,6 +102,7 @@ class View : public base::RefCounted, public base::WeakReferenced {
   virtual void on_mouse_event(const avada::input::MouseEvent& event);
 
   virtual void on_measure(MeasureSpec width_spec, MeasureSpec height_spec);
+  virtual void dispatch_layout(bool changed);
   virtual void on_layout();
   virtual void on_draw(paint::Canvas& canvas);
 
@@ -115,21 +119,23 @@ class View : public base::RefCounted, public base::WeakReferenced {
   ViewGroup* parent_;
 
   base::EnumFlags<NeedsLayout> needs_layout_;
+  bool needs_paint_;
 
   std::string debug_name_;
 
  public:
+  // TODO: Encapsulate layout_propagation_mask.
   base::EnumFlags<NeedsLayout> layout_propagation_mask;
 };
 
+enum class VisitResult : uint8_t { STOP_VISIT = 0, CONTINUE_VISIT = 1 };
+
 class ViewTreeVisitor {
  protected:
-  ~ViewTreeVisitor();
+  ~ViewTreeVisitor() = default;
 
  public:
-  enum VisitResult : uint8_t { STOP_VISIT = 0, CONTINUE_VISIT = 1 };
-
-  virtual VisitResult visit(View* view) = 0;
+  virtual VisitResult visit(View* view) const = 0;
 };
 
 }  // namespace cursedui::view

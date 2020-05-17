@@ -87,6 +87,14 @@ def generate_header_command(name, path, force, **_):
     generate_header(header)
     print('Generation successful.')
 
+def generate_source_command(name, path, force, **_):
+    source = os.path.join(path, name + SOURCE_EXT)
+    print('Generating source "{}"'.format(source))
+    if os.path.exists(source) and not force:
+      raise GenerateError(
+        'Source file already exists. Use --force to overwrite.')
+    generate_source(source)
+    print('Generation successful.')
 
 def generate_pair_command(name, path, force, **_):
     header = os.path.join(path, name + HEADER_EXT)
@@ -171,6 +179,11 @@ def parse_args():
         base,), description='Generates header/source file pair.')
     pair.add_argument('name', help='Source file name (without extension).')
     pair.set_defaults(func=generate_pair_command)
+
+    source = sub.add_parser('source', parents=(
+        base,), description='Generates single source file.')
+    source.add_argument('name', help='Source file name (without extension).')
+    source.set_defaults(func=generate_source_command)
 
     update = sub.add_parser('update', description='Updates project file to comply '
                                                   'with project code-style.')

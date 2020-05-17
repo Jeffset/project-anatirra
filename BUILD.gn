@@ -3,7 +3,7 @@ group("all") {
 
   deps = [
     "//avada",
-    "//cursedui:cursedui_test_bin",
+    "//cursedui",
     "//injecxx",
     "//third-party/googletest:gmock_main",
     "//third-party/googletest:gtest_main",

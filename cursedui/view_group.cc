@@ -30,6 +30,10 @@ void ViewGroup::add_child(base::ref_ptr<View> child) noexcept {
   child->set_tree_host(tree_host());
   child->set_parent(this);
   children_.emplace_back(std::move(child));
+
+  // Explicitly mark this as needing full size layout, for we must do the first layout
+  // of the new view and we do not yet know layout need propagation mask.
+  mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void ViewGroup::remove_child(base::ref_ptr<View>& child) noexcept {
@@ -40,6 +44,12 @@ void ViewGroup::remove_child(base::ref_ptr<View>& child) noexcept {
   if (child->focused()) {
     child->unfocus();
   }
+
+  // We know the layout propagation mask here, so we can use it, assuming that removing
+  // the child is equivalent to setting it's size to {0, 0} or something.
+  child->mark_needs_layout(NeedsLayout::SIZE);
+  propagate_needs_layout_mark(child.get());
+
   child->set_tree_host(nullptr);
   child->set_parent(nullptr);
 }
@@ -76,8 +86,8 @@ bool ViewGroup::check_layout_params(LayoutParams* params) const noexcept {
   return params->tag() == LayoutParams::TAG;
 }
 
-void ViewGroup::visit_down(ViewTreeVisitor& visitor) {
-  if (!visitor.visit(this))
+void ViewGroup::visit_down(const ViewTreeVisitor& visitor) {
+  if (visitor.visit(this) == VisitResult::STOP_VISIT)
     return;
   for (auto& child : children_) {
     child->visit_down(visitor);
@@ -96,6 +106,10 @@ void ViewGroup::on_tree_host_set() {
   }
 }
 
+void ViewGroup::dispatch_layout(bool) {
+  on_layout();
+}
+
 int ViewGroup::child_count() const noexcept {
   return children_.size();
 }
@@ -111,7 +125,5 @@ const char* LayoutParams::TAG = "LayoutParams";
 
 LayoutParams::LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept
     : width_(width), height_(height), gravity_(gfx::Gravity::CENTER) {}
-
-LayoutParams::~LayoutParams() noexcept = default;
 
 }  // namespace cursedui::view

@@ -5,13 +5,14 @@
 #include "avada/write.hpp"
 
 #include "base/exception.hpp"
+#include "base/macro.hpp"
 
 #include <unistd.h>
 
 namespace avada::internal {
 
 void write_stdout(const char* data, std::size_t count) {
-  if (count == 0)
+  if (UNLIKELY(count == 0))
     return;
 
   long remaining_count = count;
@@ -19,7 +20,7 @@ void write_stdout(const char* data, std::size_t count) {
 
   while (remaining_count > 0) {
     auto written = ::write(STDOUT_FILENO, remaining_data, remaining_count);
-    if (written < 0)
+    if (UNLIKELY(written < 0))
       throw base::system_exception("'write' call failed.");
     remaining_count -= written;
     remaining_data += written;

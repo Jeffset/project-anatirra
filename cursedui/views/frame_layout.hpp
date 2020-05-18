@@ -7,9 +7,11 @@
 
 #include "cursedui/view_group.hpp"
 
+#include "cursedui_config.hpp"
+
 namespace cursedui::view {
 
-class FrameLayout : public ViewGroup {
+class CURSEDUI_PUBLIC FrameLayout : public ViewGroup {
  public:
   gfx::Size on_measure(MeasureSpec width_spec,
                        MeasureSpec height_spec,

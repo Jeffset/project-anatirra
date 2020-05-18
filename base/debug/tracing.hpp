@@ -7,12 +7,14 @@
 
 #include "base/macro.hpp"
 
+#include "base_config.hpp"
+
 #include <chrono>
 #include <string_view>
 
 namespace base::debug {
 
-class ScopedTrace {
+class BASE_PUBLIC ScopedTrace {
  public:
   ScopedTrace(std::string_view name) noexcept;
   ~ScopedTrace() noexcept;

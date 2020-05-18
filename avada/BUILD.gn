@@ -1,3 +1,10 @@
+import("//build/component_config.gni")
+
+component_config("avada_config") {
+ name = "avada"
+ params = []
+}
+
 shared_library("avada") {
   sources = [
     "color.cc",
@@ -12,6 +19,7 @@ shared_library("avada") {
     "write.hpp",
   ]
   deps = [
+    ":avada_config",
     "//base",
   ]
 }

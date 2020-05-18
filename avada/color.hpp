@@ -5,13 +5,15 @@
 #ifndef ANATIRRA_AVADA_COLOR
 #define ANATIRRA_AVADA_COLOR
 
+#include "avada_config.hpp"
+
 #include <array>
 #include <cstdint>
 #include <variant>
 
 namespace avada::render {
 
-union ColorRGB {
+union AVADA_PUBLIC ColorRGB {
   uint32_t data_;
   alignas(uint32_t) std::array<uint8_t, 4> rgba_;
 
@@ -39,7 +41,7 @@ union ColorRGB {
   }
 };
 
-struct Colors {
+struct AVADA_PUBLIC Colors {
   Colors() = delete;
 
   static const ColorRGB TRANSPARENT;
@@ -47,7 +49,7 @@ struct Colors {
   static const ColorRGB WHITE;
 };
 
-struct RenderAttributes {
+struct AVADA_PUBLIC RenderAttributes {
   RenderAttributes() = delete;
 
   static constexpr uint8_t BOLD = 1 << 0;
@@ -55,7 +57,7 @@ struct RenderAttributes {
   static constexpr uint8_t UNDERLINE = 1 << 2;
 };
 
-enum class SystemColor : uint8_t {
+enum class AVADA_PUBLIC SystemColor : uint8_t {
   BLACK = 0,
   RED,
   GREEN,
@@ -69,6 +71,7 @@ enum class SystemColor : uint8_t {
 
 using Color = std::variant<ColorRGB, SystemColor>;
 
+AVADA_PUBLIC
 Color alpha_blend(const Color& source, const Color& destination) noexcept;
 
 }  // namespace avada::render

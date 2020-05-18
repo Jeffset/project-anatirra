@@ -7,6 +7,8 @@
 
 #include "base/macro.hpp"
 
+#include "base_config.hpp"
+
 #include <cstddef>
 #include <functional>
 #include <type_traits>
@@ -24,7 +26,7 @@ using ref_ptr_base_const = ref_ptr_base<true>;
 
 }  // namespace internal
 
-class RefCounted {
+class BASE_PUBLIC RefCounted {
  public:
   DISABLE_COPY_AND_ASSIGN(RefCounted);
 

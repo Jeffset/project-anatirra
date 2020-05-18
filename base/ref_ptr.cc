@@ -48,8 +48,8 @@ int ref_ptr_base<is_const>::ref_count() const {
   return ptr_ ? ptr_->refs_ : 0;
 }
 
-template class ref_ptr_base<true>;
-template class ref_ptr_base<false>;
+template class BASE_PUBLIC ref_ptr_base<true>;
+template class BASE_PUBLIC ref_ptr_base<false>;
 
 }  // namespace internal
 

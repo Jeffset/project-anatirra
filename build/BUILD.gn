@@ -4,6 +4,9 @@ config("compiler_defaults") {
       "-pipe",
       "-fPIC",
       "-pthread",
+
+      "-fvisibility=hidden",
+      "-fvisibility-inlines-hidden",
     ]
     cflags_cc = [
       "-std=c++17",
@@ -46,11 +49,15 @@ config("debug_config") {
 
 config("release_config") {
   cflags = [
+    "-g0",
     "-O2",
+    "-flto",
     "-fno-asynchronous-unwind-tables",
+    "-ffunction-sections",
+    "-fdata-sections",
   ]
   defines = [ "NDEBUG" ]
-  ldflags = [ "-use-lto" ]
+  ldflags = [ "-Wl,--gc-sections" ]
 }
 
 config("default_include_dirs") {

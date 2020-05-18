@@ -7,13 +7,15 @@
 
 #include "cursedui/view_group.hpp"
 
+#include "cursedui_config.hpp"
+
 #include <memory>
 #include <optional>
 #include <string_view>
 
 namespace cursedui::view {
 
-class LinearLayout : public ViewGroup {
+class CURSEDUI_PUBLIC LinearLayout : public ViewGroup {
  public:
   class LayoutParams : public view::LayoutParams {
    public:

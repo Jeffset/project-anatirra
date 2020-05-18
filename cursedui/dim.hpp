@@ -8,6 +8,8 @@
 #include "base/enum_flags.hpp"
 #include "base/macro.hpp"
 
+#include "cursedui_config.hpp"
+
 #include <cstdint>
 #include <ostream>
 #include <tuple>
@@ -17,7 +19,7 @@ namespace cursedui::gfx {
 
 using dim_t = int;
 
-enum class Gravity : uint8_t {
+enum class CURSEDUI_PUBLIC Gravity : uint8_t {
   // clang-format off
   LEFT =   0b0001,
   RIGHT =  0b0010,
@@ -28,15 +30,15 @@ enum class Gravity : uint8_t {
   // clang-format on
 };
 
-struct Point {
+struct CURSEDUI_PUBLIC Point {
   dim_t x, y;
 };
 
-struct Size {
+struct CURSEDUI_PUBLIC Size {
   dim_t width, height;
 };
 
-struct Rect {
+struct CURSEDUI_PUBLIC Rect {
   dim_t left, top, right, bottom;
 
   GETTER Point position() const noexcept;
@@ -54,31 +56,33 @@ struct Rect {
   bool intersects(const Rect& rhs) const noexcept;
 };
 
-bool operator==(const Rect& lhs, const Rect& rhs) noexcept;
-bool operator!=(const Rect& lhs, const Rect& rhs) noexcept;
+// TODO: Convert the following functions into member ones for the ^^.
 
-bool operator==(const Size& lhs, const Size& rhs) noexcept;
-bool operator!=(const Size& lhs, const Size& rhs) noexcept;
+CURSEDUI_PUBLIC bool operator==(const Rect& lhs, const Rect& rhs) noexcept;
+CURSEDUI_PUBLIC bool operator!=(const Rect& lhs, const Rect& rhs) noexcept;
 
-Rect rect_from(Point position, Size size) noexcept;
+CURSEDUI_PUBLIC bool operator==(const Size& lhs, const Size& rhs) noexcept;
+CURSEDUI_PUBLIC bool operator!=(const Size& lhs, const Size& rhs) noexcept;
 
-Size min(Size a, Size b) noexcept;
+CURSEDUI_PUBLIC Rect rect_from(Point position, Size size) noexcept;
 
-Size max(Size a, Size b) noexcept;
+CURSEDUI_PUBLIC Size min(Size a, Size b) noexcept;
 
-Rect centered_rect(const Rect& base, Size size) noexcept;
+CURSEDUI_PUBLIC Size max(Size a, Size b) noexcept;
 
-Rect grow(const Rect& base, dim_t d) noexcept;
+CURSEDUI_PUBLIC Rect centered_rect(const Rect& base, Size size) noexcept;
 
-Rect shrink(const Rect& base, dim_t d) noexcept;
+CURSEDUI_PUBLIC Rect grow(const Rect& base, dim_t d) noexcept;
 
-gfx::Rect gravitated_rect(const gfx::Rect& rect,
-                          gfx::Size size,
-                          base::EnumFlags<Gravity> gravity) noexcept;
+CURSEDUI_PUBLIC Rect shrink(const Rect& base, dim_t d) noexcept;
+
+CURSEDUI_PUBLIC gfx::Rect gravitated_rect(const gfx::Rect& rect,
+                                          gfx::Size size,
+                                          base::EnumFlags<Gravity> gravity) noexcept;
 
 namespace operators {
 
-std::ostream& operator<<(std::ostream& os, const Rect& rect);
+CURSEDUI_PUBLIC std::ostream& operator<<(std::ostream& os, const Rect& rect);
 
 }
 

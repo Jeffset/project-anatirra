@@ -1,4 +1,10 @@
+import("//build/component_config.gni")
 import("//build/test.gni")
+
+component_config("base_config") {
+  name = "base"
+  params = []
+}
 
 shared_library("base") {
   sources = [
@@ -20,6 +26,10 @@ shared_library("base") {
     "weak_ref.cc",
     "weak_ref.hpp",
     "enum_flags.hpp",
+  ]
+
+  deps = [
+    ":base_config",
   ]
 
   libs = [ "dl" ]

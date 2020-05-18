@@ -9,29 +9,31 @@
 #include "base/util.hpp"
 #include "cursedui/dim.hpp"
 
+#include "cursedui_config.hpp"
+
 #include <type_traits>
 #include <variant>
 
 namespace cursedui::view {
 
-struct MeasureSpecified {
+struct CURSEDUI_PUBLIC MeasureSpecified {
   gfx::dim_t dim;
 };
-struct MeasureExactly : public MeasureSpecified {};
-struct MeasureAtMost : public MeasureSpecified {};
-struct MeasureUnlimited {};
+struct CURSEDUI_PUBLIC MeasureExactly : public MeasureSpecified {};
+struct CURSEDUI_PUBLIC MeasureAtMost : public MeasureSpecified {};
+struct CURSEDUI_PUBLIC MeasureUnlimited {};
 
 using MeasureSpec = std::variant<MeasureExactly, MeasureAtMost, MeasureUnlimited>;
 
-struct LayoutMatchParent {};
-struct LayoutWrapContent {};
-struct LayoutExactly {
+struct CURSEDUI_PUBLIC LayoutMatchParent {};
+struct CURSEDUI_PUBLIC LayoutWrapContent {};
+struct CURSEDUI_PUBLIC LayoutExactly {
   gfx::dim_t dim;
 };
 
 using LayoutSpec = std::variant<LayoutMatchParent, LayoutWrapContent, LayoutExactly>;
 
-enum class NeedsLayout : uint8_t {
+enum class CURSEDUI_PUBLIC NeedsLayout : uint8_t {
   // clang-format off
   NOT     = 0b000,
   CONTENT = 0b001,
@@ -41,12 +43,13 @@ enum class NeedsLayout : uint8_t {
   // clang-format on
 };
 
-MeasureSpec make_measure_spec(const LayoutSpec& layout,
-                              MeasureSpec parent_measure) noexcept;
+CURSEDUI_PUBLIC MeasureSpec make_measure_spec(const LayoutSpec& layout,
+                                              MeasureSpec parent_measure) noexcept;
 
-MeasureSpec shrink_measure_spec(MeasureSpec spec, gfx::dim_t dim) noexcept;
+CURSEDUI_PUBLIC MeasureSpec shrink_measure_spec(MeasureSpec spec,
+                                                gfx::dim_t dim) noexcept;
 
-base::EnumFlags<NeedsLayout> make_layout_propagation_mask(
+CURSEDUI_PUBLIC base::EnumFlags<NeedsLayout> make_layout_propagation_mask(
     const LayoutSpec& layout,
     MeasureSpec parent_measure,
     base::EnumFlags<NeedsLayout> mark) noexcept;

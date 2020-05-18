@@ -5,6 +5,8 @@
 #ifndef ANATIRRA_CURSEDUI_VIEW
 #define ANATIRRA_CURSEDUI_VIEW
 
+#include "cursedui_config.hpp"
+
 #include "avada/color.hpp"
 #include "base/exception.hpp"
 #include "base/macro.hpp"
@@ -40,7 +42,7 @@ class LayoutParams;
 /**
  * Base class for cursed UI view system.
  */
-class View : public base::RefCounted, public base::WeakReferenced {
+class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReferenced {
  public:
   View();
   ~View() override;
@@ -131,9 +133,9 @@ class View : public base::RefCounted, public base::WeakReferenced {
   std::string debug_name_;
 };
 
-enum class VisitResult : uint8_t { STOP_VISIT = 0, CONTINUE_VISIT = 1 };
+enum class CURSEDUI_PUBLIC VisitResult : uint8_t { STOP_VISIT = 0, CONTINUE_VISIT = 1 };
 
-class ViewTreeVisitor {
+class CURSEDUI_PUBLIC ViewTreeVisitor {
  protected:
   ~ViewTreeVisitor() = default;
 

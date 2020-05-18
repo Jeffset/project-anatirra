@@ -1,4 +1,10 @@
+import("//build/component_config.gni")
 import("//build/test.gni")
+
+component_config("cursedui_config") {
+  name = "cursedui"
+  params = []
+}
 
 shared_library("cursedui") {
   sources = [
@@ -24,6 +30,10 @@ shared_library("cursedui") {
     "views/linear_layout.hpp",
     "views/text_view.cc",
     "views/text_view.hpp",
+  ]
+
+  deps = [
+    ":cursedui_config",
   ]
 
   public_deps = [

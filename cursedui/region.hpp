@@ -5,13 +5,15 @@
 #ifndef ANATIRRA_CURSEDUI_REGION
 #define ANATIRRA_CURSEDUI_REGION
 
+#include "cursedui_config.hpp"
+
 #include "cursedui/dim.hpp"
 
 #include <list>
 
 namespace cursedui::paint {
 
-class Region {
+class CURSEDUI_PUBLIC Region {
  public:
   Region() noexcept = default;
   explicit Region(const gfx::Rect& rect) noexcept;

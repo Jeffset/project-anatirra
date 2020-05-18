@@ -8,6 +8,8 @@
 #include "avada/color.hpp"
 #include "base/nullable.hpp"
 
+#include "avada_config.hpp"
+
 #include <array>
 #include <cstdint>
 #include <string_view>
@@ -16,7 +18,7 @@
 
 namespace avada::render {
 
-class Buffer {
+class AVADA_PUBLIC Buffer {
  public:
   Buffer() noexcept;
 
@@ -66,7 +68,7 @@ class Buffer {
   const Cell& operator()(int i, int j) const noexcept;
 
  private:
-  bool check_cell(int i, int j, const Cell& cell) const noexcept {
+  AVADA_PRIVATE bool check_cell(int i, int j, const Cell& cell) const noexcept {
     if (i >= rows_ || j >= columns_)
       return false;
     return contents_[i][j] == cell;
@@ -89,12 +91,12 @@ namespace std {
 using namespace avada::render;
 
 template <>
-struct hash<Color> {
+struct AVADA_PUBLIC hash<Color> {
   size_t operator()(const Color& color) const noexcept {
     return std::visit(Impl{}, color);
   }
 
-  struct Impl {
+  struct AVADA_PRIVATE Impl {
     size_t operator()(ColorRGB color) const noexcept { return color.data_; }
     size_t operator()(SystemColor color) const noexcept {
       return static_cast<size_t>(color);
@@ -103,7 +105,7 @@ struct hash<Color> {
 };
 
 template <>
-struct hash<std::pair<Color, Color>> {
+struct AVADA_PUBLIC hash<std::pair<Color, Color>> {
   size_t operator()(const std::pair<Color, Color>&) const noexcept;
 };
 

@@ -1,4 +1,3 @@
-import colorama
 import argparse
 import subprocess
 import logging

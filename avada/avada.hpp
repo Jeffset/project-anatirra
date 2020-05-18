@@ -9,6 +9,8 @@
 #include "avada/input.hpp"
 #include "base/macro.hpp"
 
+#include "avada_config.hpp"
+
 #include <codecvt>
 #include <locale>
 #include <map>
@@ -20,7 +22,7 @@ struct termios;
 
 namespace avada {
 
-class Context {
+class AVADA_PUBLIC Context {
  public:
   Context() /* may throw */;
   ~Context() noexcept;
@@ -38,9 +40,9 @@ class Context {
   const render::Buffer& render_buffer() const noexcept { return back_buffer_; }
 
  private:
-  void update_size() /* may throw */;
+  AVADA_PRIVATE void update_size() /* may throw */;
 
-  class ScopedPrivateModeChange {
+  class AVADA_PRIVATE ScopedPrivateModeChange {
    public:
     ScopedPrivateModeChange(std::initializer_list<int> to_enable,
                             std::initializer_list<int> to_disable) /* may throw */;

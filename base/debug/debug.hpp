@@ -7,6 +7,8 @@
 
 #include "base/macro.hpp"
 
+#include "base_config.hpp"
+
 #include <sstream>
 
 #if defined(DEBUG)
@@ -37,7 +39,7 @@
 
 namespace base::debug {
 
-class LoggerBase {
+class BASE_PUBLIC LoggerBase {
  public:
   virtual void log(std::streambuf* message) noexcept = 0;
 
@@ -45,17 +47,17 @@ class LoggerBase {
   ~LoggerBase() noexcept = default;
 };
 
-class LoggerToStdErr : public LoggerBase {
+class BASE_PUBLIC LoggerToStdErr : public LoggerBase {
  public:
   void log(std::streambuf* message) noexcept final;
 };
 
 // Main function used to setup logging.
-void setup_logging(LoggerBase* logger) noexcept;
+BASE_PUBLIC void setup_logging(LoggerBase* logger) noexcept;
 
 namespace internal {
 
-class LoggerProxy {
+class BASE_PUBLIC LoggerProxy {
  public:
   LoggerProxy(const char* file, int line, bool terminate = false) noexcept;
 
@@ -71,7 +73,7 @@ class LoggerProxy {
 };
 
 struct LogStarterDummy {
-  void operator&(std::ostream&) {}
+  inline void operator&(std::ostream&) {}
 };
 
 }  // namespace internal
@@ -80,6 +82,7 @@ struct LogStarterDummy {
 
 namespace std {
 
+BASE_PUBLIC
 std::ostream& operator<<(std::ostream& out, const wchar_t* wstr);
 
 inline std::ostream& operator<<(std::ostream& out, const std::wstring& wstr) {

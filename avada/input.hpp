@@ -7,6 +7,8 @@
 
 #include "base/exception.hpp"
 
+#include "avada_config.hpp"
+
 #include <codecvt>
 #include <cstdint>
 #include <locale>
@@ -17,11 +19,11 @@
 
 namespace avada::input {
 
-struct ResizeEvent {
+struct AVADA_PUBLIC ResizeEvent {
   int columns, rows;
 };
 
-enum class KeyboardKey : uint8_t {
+enum class AVADA_PUBLIC KeyboardKey : uint8_t {
   // clang-format off
   ENTER,
   TAB,
@@ -50,11 +52,11 @@ enum class KeyboardKey : uint8_t {
   // clang-format on
 };
 
-enum class ServiceEvent {
+enum class AVADA_PUBLIC ServiceEvent {
   IDLE,
 };
 
-class KeyboardEvent {
+class AVADA_PUBLIC KeyboardEvent {
  public:
   std::variant<wchar_t, KeyboardKey> key;
   uint8_t modifiers;
@@ -85,7 +87,7 @@ class KeyboardEvent {
   }
 };
 
-class MouseEvent {
+class AVADA_PUBLIC MouseEvent {
  public:
   int x, y;
 
@@ -118,7 +120,7 @@ class MouseEvent {
 
 using Event = std::variant<ServiceEvent, ResizeEvent, KeyboardEvent, MouseEvent>;
 
-class unparsed_exception : public base::exception {
+class AVADA_PUBLIC unparsed_exception : public base::exception {
  public:
   template <class... Args>
   unparsed_exception(Args&&... args) : exception(std::forward<Args>(args)...){};

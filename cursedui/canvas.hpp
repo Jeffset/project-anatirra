@@ -9,6 +9,8 @@
 #include "cursedui/dim.hpp"
 #include "cursedui/region.hpp"
 
+#include "cursedui_config.hpp"
+
 #include <array>
 #include <stack>
 #include <string_view>
@@ -20,9 +22,9 @@ class Buffer;
 
 namespace cursedui::paint {
 
-enum class BlendMode : uint8_t { BLIT = 0, BLEND = 1 };
+enum class CURSEDUI_PUBLIC BlendMode : uint8_t { BLIT = 0, BLEND = 1 };
 
-struct Pen {
+struct CURSEDUI_PUBLIC Pen {
   avada::render::Color fg_color;
   BlendMode fg_blend_mode;
 
@@ -46,9 +48,9 @@ struct Pen {
         render_attributes_blend_mode(render_attributes_blend_mode) {}
 };
 
-enum class Direction : uint8_t { HORIZONTAL, VERTICAL };
+enum class CURSEDUI_PUBLIC Direction : uint8_t { HORIZONTAL, VERTICAL };
 
-class Canvas {
+class CURSEDUI_PUBLIC Canvas {
  public:
   explicit Canvas(avada::render::Buffer& buffer) noexcept;
 
@@ -99,7 +101,7 @@ class Canvas {
   const avada::render::Buffer& buffer() const noexcept { return buffer_; }
 
  private:
-  void pop_clip() noexcept;
+  CURSEDUI_PRIVATE void pop_clip() noexcept;
 
  private:
   paint::Region apply_clip(const gfx::Rect& rect) const noexcept;

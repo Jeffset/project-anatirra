@@ -5,12 +5,14 @@
 #ifndef ANATIRRA_BASE_DEBUG_STACK_TRACE
 #define ANATIRRA_BASE_DEBUG_STACK_TRACE
 
+#include "base_config.hpp"
+
 #include <sstream>
 #include <string>
 
 namespace base::debug {
 
-class StackTrace {
+class BASE_PUBLIC StackTrace {
  public:
   StackTrace() noexcept;
 

@@ -5,13 +5,15 @@
 #ifndef ANATIRRA_CURSEDUI_DRAWABLE
 #define ANATIRRA_CURSEDUI_DRAWABLE
 
+#include "cursedui_config.hpp"
+
 #include "avada/color.hpp"
 #include "cursedui/canvas.hpp"
 #include "cursedui/dim.hpp"
 
 namespace cursedui {
 
-class Drawable {
+class CURSEDUI_PUBLIC Drawable {
  protected:
   Drawable() noexcept;
 
@@ -27,7 +29,7 @@ class Drawable {
   gfx::Rect bounds_;
 };
 
-class SolidColorDrawable : public Drawable {
+class CURSEDUI_PUBLIC SolidColorDrawable : public Drawable {
  public:
   SolidColorDrawable() noexcept;
   explicit SolidColorDrawable(avada::render::Color color) noexcept;
@@ -42,7 +44,7 @@ class SolidColorDrawable : public Drawable {
   paint::Pen pen_;
 };
 
-class BorderDrawable : public Drawable {
+class CURSEDUI_PUBLIC BorderDrawable : public Drawable {
  public:
   enum class Style {
     NO_BORDER = 0,

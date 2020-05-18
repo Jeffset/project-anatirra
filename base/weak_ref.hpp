@@ -7,6 +7,8 @@
 
 #include "base/ref_ptr.hpp"
 
+#include "base_config.hpp"
+
 namespace base {
 
 class WeakReferenced;
@@ -20,7 +22,7 @@ struct WeakRefControlBlock : public RefCounted {
 class weak_ref_base;
 }  // namespace internal
 
-class WeakReferenced {
+class BASE_PUBLIC WeakReferenced {
  protected:
   WeakReferenced() noexcept;
   virtual ~WeakReferenced() noexcept;
@@ -35,7 +37,7 @@ class WeakReferenced {
 
 namespace internal {
 
-class weak_ref_base {
+class BASE_PUBLIC weak_ref_base {
  protected:
   weak_ref_base() noexcept = default;
   weak_ref_base(const WeakReferenced* ptr) noexcept;

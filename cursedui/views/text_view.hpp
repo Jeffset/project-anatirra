@@ -7,13 +7,15 @@
 
 #include "cursedui/view.hpp"
 
+#include "cursedui_config.hpp"
+
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace cursedui::view {
 
-class TextView : public View {
+class CURSEDUI_PUBLIC TextView : public View {
  public:
   TextView();
 

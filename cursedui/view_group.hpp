@@ -5,6 +5,8 @@
 #ifndef ANATIRRA_CURSEDUI_VIEW_GROUP
 #define ANATIRRA_CURSEDUI_VIEW_GROUP
 
+#include "cursedui_config.hpp"
+
 #include "avada/color.hpp"
 #include "base/macro.hpp"
 #include "cursedui/dim.hpp"
@@ -21,7 +23,7 @@ namespace cursedui::view {
 
 class LayoutParams;
 
-class ViewGroup : public View {
+class CURSEDUI_PUBLIC ViewGroup : public View {
  public:
   ViewGroup() noexcept;
   ~ViewGroup() noexcept override;
@@ -67,7 +69,7 @@ class ViewGroup : public View {
   children_container_t children_;
 };
 
-class LayoutParams {
+class CURSEDUI_PUBLIC LayoutParams {
  public:
   static const char* TAG;
 

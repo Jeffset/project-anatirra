@@ -9,6 +9,8 @@
 #include "base/macro.hpp"
 #include "cursedui/view.hpp"
 
+#include "cursedui_config.hpp"
+
 #include <memory>
 
 namespace cursedui::paint {
@@ -18,7 +20,7 @@ class Region;
 
 namespace cursedui {
 
-class ViewTreeHost {
+class CURSEDUI_PUBLIC ViewTreeHost {
  public:
   ViewTreeHost(base::ref_ptr<view::View> root);
 

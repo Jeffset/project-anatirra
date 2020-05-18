@@ -39,11 +39,16 @@ ViewTreeHost::ViewTreeHost(base::ref_ptr<view::View> root)
 }
 
 void ViewTreeHost::set_focused_view(base::ref_ptr<view::View> focused_view) noexcept {
-  ASSERT(focused_view->tree_host() == this);
   if (focused_view_ == focused_view)
     return;
-  focused_view_ = base::weak_ref(focused_view);
-  LOG() << "ViewTreeHost: view focused\n";
+
+  if (focused_view == nullptr) {
+    focused_view_ = nullptr;
+  } else {
+    ASSERT(focused_view->tree_host() == this);
+    focused_view_ = base::weak_ref(focused_view);
+    LOG() << "ViewTreeHost: view '" << focused_view->debug_name() << "' focused.";
+  }
 }
 
 base::ref_ptr<view::View> ViewTreeHost::focused_view() noexcept {
@@ -107,11 +112,10 @@ void ViewTreeHost::run() {
 
 void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
   if (UNLIKELY(need_root_resize_)) {
-    root_->measure(view::MeasureExactly{{root_size_.width}},
-                   view::MeasureExactly{{root_size_.height}});
-    auto measured_size = root_->measured_size();
-    gfx::Rect bounds = gfx::rect_from({0, 0}, measured_size);
-    root_->layout(bounds);
+    auto bounds = gfx::rect_from({}, root_size_);
+    // Mark root as needing size layout to keep internal invariants intact.
+    root_->mark_needs_layout(view::NeedsLayout::SIZE);
+    root_->layout_as_root(bounds);
     repaint_region.add(bounds);
     need_root_resize_ = false;
     return;
@@ -160,11 +164,17 @@ void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
   // Step IV: Perform actual layout on every final detected root.
   for (auto* view : roots_needing_layout) {
     LOG() << "ViewTreeHost layout: layouting " << view->debug_name();
-    const auto size = view->size();
-    view->measure(view::MeasureExactly{{size.width}},
-                  view::MeasureExactly{{size.height}});
-    view->layout(gfx::rect_from(view->position(), size));
+    view->relayout();
   }
+
+#if defined(DEBUG)
+  roots_needing_layout.clear();
+  root_->visit_down(scan_visitor);
+  for (auto* view : roots_needing_layout) {
+    LOG() << "ERROR: view '" << view->debug_name() << "' has " << view->needs_layout();
+  }
+  ASSERT(roots_needing_layout.empty()) << "All layout marks must be cleared";
+#endif  // defined(DEBUG)
 
   for (auto& [view, bounds] : old_bounds)
     if (bounds != view->outer_bounds())

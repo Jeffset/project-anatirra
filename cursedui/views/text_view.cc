@@ -73,11 +73,14 @@ gfx::Size TextView::measure_text(gfx::dim_t max_width,
   return {width, height};
 }
 
-void TextView::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
+gfx::Size TextView::on_measure(MeasureSpec width_spec,
+                               MeasureSpec height_spec,
+                               bool /* unused */) {
+  gfx::Size size{};
   if (base::holds_alternative<MeasureExactly>(width_spec) &&
       base::holds_alternative<MeasureExactly>(height_spec)) {
-    set_measured_size({std::get<MeasureExactly>(width_spec).dim,
-                       std::get<MeasureExactly>(height_spec).dim});
+    size = {std::get<MeasureExactly>(width_spec).dim,
+            std::get<MeasureExactly>(height_spec).dim};
   } else {
     constexpr auto max_dim_generator = base::overloaded{
         [](MeasureUnlimited) { return std::numeric_limits<gfx::dim_t>::max(); },
@@ -86,12 +89,11 @@ void TextView::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
     auto max_width = std::visit(max_dim_generator, width_spec);
     auto max_height = std::visit(max_dim_generator, height_spec);
 
-    auto size = measure_text(max_width, max_height);
+    size = measure_text(max_width, max_height);
     size.width = std::visit(measure_exactly_or(size.width), width_spec);
     size.height = std::visit(measure_exactly_or(size.height), height_spec);
-
-    set_measured_size(size);
   }
+  return size;
 }
 
 void TextView::on_layout() {
@@ -180,6 +182,15 @@ void TextView::on_draw(paint::Canvas& canvas) {
     pos.x += lines_to_render_.back().size();
     canvas.draw(L'…', pos, pen);
   }
+}
+
+void TextView::on_focus_changed(bool focused) {
+  if (focused) {
+    border()->set_style(BorderDrawable::Style::DOUBLE);
+  } else {
+    border()->set_style(BorderDrawable::Style::SINGLE);
+  }
+  mark_needs_paint();
 }
 
 TextView::TextView()

@@ -33,12 +33,16 @@ class TextView : public View {
   bool focusable() const noexcept override { return true; }
 
  protected:
-  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
+  gfx::Size on_measure(MeasureSpec width_spec,
+                       MeasureSpec height_spec,
+                       bool update_layout_masks) override;
   void on_layout() override;
 
   void on_key_event(const avada::input::KeyboardEvent& event) override;
 
   void on_draw(paint::Canvas& canvas) override;
+
+  void on_focus_changed(bool focused) override;
 
  private:
   gfx::Size measure_text(gfx::dim_t max_width, gfx::dim_t max_height) const noexcept;

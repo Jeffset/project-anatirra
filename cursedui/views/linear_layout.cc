@@ -12,7 +12,9 @@
 
 namespace cursedui::view {
 
-void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
+gfx::Size LinearLayout::on_measure(MeasureSpec width_spec,
+                                   MeasureSpec height_spec,
+                                   bool update_layout_masks) {
   const bool is_horizontal = orientation_ == HORIZONTAL;
   const MeasureSpec oriented_spec = is_horizontal ? width_spec : height_spec;
   const MeasureSpec orthogonal_spec = is_horizontal ? height_spec : width_spec;
@@ -21,7 +23,6 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
       is_horizontal ? std::make_pair(&gfx::Size::width, &gfx::Size::height)
                     : std::make_pair(&gfx::Size::height, &gfx::Size::width);
 
-  const auto count = child_count();
   const auto [use_weights, total_oriented_dim] = std::visit(
       base::overloaded{
           [](const MeasureSpecified& spec) { return std::pair(true, spec.dim); },
@@ -40,18 +41,19 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   float child_summary_weight = 0.f;
   int weighted_child_count = 0;
 
-  for (int i = 0; i < count; ++i) {
-    auto* child = get_child(i);
+  for (const auto& child : *this) {
     const auto* lp = static_cast<LayoutParams*>(child->layout_params().get());
 
     if (!use_weights || !lp->weight()) {
       child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
                      make_measure_spec(lp->height_layout_spec(), height_spec));
-      child->layout_propagation_mask =
-          make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
-                                       NeedsLayout::WIDTH) |
-          make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
-                                       NeedsLayout::HEIGHT);
+      if (update_layout_masks) {
+        layout_propagation_masks_[child.get()] =
+            make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
+                                         NeedsLayout::WIDTH) |
+            make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
+                                         NeedsLayout::HEIGHT);
+      }
       weightless_children_size += child->measured_size().*oriented_dim;
 
       this_size.*orthogonal_dim =
@@ -63,14 +65,13 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   }
 
   if (use_weights) {
-    // TODO: here we can detect, that there's not enough width for us.
+    // NOTE: here we can detect, that there's not enough width for us.
     const gfx::dim_t width_for_weighting =
         std::max(total_oriented_dim - weightless_children_size, 0);
     gfx::dim_t distributed_dim = 0;
     int weighted_child_num = 1;
 
-    for (int i = 0; i < count; ++i) {
-      auto* child = get_child(i);
+    for (const auto& child : *this) {
       const auto* lp = static_cast<LayoutParams*>(child->layout_params().get());
 
       if (!lp->weight()) {
@@ -88,17 +89,21 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
       if (is_horizontal) {
         child->measure(MeasureExactly{{dim}},
                        make_measure_spec(lp->height_layout_spec(), height_spec));
-        child->layout_propagation_mask =
-            NeedsLayout::WIDTH |
-            make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
-                                         NeedsLayout::HEIGHT);
+        if (update_layout_masks) {
+          layout_propagation_masks_[child.get()] =
+              NeedsLayout::WIDTH |
+              make_layout_propagation_mask(lp->height_layout_spec(), height_spec,
+                                           NeedsLayout::HEIGHT);
+        }
       } else {
         child->measure(make_measure_spec(lp->width_layout_spec(), width_spec),
                        MeasureExactly{{dim}});
-        child->layout_propagation_mask =
-            make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
-                                         NeedsLayout::WIDTH) |
-            NeedsLayout::HEIGHT;
+        if (update_layout_masks) {
+          layout_propagation_masks_[child.get()] =
+              make_layout_propagation_mask(lp->width_layout_spec(), width_spec,
+                                           NeedsLayout::WIDTH) |
+              NeedsLayout::HEIGHT;
+        }
       }
 
       this_size.*orthogonal_dim =
@@ -111,15 +116,13 @@ void LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
     this_size.*oriented_dim = weightless_children_size;
   }
 
-  set_measured_size(this_size);
+  return this_size;
 }
 
 void LinearLayout::on_layout() {
   const bool is_horizontal = orientation_ == HORIZONTAL;
-  const auto count = child_count();
   auto position = inner_bounds().position();
-  for (int i = 0; i < count; ++i) {
-    auto* child = get_child(i);
+  for (const auto& child : *this) {
     const auto child_size = child->measured_size();
     auto available_size = is_horizontal
                               ? gfx::Size{child_size.width, inner_bounds().height()}

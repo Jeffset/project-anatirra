@@ -45,8 +45,13 @@ class View : public base::RefCounted, public base::WeakReferenced {
   View();
   ~View() override;
 
+  virtual void layout_as_root(const gfx::Rect& area);
+  virtual void relayout();
+
   // TODO: mark these as noexcept.
-  void measure(MeasureSpec width_spec, MeasureSpec height_spec);
+  void measure(MeasureSpec width_spec,
+               MeasureSpec height_spec,
+               bool update_layout_masks = true);
   void layout(const gfx::Rect& area);
   void draw(paint::Canvas& canvas);
 
@@ -95,16 +100,18 @@ class View : public base::RefCounted, public base::WeakReferenced {
   }
 
  protected:
-  virtual void on_tree_host_set();
-
-  void set_measured_size(const gfx::Size& measured_size);
+  virtual void on_tree_host_set() {}
 
   virtual void on_mouse_event(const avada::input::MouseEvent& event);
 
-  virtual void on_measure(MeasureSpec width_spec, MeasureSpec height_spec);
+  virtual gfx::Size on_measure(MeasureSpec width_spec,
+                               MeasureSpec height_spec,
+                               bool update_layout_masks);
   virtual void dispatch_layout(bool changed);
-  virtual void on_layout();
+  virtual void on_layout() {}
   virtual void on_draw(paint::Canvas& canvas);
+
+  virtual void on_focus_changed(bool focused);
 
  private:
   ViewTreeHost* view_tree_host_;
@@ -122,10 +129,6 @@ class View : public base::RefCounted, public base::WeakReferenced {
   bool needs_paint_;
 
   std::string debug_name_;
-
- public:
-  // TODO: Encapsulate layout_propagation_mask.
-  base::EnumFlags<NeedsLayout> layout_propagation_mask;
 };
 
 enum class VisitResult : uint8_t { STOP_VISIT = 0, CONTINUE_VISIT = 1 };

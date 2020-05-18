@@ -11,7 +11,9 @@ namespace cursedui::view {
 
 class FrameLayout : public ViewGroup {
  public:
-  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
+  gfx::Size on_measure(MeasureSpec width_spec,
+                       MeasureSpec height_spec,
+                       bool update_layout_masks) override;
   void on_layout() override;
 };
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
+﻿// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
 // This software is a part of the Anatirra Project.
 // "Nothing is certain, but we shall hope."
 
@@ -17,7 +17,27 @@ ViewGroup::ViewGroup() noexcept {
   border()->set_style(BorderDrawable::Style::NO_BORDER);
 }
 
-ViewGroup::~ViewGroup() noexcept = default;
+void ViewGroup::layout_as_root(const gfx::Rect& area) {
+  ASSERT(get_parent() == nullptr) << "Can't layout as root if attached to parent.";
+  const auto new_size = area.size();
+  // It's ok to measure exactly here, for we are the root.
+  measure(MeasureExactly{{new_size.width}}, MeasureExactly{{new_size.height}});
+  layout(area);
+}
+
+void ViewGroup::relayout() {
+  // This is safe to call even if we are down in a hierarchy.
+  const auto current_size = size();
+  measure(MeasureExactly{{current_size.width}}, MeasureExactly{{current_size.height}},
+          /* do not update layout masks */ false);
+  layout(gfx::rect_from(position(), current_size));
+}
+
+ViewGroup::~ViewGroup() noexcept {
+  while (!children_.empty()) {
+    remove_child_internal(children_.begin());
+  }
+}
 
 void ViewGroup::add_child(base::ref_ptr<View> child) noexcept {
   ASSERT(child->get_parent() == nullptr);
@@ -30,33 +50,33 @@ void ViewGroup::add_child(base::ref_ptr<View> child) noexcept {
   child->set_tree_host(tree_host());
   child->set_parent(this);
   children_.emplace_back(std::move(child));
+  layout_propagation_masks_[child.get()] = NeedsLayout::SIZE;
 
   // Explicitly mark this as needing full size layout, for we must do the first layout
   // of the new view and we do not yet know layout need propagation mask.
   mark_needs_layout(NeedsLayout::SIZE);
 }
 
-void ViewGroup::remove_child(base::ref_ptr<View>& child) noexcept {
-  auto it = std::find(children_.begin(), children_.end(), child);
-  if (it != children_.end()) {
-    children_.erase(it);
-  }
-  if (child->focused()) {
-    child->unfocus();
-  }
+void ViewGroup::remove_child(base::ref_ptr<View> child) noexcept {
+  ASSERT(child->get_parent() == this);
 
   // We know the layout propagation mask here, so we can use it, assuming that removing
   // the child is equivalent to setting it's size to {0, 0} or something.
   child->mark_needs_layout(NeedsLayout::SIZE);
   propagate_needs_layout_mark(child.get());
+  layout_propagation_masks_.erase(child.get());
 
-  child->set_tree_host(nullptr);
-  child->set_parent(nullptr);
+  auto it = std::find(children_.begin(), children_.end(), child);
+  if (it != children_.end()) {
+    remove_child_internal(it);
+  }
 }
 
-View* ViewGroup::get_child(int index) {
-  ASSERT(index >= 0 && static_cast<size_t>(index) <= children_.size());
-  return children_[index].get();
+void ViewGroup::remove_child_internal(children_container_t::iterator child) noexcept {
+  const auto& child_ptr = *child;
+  child_ptr->set_tree_host(nullptr);
+  child_ptr->set_parent(nullptr);
+  children_.erase(child);
 }
 
 void ViewGroup::dispatch_mouse_event(const avada::input::MouseEvent& event) {
@@ -96,7 +116,7 @@ void ViewGroup::visit_down(const ViewTreeVisitor& visitor) {
 
 void ViewGroup::propagate_needs_layout_mark(View* child) {
   ASSERT(child->get_parent() == this);
-  auto propagated_mark = child->needs_layout().has(child->layout_propagation_mask);
+  auto propagated_mark = child->needs_layout() & layout_propagation_masks_[child];
   mark_needs_layout(propagated_mark);
 }
 
@@ -108,10 +128,6 @@ void ViewGroup::on_tree_host_set() {
 
 void ViewGroup::dispatch_layout(bool) {
   on_layout();
-}
-
-int ViewGroup::child_count() const noexcept {
-  return children_.size();
 }
 
 void ViewGroup::on_draw(paint::Canvas& canvas) {

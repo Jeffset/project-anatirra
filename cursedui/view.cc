@@ -14,53 +14,51 @@
 
 namespace cursedui::view {
 
-void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
-  measured_size_.reset();
-  auto double_border_width = border() ? border_->border_width() * 2 : 0;
-  if (double_border_width > 0) {
-    on_measure(shrink_measure_spec(width_spec, double_border_width),
-               shrink_measure_spec(height_spec, double_border_width));
-  } else {
-    on_measure(width_spec, height_spec);
-  }
+void View::measure(MeasureSpec width_spec,
+                   MeasureSpec height_spec,
+                   bool update_layout_masks) {
+  const auto double_border_width = border() ? border_->border_width() * 2 : 0;
 
-  ASSERT(measured_size_.has_value());
+  auto size = double_border_width > 0
+                  ? on_measure(shrink_measure_spec(width_spec, double_border_width),
+                               shrink_measure_spec(height_spec, double_border_width),
+                               update_layout_masks)
+                  : on_measure(width_spec, height_spec, update_layout_masks);
 
   if (double_border_width > 0) {
-    measured_size_->width += double_border_width;
-    measured_size_->height += double_border_width;
+    size.width += double_border_width;
+    size.height += double_border_width;
   }
 
   // Assert that measuring is done according to specs.
   // NOTE: Think: is this actually right idea to enforce it?
   std::visit(base::overloaded{
-                 [this](const MeasureExactly& exactly) {
-                   ASSERT(measured_size_->width == exactly.dim)
-                       << "Measure exactly width spec is violated: "
-                       << measured_size_->width << " vs " << exactly.dim << " in '"
-                       << debug_name() << '\'';
+                 [this, &size](const MeasureExactly& exactly) {
+                   ASSERT(size.width == exactly.dim)
+                       << "Measure exactly width spec is violated: " << size.width
+                       << " vs " << exactly.dim << " in '" << debug_name() << '\'';
                  },
-                 [this](const MeasureAtMost& at_most) {
-                   ASSERT(measured_size_->width <= at_most.dim)
-                       << "At most width spec is violated";
+                 [&size](const MeasureAtMost& at_most) {
+                   ASSERT(size.width <= at_most.dim) << "At most width spec is violated";
                  },
                  [](MeasureUnlimited) {},
              },
              width_spec);
   std::visit(base::overloaded{
-                 [this](const MeasureExactly& exactly) {
-                   ASSERT(measured_size_->height == exactly.dim)
-                       << "Measure exactly height spec is violated: "
-                       << measured_size_->height << " vs " << exactly.dim << " in '"
-                       << debug_name() << '\'';
+                 [this, &size](const MeasureExactly& exactly) {
+                   ASSERT(size.height == exactly.dim)
+                       << "Measure exactly height spec is violated: " << size.height
+                       << " vs " << exactly.dim << " in '" << debug_name() << '\'';
                  },
-                 [this](const MeasureAtMost& at_most) {
-                   ASSERT(measured_size_->height <= at_most.dim)
+                 [&size](const MeasureAtMost& at_most) {
+                   ASSERT(size.height <= at_most.dim)
                        << "At most height spec is violated";
                  },
                  [](MeasureUnlimited) {},
              },
              height_spec);
+
+  measured_size_ = size;
 }
 
 void View::layout(const gfx::Rect& area) {
@@ -114,21 +112,24 @@ bool View::focused() const noexcept {
 }
 
 void View::focus() {
-  ASSERT(focusable());
-  if (!view_tree_host_)
+  if (!view_tree_host_ || !focusable())
     return;
   if (focused())
     return;
-  if (auto focused_view = view_tree_host_->focused_view()) {
+
+  if (auto focused_view = view_tree_host_->focused_view())
     focused_view->unfocus();
-  }
+
   view_tree_host_->set_focused_view(base::ref_ptr(this));
+
+  on_focus_changed(true);
 }
 
 void View::unfocus() {
-  if (focused()) {
-    view_tree_host_->set_focused_view(nullptr);
-  }
+  ASSERT(focused());
+  view_tree_host_->set_focused_view(nullptr);
+
+  on_focus_changed(false);
 }
 
 View::~View() = default;
@@ -139,8 +140,19 @@ View::View()
       border_(new BorderDrawable()),
       parent_(nullptr),
       needs_layout_(NeedsLayout::SIZE),
-      needs_paint_(true),
-      layout_propagation_mask(NeedsLayout::SIZE) {}
+      needs_paint_(true) {}
+
+void View::relayout() {
+  // No need to call measure, we are not ViewGroup here.
+  dispatch_layout(false);
+  // Clear layout flag as we are not using View::layout here.
+  needs_layout_ = NeedsLayout::NOT;
+}
+
+void View::layout_as_root(const gfx::Rect& area) {
+  // No need to call measure, we are not ViewGroup here.
+  layout(area);
+}
 
 base::nullable<LayoutParams> View::layout_params() const noexcept {
   return layout_params_.get();
@@ -167,6 +179,11 @@ base::nullable<Drawable> View::background() {
 void View::set_tree_host(base::nullable<ViewTreeHost> tree_host) {
   if (view_tree_host_ == tree_host)
     return;
+
+  if (focused()) {
+    unfocus();
+  }
+
   view_tree_host_ = tree_host.get_nullable();
   on_tree_host_set();
 
@@ -188,7 +205,7 @@ void View::set_parent(base::nullable<ViewGroup> parent) {
 
   // Reset layout mask for the new parent should set a new one once the first new layout
   // is done.
-  layout_propagation_mask = NeedsLayout::SIZE;
+  measured_size_.reset();
   // Invalidate view as it's attached to the new parent.
   mark_needs_layout(NeedsLayout::SIZE);
   mark_needs_paint();
@@ -209,19 +226,14 @@ void View::visit_up(const ViewTreeVisitor& visitor) {
   }
 }
 
-void View::on_tree_host_set() {}
-
-void View::set_measured_size(const gfx::Size& measured_size) {
-  measured_size_ = measured_size;
-}
-
-void View::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
+gfx::Size View::on_measure(MeasureSpec width_spec,
+                           MeasureSpec height_spec,
+                           bool /* unused */) {
   constexpr auto measurer = base::overloaded{
       [](const MeasureExactly& spec) { return spec.dim; },
       [](const auto&) { return 0; },
   };
-  set_measured_size(
-      {std::visit(measurer, width_spec), std::visit(measurer, height_spec)});
+  return {std::visit(measurer, width_spec), std::visit(measurer, height_spec)};
 }
 
 void View::dispatch_layout(bool changed) {
@@ -237,8 +249,6 @@ void View::dispatch_layout(bool changed) {
   }
 }
 
-void View::on_layout() {}
-
 void View::on_draw(paint::Canvas& canvas) {
   if (!outer_bounds().has_area())
     return;
@@ -248,6 +258,10 @@ void View::on_draw(paint::Canvas& canvas) {
 
   if (border_)
     border_->draw(canvas);
+}
+
+void View::on_focus_changed(bool focused) {
+  MARK_UNUSED(focused);
 }
 
 gfx::Rect View::inner_bounds() const noexcept {

@@ -140,6 +140,7 @@ class InputParser {
  private:
   std::wstring_convert<std::codecvt_utf8<wchar_t>> utf8_cvt_;
   std::map<std::string_view, KeyboardEvent> keymap_;
+  // TODO: throttle mouse move events.
 };
 
 }  // namespace avada::input

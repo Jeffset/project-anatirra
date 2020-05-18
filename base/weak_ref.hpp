@@ -71,6 +71,11 @@ class weak_ref : public internal::weak_ref_base {
   template <class D, REQUIRES(is_compatible_v<D>)>
   weak_ref(weak_ref<D>&& wp) noexcept : base(std::move(wp)) {}
 
+  weak_ref& operator=(std::nullptr_t) {
+    control_block_ = nullptr;
+    return *this;
+  }
+
   operator bool() const noexcept {
     return control_block_ && control_block_->ptr_ != nullptr;
   }

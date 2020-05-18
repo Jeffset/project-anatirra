@@ -280,7 +280,7 @@ std::optional<input::MouseEvent> InputParser::parse_mouse_event(
   if (*i != 'm' && *i != 'M')
     return {};
 
-  input::MouseEvent mev{cx, cy};
+  input::MouseEvent mev{cx - 1, cy - 1};
 
   if (cb < 32) {
     cb = cb & 0b11;

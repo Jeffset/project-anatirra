@@ -10,11 +10,12 @@
 #include "cursedui/dim.hpp"
 #include "cursedui/view.hpp"
 
+#include <list>
 #include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
-#include <vector>
+#include <unordered_map>
 
 namespace cursedui::view {
 
@@ -25,11 +26,14 @@ class ViewGroup : public View {
   ViewGroup() noexcept;
   ~ViewGroup() noexcept override;
 
-  void add_child(base::ref_ptr<View> child) noexcept;
-  void remove_child(base::ref_ptr<View>& child) noexcept;
+  void layout_as_root(const gfx::Rect& area) override;
+  void relayout() override;
 
-  GETTER int child_count() const noexcept;
-  GETTER View* get_child(int index);
+  void add_child(base::ref_ptr<View> child) noexcept;
+  void remove_child(base::ref_ptr<View> child) noexcept;
+
+  auto begin() noexcept { return children_.begin(); }
+  auto end() noexcept { return children_.end(); }
 
   void dispatch_mouse_event(const avada::input::MouseEvent& event) override;
 
@@ -45,13 +49,22 @@ class ViewGroup : public View {
  protected:
   void on_tree_host_set() override;
 
-  void on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override = 0;
-  void dispatch_layout(bool changed) override;
+  gfx::Size on_measure(MeasureSpec width_spec,
+                       MeasureSpec height_spec,
+                       bool update_layout_masks) override = 0;
   void on_layout() override = 0;
+  void dispatch_layout(bool changed) override;
   void on_draw(paint::Canvas& canvas) override;
 
+ protected:
+  std::unordered_map<View*, base::EnumFlags<NeedsLayout>> layout_propagation_masks_;
+
  private:
-  std::vector<base::ref_ptr<View>> children_;
+  using children_container_t = std::list<base::ref_ptr<View>>;
+  void remove_child_internal(children_container_t::iterator child) noexcept;
+
+ private:
+  children_container_t children_;
 };
 
 class LayoutParams {

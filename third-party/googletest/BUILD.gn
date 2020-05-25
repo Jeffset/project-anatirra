@@ -1,3 +1,5 @@
+assert(is_debug)
+
 config("gtest_config") {
   visibility = [ ":*" ]  # gmock also shares this config.
   defines = [

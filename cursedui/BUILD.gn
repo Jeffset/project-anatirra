@@ -53,7 +53,10 @@ executable("cursedui_test_bin") {
 
 gtest_binary("cursedui_tests") {
   sources = [
-    "test/region_unittest.cc"
+    "test/region_unittest.cc",
+    "test/test_harness.hpp",
+    "test/frame_layout_unittest.cc",
+    "test/common_layout_unittest.cc",
   ]
   deps = [
     ":cursedui",

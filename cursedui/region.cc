@@ -13,8 +13,6 @@ namespace cursedui::paint {
 namespace {
 
 void deintersect(std::list<gfx::Rect>& rs, std::list<gfx::Rect>& wrs) {
-  using namespace gfx::operators;
-
   for (auto wri = wrs.begin(); wri != wrs.end(); /* no auto incr */) {
     for (auto ri = rs.begin(); ri != rs.end(); /* no auto incr */) {
       auto& r = *ri;

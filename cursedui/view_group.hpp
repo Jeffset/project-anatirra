@@ -5,12 +5,12 @@
 #ifndef ANATIRRA_CURSEDUI_VIEW_GROUP
 #define ANATIRRA_CURSEDUI_VIEW_GROUP
 
-#include "cursedui_config.hpp"
-
 #include "avada/color.hpp"
 #include "base/macro.hpp"
 #include "cursedui/dim.hpp"
 #include "cursedui/view.hpp"
+
+#include "cursedui_config.hpp"
 
 #include <list>
 #include <memory>
@@ -32,6 +32,9 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
   void relayout() override;
 
   void add_child(base::ref_ptr<View> child) noexcept;
+  void add_child(base::ref_ptr<View> child,
+                 std::unique_ptr<LayoutParams> layout_params) noexcept;
+
   void remove_child(base::ref_ptr<View> child) noexcept;
 
   auto begin() noexcept { return children_.begin(); }
@@ -83,7 +86,9 @@ class CURSEDUI_PUBLIC LayoutParams {
 
   GETTER virtual std::string_view tag() const noexcept { return TAG; }
 
-  LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept;
+  LayoutParams(LayoutSpec width,
+               LayoutSpec height,
+               base::EnumFlags<gfx::Gravity> gravity = gfx::Gravity::CENTER) noexcept;
   virtual ~LayoutParams() noexcept = default;
 
  private:
@@ -91,6 +96,14 @@ class CURSEDUI_PUBLIC LayoutParams {
   LayoutSpec height_;
   base::EnumFlags<gfx::Gravity> gravity_;
 };
+
+template <class V, class... Args>
+void add_child(const base::ref_ptr<V>& view,
+               const base::ref_ptr<View>& child,
+               Args&&... args) {
+  view->add_child(
+      child, std::make_unique<typename V::LayoutParams>(std::forward<Args>(args)...));
+}
 
 }  // namespace cursedui::view
 

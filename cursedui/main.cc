@@ -56,7 +56,7 @@ class Factory {
 
   auto overlay = base::make_ref_ptr<view::TextView>();
   overlay->set_layout_params(std::make_unique<view::LayoutParams>(
-      view::LayoutWrapContent{}, view::LayoutWrapContent{}));
+      view::LayoutWrapContent{}, view::LayoutMatchParent{}));
   overlay->set_text(L"Hello world!");
   overlay->set_background_color(avada::render::ColorRGB{255, 0, 255, 128});
   overlay->set_debug_name("overlay");

@@ -10,7 +10,6 @@ namespace cursedui::view {
 
 MeasureSpec make_measure_spec(const LayoutSpec& layout,
                               MeasureSpec parent_measure) noexcept {
-  // TODO: some combo of specs needs special handling.
   return std::visit(
       base::overloaded{
           [](LayoutExactly exactly) -> MeasureSpec {
@@ -26,16 +25,7 @@ MeasureSpec make_measure_spec(const LayoutSpec& layout,
                 },
                 parent_measure);
           },
-          [&parent_measure](LayoutMatchParent) -> MeasureSpec {
-            return std::visit(
-                base::overloaded{
-                    [](MeasureUnlimited) -> MeasureSpec { return MeasureUnlimited{}; },
-                    [](MeasureSpecified spec) -> MeasureSpec {
-                      return MeasureExactly{{spec.dim}};
-                    },
-                },
-                parent_measure);
-          },
+          [&parent_measure](LayoutMatchParent) -> MeasureSpec { return parent_measure; },
       },
       layout);
 }

@@ -42,7 +42,7 @@ set_defaults("executable") {
   configs += [ "//build:executable_ldconfig" ]
 
   if (is_debug) {
-   configs += [ "//build:executable_debug_ldconfig" ]
+    configs += [ "//build:executable_debug_ldconfig" ]
   }
 }
 set_defaults("static_library") {

@@ -40,13 +40,20 @@ ViewGroup::~ViewGroup() noexcept {
 }
 
 void ViewGroup::add_child(base::ref_ptr<View> child) noexcept {
+  add_child(std::move(child), nullptr);
+}
+
+void ViewGroup::add_child(base::ref_ptr<View> child,
+                          std::unique_ptr<LayoutParams> layout_params) noexcept {
   ASSERT(child->get_parent() == nullptr);
   ASSERT(std::find(children_.begin(), children_.end(), child) == children_.end());
 
-  auto old_lp = child->layout_params();
-  if (!old_lp || !check_layout_params(old_lp.get())) {
+  if (layout_params != nullptr && check_layout_params(layout_params.get())) {
+    child->set_layout_params(std::move(layout_params));
+  } else if (auto lp = child->layout_params(); !lp || !check_layout_params(lp.get())) {
     child->set_layout_params(create_layout_params());
   }
+
   child->set_tree_host(tree_host());
   child->set_parent(this);
   children_.emplace_back(std::move(child));
@@ -139,7 +146,9 @@ void ViewGroup::on_draw(paint::Canvas& canvas) {
 
 const char* LayoutParams::TAG = "LayoutParams";
 
-LayoutParams::LayoutParams(const LayoutSpec& width, const LayoutSpec& height) noexcept
-    : width_(width), height_(height), gravity_(gfx::Gravity::CENTER) {}
+LayoutParams::LayoutParams(LayoutSpec width,
+                           LayoutSpec height,
+                           base::EnumFlags<gfx::Gravity> gravity) noexcept
+    : width_(width), height_(height), gravity_(gravity) {}
 
 }  // namespace cursedui::view

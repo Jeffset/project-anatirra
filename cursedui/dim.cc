@@ -146,7 +146,7 @@ bool operator!=(const Size& lhs, const Size& rhs) noexcept {
   return std::tie(lhs.width, lhs.height) != std::tie(rhs.width, rhs.height);
 }
 
-std::ostream& operators::operator<<(std::ostream& os, const Rect& rect) {
+std::ostream& operator<<(std::ostream& os, const Rect& rect) {
   return os << '[' << rect.left << ", " << rect.top << ", " << rect.right << ", "
             << rect.bottom << ']';
 }

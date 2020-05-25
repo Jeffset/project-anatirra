@@ -81,7 +81,6 @@ class RegionTester {
 };
 
 void test(const std::vector<Rect>& v) {
-  using namespace cursedui::gfx::operators;
   Region region;
   RegionTester<22, 22> t1, t2;
   for (auto& r : v)

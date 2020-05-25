@@ -65,8 +65,9 @@ static constexpr bool supports_ref_counted = std::is_base_of_v<RefCounted, D>;
 
 }  // namespace internal
 
-template <class T, REQUIRES(internal::supports_ref_counted<T>)>
+template <class T>
 class ref_ptr final : public internal::ref_ptr_base<std::is_const_v<T>> {
+  static_assert(internal::supports_ref_counted<T>);
   using base = internal::ref_ptr_base<std::is_const_v<T>>;
 
   template <class D>

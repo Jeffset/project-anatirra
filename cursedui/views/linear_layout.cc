@@ -15,27 +15,20 @@ namespace cursedui::view {
 gfx::Size LinearLayout::on_measure(MeasureSpec width_spec,
                                    MeasureSpec height_spec,
                                    bool update_layout_masks) {
+  gfx::Size this_size = View::on_measure(width_spec, height_spec, false);
+
   const bool is_horizontal = orientation_ == HORIZONTAL;
   const MeasureSpec oriented_spec = is_horizontal ? width_spec : height_spec;
-  const MeasureSpec orthogonal_spec = is_horizontal ? height_spec : width_spec;
 
   const auto [oriented_dim, orthogonal_dim] =
-      is_horizontal ? std::make_pair(&gfx::Size::width, &gfx::Size::height)
-                    : std::make_pair(&gfx::Size::height, &gfx::Size::width);
+      is_horizontal ? std::pair(&gfx::Size::width, &gfx::Size::height)
+                    : std::pair(&gfx::Size::height, &gfx::Size::width);
 
   const auto [use_weights, total_oriented_dim] = std::visit(
       base::overloaded{
           [](const MeasureSpecified& spec) { return std::pair(true, spec.dim); },
           [](MeasureUnlimited) { return std::pair(false, -1); }},
       oriented_spec);
-
-  gfx::Size this_size{};
-  this_size.*orthogonal_dim =
-      std::visit(base::overloaded{
-                     [](const MeasureExactly& exactly) { return exactly.dim; },
-                     [](const auto&) { return 0; },
-                 },
-                 orthogonal_spec);
 
   gfx::dim_t weightless_children_size = 0;
   float child_summary_weight = 0.f;

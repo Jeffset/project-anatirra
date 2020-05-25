@@ -17,7 +17,6 @@ shared_library("base") {
     "exception.cc",
     "exception.hpp",
     "macro.hpp",
-    "meta_string.hpp",
     "nullable.hpp",
     "ref_ptr.cc",
     "ref_ptr.hpp",

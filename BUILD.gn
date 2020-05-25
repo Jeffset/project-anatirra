@@ -5,7 +5,5 @@ group("all") {
     "//avada",
     "//cursedui",
     "//injecxx",
-    "//third-party/googletest:gmock_main",
-    "//third-party/googletest:gtest_main",
   ]
 }

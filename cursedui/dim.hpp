@@ -80,11 +80,7 @@ CURSEDUI_PUBLIC gfx::Rect gravitated_rect(const gfx::Rect& rect,
                                           gfx::Size size,
                                           base::EnumFlags<Gravity> gravity) noexcept;
 
-namespace operators {
-
 CURSEDUI_PUBLIC std::ostream& operator<<(std::ostream& os, const Rect& rect);
-
-}
 
 }  // namespace cursedui::gfx
 

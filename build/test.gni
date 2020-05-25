@@ -3,50 +3,64 @@ declare_args() {
 }
 
 template("gtest_binary") {
-  executable(target_name) {
-    visibility = []
+  if (is_debug) {
+    executable(target_name) {
+      visibility = []
 
-    forward_variables_from(invoker, "*", [ "testonly" ])
+      forward_variables_from(invoker, "*", [ "testonly" ])
 
-    assert(defined(sources))
+      assert(defined(sources))
 
-    testonly = true
-    if (!defined(deps)) {
-      deps = []
+      testonly = true
+      if (!defined(deps)) {
+        deps = []
+      }
+      deps += [
+        "//third-party/googletest:gmock_main",
+        "//third-party/googletest:gtest_main",
+      ]
+
+      if (!defined(ldflags)) {
+        ldflags = []
+      }
+      ldflags += [ "-pthread" ]
+
+      if (!defined(defines)) {
+        defines = []
+      }
+      defines += [ "UNIT_TEST" ]
     }
-    deps += [
-      "//third-party/googletest:gmock_main",
-      "//third-party/googletest:gtest_main",
-    ]
-
-    if (!defined(ldflags)) {
-      ldflags = []
+  } else {
+    # Under release we do not generate unit-tests at all
+    group(target_name) {
     }
-    ldflags += [ "-pthread" ]
-
-    if (!defined(defines)) {
-      defines = []
-    }
-    defines += [ "UNIT_TEST" ]
+    not_needed(invoker, "*")
   }
 }
 
 template("compiler_test") {
-  test_source_set_ = "${target_name}__runner"
-  if (is_compiler_test) {
-    executable(test_source_set_) {
-      forward_variables_from(invoker,
-                             [
-                               "sources",
-                               "defines",
-                             ])
+  if (is_debug) {
+    test_source_set_ = "${target_name}__runner"
+    if (is_compiler_test) {
+      executable(test_source_set_) {
+        forward_variables_from(invoker,
+                               [
+                                 "sources",
+                                 "defines",
+                               ])
+      }
+    } else {
+      not_needed(invoker, "*")
+    }
+    group(target_name) {
+      deps = [
+        ":$test_source_set_(//build/compiler-test:clang_compiler_test)",
+      ]
     }
   } else {
+    # Under release we do not generate unit-tests at all
+    group(target_name) {
+    }
     not_needed(invoker, "*")
-  }
-  group(target_name) {
-    deps = [
-      ":$test_source_set_(//build/compiler-test:clang_compiler_test)",
-    ]
   }
 }

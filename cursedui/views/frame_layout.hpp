@@ -17,10 +17,9 @@ class CURSEDUI_PUBLIC FrameLayout : public ViewGroup {
  public:
   using LayoutParams = view::LayoutParams;
 
-  gfx::Size on_measure(MeasureSpec width_spec,
-                       MeasureSpec height_spec,
-                       bool update_layout_masks) override;
+  gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
+  void propagate_needs_layout_mark(const View* child) override;
 
  private:
   std::vector<View*> match_parent_children_tmp_;

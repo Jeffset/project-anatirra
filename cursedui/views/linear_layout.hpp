@@ -21,7 +21,13 @@ class CURSEDUI_PUBLIC LinearLayout : public ViewGroup {
    public:
     static const char* TAG;
 
-    LayoutParams(const LayoutSpec& width, const LayoutSpec& height);
+    LayoutParams(LayoutSpec width,
+                 LayoutSpec height,
+                 base::EnumFlags<gfx::Gravity> gravity = gfx::Gravity::CENTER) noexcept;
+    LayoutParams(LayoutSpec width,
+                 LayoutSpec height,
+                 float weight,
+                 base::EnumFlags<gfx::Gravity> gravity = gfx::Gravity::CENTER) noexcept;
 
     GETTER std::optional<float> weight() const { return weight_; }
 
@@ -35,7 +41,10 @@ class CURSEDUI_PUBLIC LinearLayout : public ViewGroup {
     std::optional<float> weight_;
   };
 
-  enum Orientation : unsigned char { HORIZONTAL, VERTICAL };
+  enum Orientation : unsigned char {
+    HORIZONTAL = 0,
+    VERTICAL = 1,
+  };
 
   LinearLayout() noexcept;
   ~LinearLayout() noexcept override;
@@ -48,13 +57,13 @@ class CURSEDUI_PUBLIC LinearLayout : public ViewGroup {
   bool check_layout_params(view::LayoutParams* params) const noexcept override;
 
  protected:
-  gfx::Size on_measure(MeasureSpec width_spec,
-                       MeasureSpec height_spec,
-                       bool update_layout_masks) override;
+  gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
+  void propagate_needs_layout_mark(const View* child) override;
 
  private:
   Orientation orientation_;
+  std::vector<View*> match_parent_children_tmp_;
 };
 
 }  // namespace cursedui::view

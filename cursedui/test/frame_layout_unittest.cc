@@ -30,6 +30,17 @@ TEST(FrameLayoutTest, RootWithChild) {
   EXPECT_EQ(fl->outer_bounds(), (Rect{0, 0, 100, 100}));
 }
 
+TEST(FrameLayoutTest, RootWithChild_Oversize) {
+  auto fl = base::make_ref_ptr<FrameLayout>();
+  auto child = test::make_view();
+  add_child(fl, child, LayoutExactly{200}, LayoutExactly{200});
+
+  fl->layout_as_root({0, 0, 100, 100});
+
+  EXPECT_EQ(fl->outer_bounds(), (Rect{0, 0, 100, 100}));
+  EXPECT_BOUNDS(child, rect_from({-50, -50}, {200, 200}));
+}
+
 TEST(FrameLayoutTest, WithChildCenter_WrapContent) {
   auto root = base::make_ref_ptr<FrameLayout>();
   auto fl = base::make_ref_ptr<FrameLayout>();

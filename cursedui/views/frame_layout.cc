@@ -9,10 +9,8 @@
 
 namespace cursedui::view {
 
-gfx::Size FrameLayout::on_measure(MeasureSpec width_spec,
-                                  MeasureSpec height_spec,
-                                  bool update_layout_masks) {
-  gfx::Size size = View::on_measure(width_spec, height_spec, false);
+gfx::Size FrameLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
+  gfx::Size size = View::on_measure(width_spec, height_spec);
   match_parent_children_tmp_.clear();
 
   for (const auto& child : *this) {
@@ -28,11 +26,6 @@ gfx::Size FrameLayout::on_measure(MeasureSpec width_spec,
 
     child->measure(make_measure_spec(wls, width_spec),
                    make_measure_spec(hls, height_spec));
-    if (update_layout_masks) {
-      layout_propagation_masks_[child.get()] =
-          make_layout_propagation_mask(wls, width_spec, NeedsLayout::WIDTH) |
-          make_layout_propagation_mask(wls, height_spec, NeedsLayout::HEIGHT);
-    }
     size = gfx::max(size, child->measured_size());
   }
 
@@ -48,16 +41,9 @@ gfx::Size FrameLayout::on_measure(MeasureSpec width_spec,
                                               : make_measure_spec(hls, height_spec);
 
     child->measure(child_width_spec, child_height_spec);
-
-    if (update_layout_masks) {
-      base::EnumFlags<NeedsLayout> mask;
-      if (!base::holds_alternative<LayoutMatchParent>(wls))
-        mask.add(make_layout_propagation_mask(wls, width_spec, NeedsLayout::WIDTH));
-      if (!base::holds_alternative<LayoutMatchParent>(hls))
-        mask.add(make_layout_propagation_mask(hls, height_spec, NeedsLayout::HEIGHT));
-      layout_propagation_masks_[child] = mask;
-    }
   }
+  size.width = fix_measure(size.width, width_spec);
+  size.height = fix_measure(size.height, width_spec);
   return size;
 }
 
@@ -67,6 +53,20 @@ void FrameLayout::on_layout() {
     auto rect =
         gfx::gravitated_rect(inner_bounds(), child->measured_size(), lp->gravity());
     child->layout(rect);
+  }
+}
+
+void FrameLayout::propagate_needs_layout_mark(const View* child) {
+  using namespace base::operators;
+  ASSERT(child->get_parent() == this);
+  auto* lp = child->layout_params().get();
+  if (child->needs_layout().has(NeedsLayout::WIDTH) &&
+      base::holds_alternative<LayoutWrapContent>(lp->width_layout_spec())) {
+    mark_needs_layout(NeedsLayout::WIDTH | NeedsLayout::CONTENT);
+  }
+  if (child->needs_layout().has(NeedsLayout::HEIGHT) &&
+      base::holds_alternative<LayoutWrapContent>(lp->height_layout_spec())) {
+    mark_needs_layout(NeedsLayout::HEIGHT | NeedsLayout::CONTENT);
   }
 }
 

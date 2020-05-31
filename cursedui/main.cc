@@ -116,7 +116,7 @@ class Factory {
   //  lp3->set_weight(1.0f);
   lp3->set_width_layout_spec(view::LayoutMatchParent{});
   auto* lp4 = (view::LinearLayout::LayoutParams*)view4->layout_params().get();
-  lp4->set_weight(0.5f);
+  // lp4->set_weight(0.5f);
   lp4->set_width_layout_spec(view::LayoutMatchParent{});
 
   auto* ll = (view::LinearLayout::LayoutParams*)lin_layout2->layout_params().get();

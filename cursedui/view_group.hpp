@@ -49,20 +49,14 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
 
   void visit_down(const ViewTreeVisitor& visitor) override;
 
-  void propagate_needs_layout_mark(View* child);
+  virtual void propagate_needs_layout_mark(const View* child) = 0;
 
  protected:
   void on_tree_host_set() override;
 
-  gfx::Size on_measure(MeasureSpec width_spec,
-                       MeasureSpec height_spec,
-                       bool update_layout_masks) override = 0;
+  gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override = 0;
   void on_layout() override = 0;
-  void dispatch_layout(bool changed) override;
   void on_draw(paint::Canvas& canvas) override;
-
- protected:
-  std::unordered_map<View*, base::EnumFlags<NeedsLayout>> layout_propagation_masks_;
 
  private:
   using children_container_t = std::list<base::ref_ptr<View>>;

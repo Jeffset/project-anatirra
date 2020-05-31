@@ -73,9 +73,7 @@ gfx::Size TextView::measure_text(gfx::dim_t max_width,
   return {width, height};
 }
 
-gfx::Size TextView::on_measure(MeasureSpec width_spec,
-                               MeasureSpec height_spec,
-                               bool /* unused */) {
+gfx::Size TextView::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   gfx::Size size{};
   if (base::holds_alternative<MeasureExactly>(width_spec) &&
       base::holds_alternative<MeasureExactly>(height_spec)) {

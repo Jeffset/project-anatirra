@@ -43,13 +43,17 @@ enum class CURSEDUI_PUBLIC NeedsLayout : uint8_t {
   // clang-format on
 };
 
-CURSEDUI_PUBLIC MeasureSpec make_measure_spec(const LayoutSpec& layout,
-                                              MeasureSpec parent_measure) noexcept;
+CURSEDUI_PUBLIC
+MeasureSpec make_measure_spec(LayoutSpec layout, MeasureSpec parent_measure) noexcept;
 
-CURSEDUI_PUBLIC MeasureSpec shrink_measure_spec(MeasureSpec spec,
-                                                gfx::dim_t dim) noexcept;
+CURSEDUI_PUBLIC
+gfx::dim_t fix_measure(gfx::dim_t dim, MeasureSpec spec) noexcept;
 
-CURSEDUI_PUBLIC base::EnumFlags<NeedsLayout> make_layout_propagation_mask(
+CURSEDUI_PUBLIC
+MeasureSpec shrink_measure_spec(MeasureSpec spec, gfx::dim_t dim) noexcept;
+
+CURSEDUI_PUBLIC
+base::EnumFlags<NeedsLayout> make_layout_propagation_mask(
     const LayoutSpec& layout,
     MeasureSpec parent_measure,
     base::EnumFlags<NeedsLayout> mark) noexcept;

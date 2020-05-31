@@ -25,7 +25,7 @@ class ViewForTest : public View {
   gfx::Size preferred_size_;
 
  protected:
-  gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec, bool) override {
+  gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override {
     return {std::visit(make_measurer(preferred_size_.width), width_spec),
             std::visit(make_measurer(preferred_size_.height), height_spec)};
   }

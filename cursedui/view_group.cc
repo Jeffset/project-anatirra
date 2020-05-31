@@ -28,8 +28,7 @@ void ViewGroup::layout_as_root(const gfx::Rect& area) {
 void ViewGroup::relayout() {
   // This is safe to call even if we are down in a hierarchy.
   const auto current_size = size();
-  measure(MeasureExactly{{current_size.width}}, MeasureExactly{{current_size.height}},
-          /* do not update layout masks */ false);
+  measure(MeasureExactly{{current_size.width}}, MeasureExactly{{current_size.height}});
   layout(gfx::rect_from(position(), current_size));
 }
 
@@ -57,7 +56,6 @@ void ViewGroup::add_child(base::ref_ptr<View> child,
   child->set_tree_host(tree_host());
   child->set_parent(this);
   children_.emplace_back(std::move(child));
-  layout_propagation_masks_[child.get()] = NeedsLayout::SIZE;
 
   // Explicitly mark this as needing full size layout, for we must do the first layout
   // of the new view and we do not yet know layout need propagation mask.
@@ -71,7 +69,6 @@ void ViewGroup::remove_child(base::ref_ptr<View> child) noexcept {
   // the child is equivalent to setting it's size to {0, 0} or something.
   child->mark_needs_layout(NeedsLayout::SIZE);
   propagate_needs_layout_mark(child.get());
-  layout_propagation_masks_.erase(child.get());
 
   auto it = std::find(children_.begin(), children_.end(), child);
   if (it != children_.end()) {
@@ -121,20 +118,10 @@ void ViewGroup::visit_down(const ViewTreeVisitor& visitor) {
   }
 }
 
-void ViewGroup::propagate_needs_layout_mark(View* child) {
-  ASSERT(child->get_parent() == this);
-  auto propagated_mark = child->needs_layout() & layout_propagation_masks_[child];
-  mark_needs_layout(propagated_mark);
-}
-
 void ViewGroup::on_tree_host_set() {
   for (auto& child : children_) {
     child->set_tree_host(tree_host());
   }
-}
-
-void ViewGroup::dispatch_layout(bool) {
-  on_layout();
 }
 
 void ViewGroup::on_draw(paint::Canvas& canvas) {

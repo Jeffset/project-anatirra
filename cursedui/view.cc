@@ -14,16 +14,13 @@
 
 namespace cursedui::view {
 
-void View::measure(MeasureSpec width_spec,
-                   MeasureSpec height_spec,
-                   bool update_layout_masks) {
+void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   const auto double_border_width = border() ? border_->border_width() * 2 : 0;
 
   auto size = double_border_width > 0
                   ? on_measure(shrink_measure_spec(width_spec, double_border_width),
-                               shrink_measure_spec(height_spec, double_border_width),
-                               update_layout_masks)
-                  : on_measure(width_spec, height_spec, update_layout_masks);
+                               shrink_measure_spec(height_spec, double_border_width))
+                  : on_measure(width_spec, height_spec);
 
   if (double_border_width > 0) {
     size.width += double_border_width;
@@ -196,10 +193,6 @@ base::nullable<ViewTreeHost> View::tree_host() noexcept {
   return view_tree_host_;
 }
 
-base::nullable<ViewGroup> View::get_parent() {
-  return parent_;
-}
-
 void View::set_parent(base::nullable<ViewGroup> parent) {
   parent_ = parent.get_nullable();
 
@@ -226,9 +219,7 @@ void View::visit_up(const ViewTreeVisitor& visitor) {
   }
 }
 
-gfx::Size View::on_measure(MeasureSpec width_spec,
-                           MeasureSpec height_spec,
-                           bool /* unused */) {
+gfx::Size View::on_measure(MeasureSpec width_spec, MeasureSpec height_spec) {
   constexpr auto measurer = base::overloaded{
       [](const MeasureExactly& spec) { return spec.dim; },
       [](const auto&) { return 0; },

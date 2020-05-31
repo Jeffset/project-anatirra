@@ -9,10 +9,10 @@
 #include "cursedui/canvas.hpp"
 #include "cursedui/view_group.hpp"
 
-#include <forward_list>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 namespace cursedui {
 
@@ -121,28 +121,28 @@ void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
     return;
   }
 
-  std::forward_list<view::View*> roots_needing_layout;
+  std::unordered_map<view::View*, gfx::Rect> old_bounds;
 
-  auto scan_visitor = ViewTreeVisitor{
+  std::vector<view::View*> roots_needing_layout;
+
+  const auto scan_visitor = ViewTreeVisitor{
       [&roots_needing_layout](view::View* view) {
         if (view->needs_layout()) {
-          roots_needing_layout.push_front(view);
+          roots_needing_layout.push_back(view);
           return view::VisitResult::STOP_VISIT;
         }
         return view::VisitResult::CONTINUE_VISIT;
       },
   };
 
-  // Step I: obtain all sub-roots of the view hierarchy that explcitily need layout
+  // Step I: obtain all sub-roots of the view hierarchy that explicitily need layout
   root_->visit_down(scan_visitor);
 
   if (roots_needing_layout.empty())
     return;
 
-  std::unordered_map<view::View*, gfx::Rect> old_bounds;
-
   // Step II: propagate layout need from every root up the tree.
-  auto propagate_visitor = ViewTreeVisitor{
+  const auto propagate_visitor = ViewTreeVisitor{
       [&old_bounds](view::View* view) {
         old_bounds[view] = view->outer_bounds();
         if (auto* parent = view->get_parent().get_nullable()) {
@@ -157,24 +157,17 @@ void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
     view->visit_up(propagate_visitor);
   }
 
-  // Step III: re-scan the tree to obtain the final set of roots needing layout.
-  roots_needing_layout.clear();
-  root_->visit_down(scan_visitor);
+  do {
+    // Step III: re-scan the tree to obtain the final set of roots needing layout.
+    roots_needing_layout.clear();
+    root_->visit_down(scan_visitor);
 
-  // Step IV: Perform actual layout on every final detected root.
-  for (auto* view : roots_needing_layout) {
-    LOG() << "ViewTreeHost layout: layouting " << view->debug_name();
-    view->relayout();
-  }
-
-#if defined(DEBUG)
-  roots_needing_layout.clear();
-  root_->visit_down(scan_visitor);
-  for (auto* view : roots_needing_layout) {
-    LOG() << "ERROR: view '" << view->debug_name() << "' has " << view->needs_layout();
-  }
-  ASSERT(roots_needing_layout.empty()) << "All layout marks must be cleared";
-#endif  // defined(DEBUG)
+    // Step IV: Perform actual layout on every final detected root.
+    for (auto* view : roots_needing_layout) {
+      LOG() << "ViewTreeHost layout: layouting " << view->debug_name();
+      view->relayout();
+    }
+  } while (!roots_needing_layout.empty());
 
   for (auto& [view, bounds] : old_bounds)
     if (bounds != view->outer_bounds())
@@ -182,11 +175,11 @@ void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
 }
 
 bool ViewTreeHost::paint_tree(paint::Region& paint_region, paint::Canvas& canvas) {
-  std::forward_list<view::View*> roots_to_paint;
+  std::vector<view::View*> roots_to_paint;
   root_->visit_down(ViewTreeVisitor{
       [&roots_to_paint](view::View* view) {
         if (view->needs_paint()) {
-          roots_to_paint.push_front(view);
+          roots_to_paint.push_back(view);
           return view::VisitResult::STOP_VISIT;
         }
         return view::VisitResult::CONTINUE_VISIT;

@@ -5,8 +5,6 @@
 #ifndef ANATIRRA_CURSEDUI_VIEW
 #define ANATIRRA_CURSEDUI_VIEW
 
-#include "cursedui_config.hpp"
-
 #include "avada/color.hpp"
 #include "base/exception.hpp"
 #include "base/macro.hpp"
@@ -14,6 +12,8 @@
 #include "base/weak_ref.hpp"
 #include "cursedui/dim.hpp"
 #include "cursedui/view_specs.hpp"
+
+#include "cursedui_config.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -51,9 +51,7 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
   virtual void relayout();
 
   // TODO: mark these as noexcept.
-  void measure(MeasureSpec width_spec,
-               MeasureSpec height_spec,
-               bool update_layout_masks = true);
+  void measure(MeasureSpec width_spec, MeasureSpec height_spec);
   void layout(const gfx::Rect& area);
   void draw(paint::Canvas& canvas);
 
@@ -84,7 +82,7 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
   void set_tree_host(base::nullable<ViewTreeHost> tree_host);
   GETTER base::nullable<ViewTreeHost> tree_host() noexcept;
 
-  GETTER base::nullable<ViewGroup> get_parent();
+  GETTER base::nullable<ViewGroup> get_parent() const noexcept { return parent_; }
   void set_parent(base::nullable<ViewGroup> parent);
 
   void mark_needs_layout(base::EnumFlags<NeedsLayout> mark) noexcept;
@@ -106,14 +104,14 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
 
   virtual void on_mouse_event(const avada::input::MouseEvent& event);
 
-  virtual gfx::Size on_measure(MeasureSpec width_spec,
-                               MeasureSpec height_spec,
-                               bool update_layout_masks);
-  virtual void dispatch_layout(bool changed);
+  virtual gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec);
   virtual void on_layout() {}
   virtual void on_draw(paint::Canvas& canvas);
 
   virtual void on_focus_changed(bool focused);
+
+ private:
+  void dispatch_layout(bool changed);
 
  private:
   ViewTreeHost* view_tree_host_;

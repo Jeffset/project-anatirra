@@ -35,9 +35,7 @@ class CURSEDUI_PUBLIC TextView : public View {
   bool focusable() const noexcept override { return true; }
 
  protected:
-  gfx::Size on_measure(MeasureSpec width_spec,
-                       MeasureSpec height_spec,
-                       bool update_layout_masks) override;
+  gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override;
   void on_layout() override;
 
   void on_key_event(const avada::input::KeyboardEvent& event) override;

@@ -8,26 +8,30 @@
 
 namespace cursedui::view {
 
-MeasureSpec make_measure_spec(const LayoutSpec& layout,
-                              MeasureSpec parent_measure) noexcept {
+MeasureSpec make_measure_spec(LayoutSpec layout, MeasureSpec parent_measure) noexcept {
+  constexpr auto maker = base::overloaded{
+      [](LayoutExactly exaclty, auto) -> MeasureSpec {
+        return MeasureExactly{{exaclty.dim}};
+      },
+      [](LayoutWrapContent, MeasureUnlimited unlimited) -> MeasureSpec {
+        return unlimited;
+      },
+      [](LayoutWrapContent, MeasureSpecified specified) -> MeasureSpec {
+        return MeasureAtMost{{specified.dim}};
+      },
+      [](LayoutMatchParent, auto parent) -> MeasureSpec { return parent; },
+  };
+  return std::visit(maker, layout, parent_measure);
+}
+
+gfx::dim_t fix_measure(gfx::dim_t dim, MeasureSpec spec) noexcept {
   return std::visit(
       base::overloaded{
-          [](LayoutExactly exactly) -> MeasureSpec {
-            return MeasureExactly{{exactly.dim}};
-          },
-          [&parent_measure](LayoutWrapContent) -> MeasureSpec {
-            return std::visit(
-                base::overloaded{
-                    [](MeasureUnlimited) -> MeasureSpec { return MeasureUnlimited{}; },
-                    [](MeasureSpecified spec) -> MeasureSpec {
-                      return MeasureAtMost{{spec.dim}};
-                    },
-                },
-                parent_measure);
-          },
-          [&parent_measure](LayoutMatchParent) -> MeasureSpec { return parent_measure; },
+          [](MeasureExactly ex) { return ex.dim; },
+          [dim](MeasureAtMost at_most) { return std::min(dim, at_most.dim); },
+          [dim](MeasureUnlimited) { return dim; },
       },
-      layout);
+      spec);
 }
 
 MeasureSpec shrink_measure_spec(MeasureSpec spec, gfx::dim_t dim) noexcept {

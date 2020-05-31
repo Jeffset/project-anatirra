@@ -55,11 +55,3 @@ TYPED_TEST(CommonLayoutTest, MatchParentWrapContent) {
 
   EXPECT_BOUNDS(this->view_, rect_from({0, 44}, {100, 12}));
 }
-
-TYPED_TEST(CommonLayoutTest, DISABLED_WrapContentMatchParent) {
-  add_child(this->group_, this->view_, LayoutWrapContent{}, LayoutMatchParent{});
-
-  this->root_->layout_as_root(rect_from({0, 0}, {100, 100}));
-
-  EXPECT_BOUNDS(this->view_, rect_from({44, 0}, {12, 100}));
-}

@@ -2,7 +2,6 @@ config("compiler_defaults") {
   if (current_os == "linux") {
     cflags = [
       "-pipe",
-      "-fPIC",
       "-pthread",
 
       "-fvisibility=hidden",
@@ -11,9 +10,16 @@ config("compiler_defaults") {
     cflags_cc = [
       "-std=c++17",
       "-fno-rtti",
+      "-march=native",
     ]
     ldflags = [ "-fuse-ld=lld" ]
   }
+}
+
+config("shared_library_config") {
+ cflags = [
+   "-fPIC",
+ ]
 }
 
 config("death_march_mode") {

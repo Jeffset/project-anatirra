@@ -6,7 +6,7 @@ component_config("cursedui_config") {
   params = []
 }
 
-shared_library("cursedui") {
+component("cursedui") {
   sources = [
     "canvas.cc",
     "canvas.hpp",
@@ -57,6 +57,7 @@ gtest_binary("cursedui_tests") {
     "test/test_harness.hpp",
     "test/frame_layout_unittest.cc",
     "test/common_layout_unittest.cc",
+    "test/linear_layout_unittest.cc",
   ]
   deps = [
     ":cursedui",

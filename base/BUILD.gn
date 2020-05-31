@@ -6,7 +6,7 @@ component_config("base_config") {
   params = []
 }
 
-shared_library("base") {
+component("base") {
   sources = [
     "debug/debug.cc",
     "debug/debug.hpp",

@@ -38,3 +38,15 @@ template("component_config") {
     public_configs = [ ":$impl_define_config_name_" ]
   }
 }
+
+template("component") {
+ if (is_debug) {
+   shared_library(target_name) {
+     forward_variables_from(invoker, "*")
+   }
+ } else {
+   static_library(target_name) {
+     forward_variables_from(invoker, "*")
+   }
+ }
+}

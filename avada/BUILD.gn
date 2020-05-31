@@ -5,7 +5,7 @@ component_config("avada_config") {
  params = []
 }
 
-shared_library("avada") {
+component("avada") {
   sources = [
     "color.cc",
     "color.hpp",

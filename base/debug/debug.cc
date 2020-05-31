@@ -40,7 +40,7 @@ LoggerProxy::~LoggerProxy() noexcept {
   if (g_logger)
     g_logger->log(ss_.rdbuf());
   if (terminate_after_)
-    std::terminate();
+    std::abort();
 }
 
 }  // namespace internal

@@ -124,7 +124,7 @@ gfx::Size LinearLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_sp
   }
 
   this_size.width = fix_measure(this_size.width, width_spec);
-  this_size.height = fix_measure(this_size.height, width_spec);
+  this_size.height = fix_measure(this_size.height, height_spec);
   return this_size;
 }
 

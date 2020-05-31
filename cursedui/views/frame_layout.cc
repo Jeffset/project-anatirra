@@ -43,7 +43,7 @@ gfx::Size FrameLayout::on_measure(MeasureSpec width_spec, MeasureSpec height_spe
     child->measure(child_width_spec, child_height_spec);
   }
   size.width = fix_measure(size.width, width_spec);
-  size.height = fix_measure(size.height, width_spec);
+  size.height = fix_measure(size.height, height_spec);
   return size;
 }
 

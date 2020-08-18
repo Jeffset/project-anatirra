@@ -28,8 +28,8 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
   ViewGroup() noexcept;
   ~ViewGroup() noexcept override;
 
-  void layout_as_root(const gfx::Rect& area) override;
-  void relayout() override;
+  void layout_as_root(const gfx::Rect& area) final;
+  void relayout() final;
 
   void add_child(base::ref_ptr<View> child) noexcept;
   void add_child(base::ref_ptr<View> child,
@@ -40,14 +40,14 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
   auto begin() noexcept { return children_.begin(); }
   auto end() noexcept { return children_.end(); }
 
-  void dispatch_mouse_event(const avada::input::MouseEvent& event) override;
+  void dispatch_mouse_event(const avada::input::MouseEvent& event) final;
 
   virtual bool intercept_mouse_event(const avada::input::MouseEvent& event);
 
   virtual std::unique_ptr<LayoutParams> create_layout_params() const noexcept;
   virtual bool check_layout_params(LayoutParams* params) const noexcept;
 
-  void visit_down(const ViewTreeVisitor& visitor) override;
+  void visit_down(const ViewTreeVisitor& visitor) final;
 
   virtual void propagate_needs_layout_mark(const View* child) = 0;
 

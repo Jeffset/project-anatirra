@@ -15,6 +15,12 @@
 namespace cursedui::view {
 
 void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
+  if (measured_size_ && !needs_layout() && last_width_spec_ == width_spec &&
+      last_height_spec_ == height_spec) {
+    LOG() << "Measure optimized out for '" << debug_name() << "'";
+    return;
+  }
+
   const auto double_border_width = border() ? border_->border_width() * 2 : 0;
 
   auto size = double_border_width > 0
@@ -55,6 +61,8 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
              },
              height_spec);
 
+  last_width_spec_ = width_spec;
+  last_height_spec_ = height_spec;
   measured_size_ = size;
 }
 

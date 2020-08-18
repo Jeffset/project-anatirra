@@ -127,6 +127,7 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
 
   base::EnumFlags<NeedsLayout> needs_layout_;
   bool needs_paint_;
+  std::optional<MeasureSpec> last_width_spec_, last_height_spec_;
 
   std::string debug_name_;
 };

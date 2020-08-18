@@ -148,17 +148,18 @@ void LinearLayout::on_layout() {
 }
 
 void LinearLayout::propagate_needs_layout_mark(const View* child) {
+  using namespace base::operators;
   ASSERT(child->get_parent() == this);
   auto* lp = static_cast<LayoutParams*>(child->layout_params().get());
   if (child->needs_layout().has(NeedsLayout::WIDTH) &&
       base::holds_alternative<LayoutWrapContent>(lp->width_layout_spec()) &&
       !(lp->weight() && orientation_ == HORIZONTAL)) {
-    mark_needs_layout(NeedsLayout::WIDTH);
+    mark_needs_layout(NeedsLayout::WIDTH | NeedsLayout::CONTENT);
   }
   if (child->needs_layout().has(NeedsLayout::HEIGHT) &&
       base::holds_alternative<LayoutWrapContent>(lp->height_layout_spec()) &&
       !(lp->weight() && orientation_ == VERTICAL)) {
-    mark_needs_layout(NeedsLayout::HEIGHT);
+    mark_needs_layout(NeedsLayout::HEIGHT | NeedsLayout::CONTENT);
   }
 }
 

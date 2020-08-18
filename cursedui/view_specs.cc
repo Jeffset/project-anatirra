@@ -75,4 +75,15 @@ base::EnumFlags<NeedsLayout> make_layout_propagation_mask(
       layout);
 }
 
+bool operator==(const MeasureSpec& lhs, const MeasureSpec& rhs) noexcept {
+  return std::visit(
+      base::overloaded{
+          [](const MeasureExactly& l, const MeasureExactly& r) { return l.dim == r.dim; },
+          [](const MeasureAtMost& l, const MeasureAtMost& r) { return l.dim == r.dim; },
+          [](MeasureUnlimited, MeasureUnlimited) { return true; },
+          [](auto, auto) { return false; },
+      },
+      lhs, rhs);
+}
+
 }  // namespace cursedui::view

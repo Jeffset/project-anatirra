@@ -25,6 +25,8 @@ struct CURSEDUI_PUBLIC MeasureUnlimited {};
 
 using MeasureSpec = std::variant<MeasureExactly, MeasureAtMost, MeasureUnlimited>;
 
+bool operator==(const MeasureSpec& lhs, const MeasureSpec& rhs) noexcept;
+
 struct CURSEDUI_PUBLIC LayoutMatchParent {};
 struct CURSEDUI_PUBLIC LayoutWrapContent {};
 struct CURSEDUI_PUBLIC LayoutExactly {
@@ -35,11 +37,26 @@ using LayoutSpec = std::variant<LayoutMatchParent, LayoutWrapContent, LayoutExac
 
 enum class CURSEDUI_PUBLIC NeedsLayout : uint8_t {
   // clang-format off
+
+  // No layout required.
   NOT     = 0b000,
+
+  // View wants to layout just its contents and that will not change its size.
+  // NOTE: for the cases, when a View wants to relayout its size triggered by a content
+  // change, it should mark itself both by CONTENT and WIDTH/HEIGHT flags.
+  // Pure size flags should be used only if view doesn't need to relayout its contents by
+  // themselfs.
   CONTENT = 0b001,
+
+  // Conveys that width may be changed.
   WIDTH   = 0b010,
+
+  // Conveys that height may be changed.
   HEIGHT  = 0b100,
+
+  // Conveys, that either width or/and height may be changed.
   SIZE    = 0b110,
+
   // clang-format on
 };
 

@@ -11,6 +11,7 @@
 #include "base/nullable.hpp"
 #include "base/weak_ref.hpp"
 #include "cursedui/dim.hpp"
+#include "cursedui/drawable.hpp"
 #include "cursedui/view_specs.hpp"
 
 #include "cursedui_config.hpp"
@@ -25,8 +26,6 @@ class KeyboardEvent;
 }  // namespace avada::input
 
 namespace cursedui {
-class Drawable;
-class BorderDrawable;
 class ViewTreeHost;
 namespace paint {
 class Canvas;
@@ -77,7 +76,7 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
   void set_background_color(avada::render::Color color);
 
   GETTER base::nullable<Drawable> background();
-  GETTER BorderDrawable* border() { return border_.get(); }
+  GETTER BorderDrawable& border() { return border_; }
 
   void set_tree_host(base::nullable<ViewTreeHost> tree_host);
   GETTER base::nullable<ViewTreeHost> tree_host() noexcept;
@@ -119,8 +118,8 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
   std::optional<gfx::Size> measured_size_;
   std::optional<gfx::Rect> bounds_;
 
+  BorderDrawable border_;
   std::unique_ptr<Drawable> background_;
-  std::unique_ptr<BorderDrawable> border_;  // TODO: consider making this stored by value
   std::unique_ptr<LayoutParams> layout_params_;
 
   ViewGroup* parent_;

@@ -47,7 +47,7 @@ TEST(FrameLayoutTest, WithChildCenter_WrapContent) {
   add_child(root, fl, LayoutWrapContent{}, LayoutWrapContent{});
 
   auto v = test::make_view();
-  v->border()->set_style(BorderDrawable::Style::SINGLE);
+  v->border().set_style(BorderDrawable::Style::SINGLE);
   add_child(fl, v, LayoutWrapContent{}, LayoutWrapContent{});
 
   root->layout_as_root(rect_from({0, 0}, {100, 100}));
@@ -62,7 +62,7 @@ TEST(FrameLayoutTest, WithChildCenter_MatchParent) {
   add_child(root, fl, LayoutMatchParent{}, LayoutMatchParent{});
 
   auto v = test::make_view();
-  v->border()->set_style(BorderDrawable::Style::NO_BORDER);
+  v->border().set_style(BorderDrawable::Style::NO_BORDER);
   add_child(fl, v, LayoutWrapContent{}, LayoutWrapContent{});
 
   root->layout_as_root(rect_from({0, 0}, {100, 100}));
@@ -139,10 +139,10 @@ TEST(FrameLayoutTest, CrossMatchParent_WithWrapContent) {
   add_child(root, fl, wc, wc);
 
   auto c1 = test::make_view({10, 20});
-  c1->border()->set_style(BorderDrawable::Style::NO_BORDER);
+  c1->border().set_style(BorderDrawable::Style::NO_BORDER);
   add_child(fl, c1, wc, mp);
   auto c2 = test::make_view({30, 15});
-  c2->border()->set_style(BorderDrawable::Style::NO_BORDER);
+  c2->border().set_style(BorderDrawable::Style::NO_BORDER);
   add_child(fl, c2, mp, wc);
 
   root->layout_as_root(rect_from({0, 0}, {100, 100}));

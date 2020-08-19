@@ -9,6 +9,7 @@
 #include "base/macro.hpp"
 #include "cursedui/dim.hpp"
 #include "cursedui/view.hpp"
+#include "cursedui/view_data.hpp"
 
 #include "cursedui_config.hpp"
 
@@ -66,7 +67,7 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
   children_container_t children_;
 };
 
-class CURSEDUI_PUBLIC LayoutParams {
+class CURSEDUI_PUBLIC LayoutParams : public ViewData {
  public:
   static const char* TAG;
 
@@ -74,9 +75,9 @@ class CURSEDUI_PUBLIC LayoutParams {
   GETTER LayoutSpec height_layout_spec() const noexcept { return height_; }
   GETTER base::EnumFlags<gfx::Gravity> gravity() const noexcept { return gravity_; }
 
-  void set_width_layout_spec(const LayoutSpec& spec) noexcept { width_ = spec; }
-  void set_height_layout_spec(const LayoutSpec& spec) noexcept { height_ = spec; }
-  void set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept { gravity_ = gravity; }
+  void set_width_layout_spec(const LayoutSpec& spec) noexcept;
+  void set_height_layout_spec(const LayoutSpec& spec) noexcept;
+  void set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept;
 
   GETTER virtual std::string_view tag() const noexcept { return TAG; }
 
@@ -86,8 +87,7 @@ class CURSEDUI_PUBLIC LayoutParams {
   virtual ~LayoutParams() noexcept = default;
 
  private:
-  LayoutSpec width_;
-  LayoutSpec height_;
+  LayoutSpec width_, height_;
   base::EnumFlags<gfx::Gravity> gravity_;
 };
 

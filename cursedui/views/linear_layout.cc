@@ -203,11 +203,19 @@ const char* LinearLayout::LayoutParams::TAG = "LinearLayout";
 
 void LinearLayout::LayoutParams::set_weight(float weight) {
   ASSERT(weight > 0.0001f);
+  if (weight_ == weight) {
+    return;
+  }
   weight_ = weight;
+  mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void LinearLayout::LayoutParams::set_no_weight() {
+  if (!weight_.has_value()) {
+    return;
+  }
   weight_.reset();
+  mark_needs_layout(NeedsLayout::SIZE);
 }
 
 }  // namespace cursedui::view

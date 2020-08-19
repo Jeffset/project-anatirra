@@ -21,7 +21,7 @@ void View::measure(MeasureSpec width_spec, MeasureSpec height_spec) {
     return;
   }
 
-  const auto double_border_width = border() ? border_->border_width() * 2 : 0;
+  const auto double_border_width = border_.border_width() * 2;
 
   auto size = double_border_width > 0
                   ? on_measure(shrink_measure_spec(width_spec, double_border_width),
@@ -71,12 +71,7 @@ void View::layout(const gfx::Rect& area) {
   const auto old_bounds = bounds_.has_value() ? outer_bounds() : gfx::Rect{};
 
   bounds_ = area;
-  if (background_)
-    background_->set_bounds(outer_bounds());
-  if (border_)
-    border_->set_bounds(outer_bounds());
-
-  bool changed = old_inner_bounds != inner_bounds() || old_bounds != outer_bounds();
+  const bool changed = old_inner_bounds != inner_bounds() || old_bounds != outer_bounds();
   dispatch_layout(changed);
   needs_layout_ = NeedsLayout::NOT;
 }
@@ -141,11 +136,13 @@ View::~View() = default;
 
 View::View()
     : view_tree_host_(nullptr),
+      border_{},
       background_(nullptr),
-      border_(new BorderDrawable()),
       parent_(nullptr),
       needs_layout_(NeedsLayout::SIZE),
-      needs_paint_(true) {}
+      needs_paint_(true) {
+  border_.owned_by(this);
+}
 
 void View::relayout() {
   // No need to call measure, we are not ViewGroup here.
@@ -164,12 +161,17 @@ base::nullable<LayoutParams> View::layout_params() const noexcept {
 }
 
 void View::set_layout_params(std::unique_ptr<LayoutParams> layout_params) {
+  ASSERT(layout_params);
   layout_params_ = std::move(layout_params);
+  layout_params_->owned_by(this);
   mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void View::set_background(std::unique_ptr<Drawable> drawable) {
   background_ = std::move(drawable);
+  if (background_) {
+    background_->owned_by(this);
+  }
   mark_needs_paint();
 }
 
@@ -249,14 +251,14 @@ void View::dispatch_layout(bool changed) {
 }
 
 void View::on_draw(paint::Canvas& canvas) {
-  if (!outer_bounds().has_area())
+  const auto bounds = outer_bounds();
+  if (!bounds.has_area())
     return;
 
   if (background_)
-    background_->draw(canvas);
+    background_->draw(canvas, bounds);
 
-  if (border_)
-    border_->draw(canvas);
+  border_.draw(canvas, bounds);
 }
 
 void View::on_focus_changed(bool focused) {
@@ -265,8 +267,7 @@ void View::on_focus_changed(bool focused) {
 
 gfx::Rect View::inner_bounds() const noexcept {
   // FIXME: a bit too heavy for a getter, isn't it?
-  return border_ ? gfx::shrink(bounds_.value(), border_->border_width())
-                 : bounds_.value();
+  return gfx::shrink(bounds_.value(), border_.border_width());
 }
 
 gfx::Rect View::outer_bounds() const noexcept {

@@ -14,7 +14,7 @@
 namespace cursedui::view {
 
 ViewGroup::ViewGroup() noexcept {
-  border()->set_style(BorderDrawable::Style::NO_BORDER);
+  border().set_style(BorderDrawable::Style::NO_BORDER);
 }
 
 void ViewGroup::layout_as_root(const gfx::Rect& area) {
@@ -57,8 +57,7 @@ void ViewGroup::add_child(base::ref_ptr<View> child,
   child->set_parent(this);
   children_.emplace_back(std::move(child));
 
-  // Explicitly mark this as needing full size layout, for we must do the first layout
-  // of the new view and we do not yet know layout need propagation mask.
+  // Explicitly mark this as needing full size layout.
   mark_needs_layout(NeedsLayout::SIZE);
 }
 
@@ -132,6 +131,31 @@ void ViewGroup::on_draw(paint::Canvas& canvas) {
 }
 
 const char* LayoutParams::TAG = "LayoutParams";
+
+void LayoutParams::set_width_layout_spec(const LayoutSpec& spec) noexcept {
+  if (width_ == spec) {
+    return;
+  }
+  width_ = spec;
+  mark_needs_layout(NeedsLayout::SIZE);
+}
+
+void LayoutParams::set_height_layout_spec(const LayoutSpec& spec) noexcept {
+  if (height_ == spec) {
+    return;
+  }
+  height_ = spec;
+  mark_needs_layout(NeedsLayout::SIZE);
+}
+
+void LayoutParams::set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept {
+  if (gravity_ == gravity) {
+    return;
+  }
+  gravity_ = gravity;
+  // NOTE: Actually, size layout is not needed here at all. Position layout?
+  mark_needs_layout(NeedsLayout::SIZE);
+}
 
 LayoutParams::LayoutParams(LayoutSpec width,
                            LayoutSpec height,

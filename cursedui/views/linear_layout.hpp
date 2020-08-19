@@ -29,9 +29,9 @@ class CURSEDUI_PUBLIC LinearLayout : public ViewGroup {
                  float weight,
                  base::EnumFlags<gfx::Gravity> gravity = gfx::Gravity::CENTER) noexcept;
 
+    void set_weight(float weight);
     GETTER std::optional<float> weight() const { return weight_; }
 
-    void set_weight(float weight);
     void set_no_weight();
 
    private:

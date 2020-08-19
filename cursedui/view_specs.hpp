@@ -35,6 +35,8 @@ struct CURSEDUI_PUBLIC LayoutExactly {
 
 using LayoutSpec = std::variant<LayoutMatchParent, LayoutWrapContent, LayoutExactly>;
 
+bool operator==(const LayoutSpec& lhs, const LayoutSpec& rhs) noexcept;
+
 enum class CURSEDUI_PUBLIC NeedsLayout : uint8_t {
   // clang-format off
 

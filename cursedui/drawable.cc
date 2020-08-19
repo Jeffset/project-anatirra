@@ -13,7 +13,7 @@ namespace cursedui {
 
 namespace {
 
-struct BorderSet {
+struct CURSEDUI_PRIVATE BorderSet {
   wchar_t top_left;
   wchar_t top_right;
   wchar_t bottom_left;
@@ -57,10 +57,18 @@ SolidColorDrawable::SolidColorDrawable() noexcept
 SolidColorDrawable::SolidColorDrawable(avada::render::Color color) noexcept
     : pen_(avada::render::Colors::TRANSPARENT, color) {}
 
-void SolidColorDrawable::draw(paint::Canvas& canvas) noexcept {
-  if (!bounds().has_area())
+void SolidColorDrawable::set_color(avada::render::Color color) noexcept {
+  if (pen_.bg_color == color) {
     return;
-  canvas.fill(' ', bounds(), pen_);
+  }
+  pen_.bg_color = color;
+  mark_needs_repaint();
+}
+
+void SolidColorDrawable::draw(paint::Canvas& canvas, const gfx::Rect& bounds) noexcept {
+  if (!bounds.has_area())
+    return;
+  canvas.fill(' ', bounds, pen_);
 }
 
 BorderDrawable::BorderDrawable() noexcept
@@ -70,7 +78,28 @@ BorderDrawable::BorderDrawable() noexcept
 void BorderDrawable::set_style(BorderDrawable::Style style) noexcept {
   if (style_ == style)
     return;
+  const auto old_width = border_width();
   style_ = style;
+  mark_needs_repaint();
+  if (old_width != border_width()) {
+    mark_needs_layout(view::NeedsLayout::SIZE);
+  }
+}
+
+void BorderDrawable::set_color(avada::render::Color color) noexcept {
+  if (pen_.fg_color == color) {
+    return;
+  }
+  pen_.fg_color = color;
+  mark_needs_repaint();
+}
+
+void BorderDrawable::set_background_color(avada::render::Color color) noexcept {
+  if (pen_.bg_color == color) {
+    return;
+  }
+  pen_.bg_color = color;
+  mark_needs_repaint();
 }
 
 gfx::dim_t BorderDrawable::border_width() const noexcept {
@@ -85,16 +114,16 @@ gfx::dim_t BorderDrawable::border_width() const noexcept {
   }
 }
 
-void BorderDrawable::draw(paint::Canvas& canvas) noexcept {
-  if (style_ == Style::NO_BORDER || !bounds().has_area())
+void BorderDrawable::draw(paint::Canvas& canvas, const gfx::Rect& bounds) noexcept {
+  if (style_ == Style::NO_BORDER || !bounds.has_area())
     return;
 
   switch (style_) {
     case Style::SINGLE:
-      SINGLE_BORDER.draw(canvas, pen_, bounds());
+      SINGLE_BORDER.draw(canvas, pen_, bounds);
       break;
     case Style::DOUBLE:
-      DOUBLE_BORDER.draw(canvas, pen_, bounds());
+      DOUBLE_BORDER.draw(canvas, pen_, bounds);
       break;
     default:
       ASSERT(false) << "Not reached";

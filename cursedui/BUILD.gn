@@ -18,6 +18,8 @@ component("cursedui") {
     "region.hpp",
     "view.cc",
     "view.hpp",
+    "view_data.cc",
+    "view_data.hpp",
     "view_group.cc",
     "view_group.hpp",
     "view_specs.cc",

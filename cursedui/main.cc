@@ -84,7 +84,7 @@ class Factory {
   view2->set_text(L"◕ Prod ◕ string ◕ long B");
   view2->set_debug_name("text-view-B");
 
-  view2->border()->set_style(BorderDrawable::Style::DOUBLE);
+  view2->border().set_style(BorderDrawable::Style::DOUBLE);
 
   lin_layout->add_child(view1);
   lin_layout->add_child(lin_layout2);
@@ -99,10 +99,10 @@ class Factory {
   lp2->set_height_layout_spec(view::LayoutMatchParent{});
 
   auto view3 = base::make_ref_ptr<view::TextView>();
-  view3->border()->set_color(avada::render::ColorRGB{0, 255, 200});
+  view3->border().set_color(avada::render::ColorRGB{0, 255, 200});
   auto view4 = base::make_ref_ptr<view::TextView>();
-  view4->border()->set_color(avada::render::ColorRGB{0, 50, 18});
-  view4->border()->set_background_color(avada::render::ColorRGB{128, 255, 255});
+  view4->border().set_color(avada::render::ColorRGB{0, 50, 18});
+  view4->border().set_background_color(avada::render::ColorRGB{128, 255, 255});
   view3->set_text(L"Test ◕ string");
   view3->set_multiline(true);
   view3->set_text(std::move(wstring));

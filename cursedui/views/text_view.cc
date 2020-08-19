@@ -184,9 +184,9 @@ void TextView::on_draw(paint::Canvas& canvas) {
 
 void TextView::on_focus_changed(bool focused) {
   if (focused) {
-    border()->set_style(BorderDrawable::Style::DOUBLE);
+    border().set_style(BorderDrawable::Style::DOUBLE);
   } else {
-    border()->set_style(BorderDrawable::Style::SINGLE);
+    border().set_style(BorderDrawable::Style::SINGLE);
   }
   mark_needs_paint();
 }

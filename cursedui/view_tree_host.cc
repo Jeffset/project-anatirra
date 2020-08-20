@@ -191,7 +191,7 @@ bool ViewTreeHost::paint_tree(paint::Region& paint_region, paint::Canvas& canvas
 
   for (auto* view : roots_to_paint)
     paint_region.add(view->outer_bounds());
-  auto clip_handle = canvas.push_clip(paint_region);
+  auto scoped_clip_handle = canvas.push_clip(paint_region);
   root_->draw(canvas);
   return true;
 }

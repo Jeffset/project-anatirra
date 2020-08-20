@@ -30,6 +30,8 @@ component("cursedui") {
     "views/frame_layout.hpp",
     "views/linear_layout.cc",
     "views/linear_layout.hpp",
+    "views/scroll_view.cc",
+    "views/scroll_view.hpp",
     "views/text_view.cc",
     "views/text_view.hpp",
   ]

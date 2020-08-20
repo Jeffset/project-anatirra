@@ -62,6 +62,11 @@ Rect shrink(const Rect& base, dim_t d) noexcept {
   return grow(base, -d);
 }
 
+Rect move(const Rect& base, const Size& offset) noexcept {
+  return {base.left + offset.width, base.top + offset.height, base.right + offset.width,
+          base.bottom + offset.height};
+}
+
 bool Rect::has_area() const noexcept {
   return right >= left && bottom >= top;
 }
@@ -149,6 +154,10 @@ bool operator!=(const Size& lhs, const Size& rhs) noexcept {
 std::ostream& operator<<(std::ostream& os, const Rect& rect) {
   return os << '[' << rect.left << ", " << rect.top << ", " << rect.right << ", "
             << rect.bottom << ']';
+}
+
+std::ostream& operator<<(std::ostream& os, const Size& size) {
+  return os << '[' << size.width << "x" << size.height << ']';
 }
 
 }  // namespace cursedui::gfx

@@ -125,6 +125,7 @@ void ViewGroup::on_tree_host_set() {
 
 void ViewGroup::on_draw(paint::Canvas& canvas) {
   View::on_draw(canvas);
+  auto scoped_clip = canvas.push_clip(inner_bounds());
   for (auto& child : children_) {
     child->draw(canvas);
   }
@@ -133,25 +134,22 @@ void ViewGroup::on_draw(paint::Canvas& canvas) {
 const char* LayoutParams::TAG = "LayoutParams";
 
 void LayoutParams::set_width_layout_spec(const LayoutSpec& spec) noexcept {
-  if (width_ == spec) {
+  if (width_ == spec)
     return;
-  }
   width_ = spec;
   mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void LayoutParams::set_height_layout_spec(const LayoutSpec& spec) noexcept {
-  if (height_ == spec) {
+  if (height_ == spec)
     return;
-  }
   height_ = spec;
   mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void LayoutParams::set_gravity(base::EnumFlags<gfx::Gravity> gravity) noexcept {
-  if (gravity_ == gravity) {
+  if (gravity_ == gravity)
     return;
-  }
   gravity_ = gravity;
   // NOTE: Actually, size layout is not needed here at all. Position layout?
   mark_needs_layout(NeedsLayout::SIZE);

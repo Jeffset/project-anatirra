@@ -41,7 +41,7 @@ class CURSEDUI_PUBLIC LinearLayout : public ViewGroup {
     std::optional<float> weight_;
   };
 
-  enum Orientation : unsigned char {
+  enum Orientation {
     HORIZONTAL = 0,
     VERTICAL = 1,
   };

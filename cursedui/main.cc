@@ -8,6 +8,7 @@
 #include "cursedui/view_tree_host.hpp"
 #include "cursedui/views/frame_layout.hpp"
 #include "cursedui/views/linear_layout.hpp"
+#include "cursedui/views/scroll_view.hpp"
 #include "cursedui/views/text_view.hpp"
 
 #include <algorithm>
@@ -36,7 +37,7 @@ class Factory {
   std::vector<base::weak_ref<cursedui::view::View>> weaks_;
 };
 
-[[noreturn]] int main() {
+int main() {
   using namespace cursedui;
   using namespace base::operators;
 
@@ -47,6 +48,9 @@ class Factory {
 
   auto root = base::make_ref_ptr<view::FrameLayout>();
   root->set_debug_name("root-frame");
+
+  auto scroll_view = base::make_ref_ptr<view::ScrollView>();
+  scroll_view->border().set_style(BorderDrawable::Style::SINGLE);
 
   auto lin_layout = base::make_ref_ptr<view::LinearLayout>();
   lin_layout->set_debug_name("root-hor-linear-layout");
@@ -60,7 +64,7 @@ class Factory {
   overlay->set_text(L"Hello world!");
   overlay->set_background_color(avada::render::ColorRGB{255, 0, 255, 128});
   overlay->set_debug_name("overlay");
-  root->add_child(overlay);
+  // root->add_child(overlay);
 
   lin_layout->set_background_color(avada::render::ColorRGB{33, 20, 20});
   auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();
@@ -76,8 +80,9 @@ class Factory {
   ifs.imbue(std::locale(""));
   std::wstring wstring{std::istreambuf_iterator<wchar_t>{ifs}, {}};
   LOG() << "SOURCE TEXT: " << wstring << '\n';
-  view1->set_text(wstring);
+  view1->set_text(wstring + wstring);
   view1->set_multiline(true);
+  view1->border().set_style(BorderDrawable::Style::NO_BORDER);
 
   view1->set_background_color(avada::render::ColorRGB{100, 34, 40});
   view1->set_text_color(avada::render::ColorRGB{0, 0, 0});
@@ -86,13 +91,17 @@ class Factory {
 
   view2->border().set_style(BorderDrawable::Style::DOUBLE);
 
-  lin_layout->add_child(view1);
+  lin_layout->add_child(scroll_view);
+  scroll_view->add_child(view1);
   lin_layout->add_child(lin_layout2);
   lin_layout->add_child(view2);
 
-  auto* lp1 = (view::LinearLayout::LayoutParams*)view1->layout_params().get();
-  lp1->set_weight(1.0f);
-  lp1->set_height_layout_spec(view::LayoutMatchParent{});
+  auto* lp_scroll = (view::LinearLayout::LayoutParams*)scroll_view->layout_params().get();
+  lp_scroll->set_weight(1.0f);
+  lp_scroll->set_height_layout_spec(view::LayoutMatchParent{});
+
+  auto* lp1 = (view::LayoutParams*)view1->layout_params().get();
+  lp1->set_width_layout_spec(view::LayoutMatchParent{});
 
   auto* lp2 = (view::LinearLayout::LayoutParams*)view2->layout_params().get();
   lp2->set_weight(0.5f);

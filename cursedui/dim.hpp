@@ -76,11 +76,14 @@ CURSEDUI_PUBLIC Rect grow(const Rect& base, dim_t d) noexcept;
 
 CURSEDUI_PUBLIC Rect shrink(const Rect& base, dim_t d) noexcept;
 
+CURSEDUI_PUBLIC Rect move(const Rect& base, const Size& offset) noexcept;
+
 CURSEDUI_PUBLIC gfx::Rect gravitated_rect(const gfx::Rect& rect,
                                           gfx::Size size,
                                           base::EnumFlags<Gravity> gravity) noexcept;
 
 CURSEDUI_PUBLIC std::ostream& operator<<(std::ostream& os, const Rect& rect);
+CURSEDUI_PUBLIC std::ostream& operator<<(std::ostream& os, const Size& size);
 
 }  // namespace cursedui::gfx
 

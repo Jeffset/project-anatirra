@@ -31,6 +31,7 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
 
   void layout_as_root(const gfx::Rect& area) final;
   void relayout() final;
+  bool focusable() const noexcept final { return false; }
 
   void add_child(base::ref_ptr<View> child) noexcept;
   void add_child(base::ref_ptr<View> child,
@@ -43,16 +44,16 @@ class CURSEDUI_PUBLIC ViewGroup : public View {
 
   void dispatch_mouse_event(const avada::input::MouseEvent& event) final;
 
-  virtual bool intercept_mouse_event(const avada::input::MouseEvent& event);
-
-  virtual std::unique_ptr<LayoutParams> create_layout_params() const noexcept;
-  virtual bool check_layout_params(LayoutParams* params) const noexcept;
-
   void visit_down(const ViewTreeVisitor& visitor) final;
 
   virtual void propagate_needs_layout_mark(const View* child) = 0;
 
  protected:
+  virtual bool intercept_mouse_event(const avada::input::MouseEvent& event);
+
+  virtual std::unique_ptr<LayoutParams> create_layout_params() const noexcept;
+  virtual bool check_layout_params(LayoutParams* params) const noexcept;
+
   void on_tree_host_set() override;
 
   gfx::Size on_measure(MeasureSpec width_spec, MeasureSpec height_spec) override = 0;

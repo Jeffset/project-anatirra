@@ -29,6 +29,7 @@ template("gtest_binary") {
         defines = []
       }
       defines += [ "UNIT_TEST" ]
+      configs -= [ "//build:death_march_mode" ]
     }
   } else {
     # Under release we do not generate unit-tests at all

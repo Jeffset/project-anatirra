@@ -21,7 +21,12 @@ config("gtest_config") {
 
   # Gtest headers need to be able to find themselves.
   include_dirs = [ "src/googletest/include" ]
-  cflags = [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+  if (!defined(cflags)) {
+    cflags = []
+  }
+  if (!use_gcc) {
+    cflags += [ "-Wno-gnu-zero-variadic-macro-arguments" ]
+  }
 }
 config("gmock_config") {
   visibility = [ ":*" ]
@@ -137,6 +142,7 @@ source_set("gmock") {
   public_deps = [
     ":gtest",
   ]
+  configs -= [ "//build:death_march_mode" ]
   public_configs = [ ":gmock_config" ]
 }
 
@@ -151,5 +157,6 @@ static_library("gmock_main") {
   deps = [
     ":gmock",
   ]
+  configs -= [ "//build:death_march_mode" ]
   public_configs = [ ":gmock_config" ]
 }

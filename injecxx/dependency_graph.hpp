@@ -40,27 +40,27 @@ constexpr auto get_context_type(meta::ta<T> type) {
   return type;
 }
 
+template <class... Ts>
+struct CyclicDependency {
+  constexpr CyclicDependency(meta::ta<Ts...>) {}
+  constexpr operator bool() { return false; }
+};
+
+template <class... Ts>
+CyclicDependency(meta::ta<Ts...>) -> CyclicDependency<Ts...>;
+
+template <class... Ts>
+struct MissingDependencyMark {
+  constexpr MissingDependencyMark(meta::ta<Ts...>) {}
+  constexpr operator bool() { return false; }
+};
+
+template <class... Ts>
+MissingDependencyMark(meta::ta<Ts...>) -> MissingDependencyMark<Ts...>;
+
 template <typename... Leaves>
 class dependency_graph {
  public:
-  template <class... Ts>
-  struct CyclicDependency {
-    constexpr CyclicDependency(meta::ta<Ts...>) {}
-    constexpr operator bool() { return false; }
-  };
-
-  template <class... Ts>
-  CyclicDependency(meta::ta<Ts...>)->CyclicDependency<Ts...>;
-
-  template <class... Ts>
-  struct MissingDependency {
-    constexpr MissingDependency(meta::ta<Ts...>) {}
-    constexpr operator bool() { return false; }
-  };
-
-  template <class... Ts>
-  MissingDependency(meta::ta<Ts...>)->MissingDependency<Ts...>;
-
   static constexpr auto all_types = meta::filter(meta::ts<Leaves...>, [](auto type) {
     constexpr auto all_provided =
         meta::map(meta::ts<Leaves...>, [](auto t) { return get_context_type(t); });
@@ -90,7 +90,8 @@ class dependency_graph {
       constexpr auto deps = dependencies(element);
       constexpr bool missing_deps_present = meta::contains(deps, meta::null_ta);
       if constexpr (missing_deps_present) {
-        static_assert(MissingDependency(element + deps), "Missing dependencies present");
+        static_assert(MissingDependencyMark(element + deps),
+                      "Missing dependencies present");
       }
     });
   }

@@ -9,66 +9,80 @@
 
 #include "base_config.hpp"
 
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <type_traits>
 #include <utility>
 
-namespace base {
+namespace base::internal {
 
-namespace internal {
-
-template <bool>
-class ref_ptr_base;
-
-using ref_ptr_base_mutable = ref_ptr_base<false>;
-using ref_ptr_base_const = ref_ptr_base<true>;
-
-}  // namespace internal
-
-class BASE_PUBLIC RefCounted {
- public:
-  DISABLE_COPY_AND_ASSIGN(RefCounted);
-
- protected:
-  RefCounted() noexcept;
-  virtual ~RefCounted() noexcept;
-
- private:
-  friend internal::ref_ptr_base_mutable;
-  friend internal::ref_ptr_base_const;
-
-  mutable int refs_;
+enum class ThreadSafe {
+  NOT = 0,
+  SAFE = 1,
 };
 
-namespace internal {
+template <bool is_const, ThreadSafe safe>
+class ref_ptr_base;
 
-template <bool is_const>
-class ref_ptr_base {
-  using type = std::conditional_t<is_const, const RefCounted, RefCounted>;
-
+template <ThreadSafe safe>
+class BASE_PUBLIC RefCountedImpl {
  public:
+  DISABLE_COPY_AND_ASSIGN(RefCountedImpl);
+
+ protected:
+  RefCountedImpl() noexcept;
+  virtual ~RefCountedImpl() noexcept;
+
+ private:
+  friend internal::ref_ptr_base<true, safe>;
+  friend internal::ref_ptr_base<false, safe>;
+
+  mutable std::conditional_t<safe == ThreadSafe::SAFE, std::atomic<int>, int> refs_;
+};
+
+template <bool is_const, ThreadSafe safe>
+class ref_ptr_base {
+  using type =
+      std::conditional_t<is_const, const RefCountedImpl<safe>, RefCountedImpl<safe>>;
+
+ protected:
   ref_ptr_base() noexcept;
   explicit ref_ptr_base(type* ptr) noexcept;
   ref_ptr_base(const ref_ptr_base& rhs) noexcept;
   ref_ptr_base(ref_ptr_base&& rhs) noexcept;
   ~ref_ptr_base();
 
-  int ref_count() const;
-
  protected:
   type* ptr_;
 };
 
 template <class D>
-static constexpr bool supports_ref_counted = std::is_base_of_v<RefCounted, D>;
-
-}  // namespace internal
+static constexpr bool supports_ref_counted =
+    std::is_base_of_v<RefCountedImpl<ThreadSafe::NOT>, D>;
+template <class D>
+static constexpr bool supports_thread_safe_ref_counted =
+    std::is_base_of_v<RefCountedImpl<ThreadSafe::SAFE>, D>;
 
 template <class T>
-class ref_ptr final : public internal::ref_ptr_base<std::is_const_v<T>> {
-  static_assert(internal::supports_ref_counted<T>);
-  using base = internal::ref_ptr_base<std::is_const_v<T>>;
+using ref_ptr_base_for =
+    ref_ptr_base<std::is_const_v<T>,
+                 supports_thread_safe_ref_counted<T> ? ThreadSafe::SAFE
+                                                     : ThreadSafe::NOT>;
+
+}  // namespace base::internal
+
+namespace base {
+
+using RefCounted = internal::RefCountedImpl<internal::ThreadSafe::NOT>;
+using RefCountedThreadSafe = internal::RefCountedImpl<internal::ThreadSafe::SAFE>;
+
+template <class T>
+class ref_ptr final : public internal::ref_ptr_base_for<T> {
+  static_assert(internal::supports_ref_counted<T> xor
+                    internal::supports_thread_safe_ref_counted<T>,
+                "Type must be either RefCounted or RefCountedThreadSafe");
+  using base = internal::ref_ptr_base_for<T>;
 
   template <class D>
   static constexpr bool is_compatible_v = std::is_base_of_v<T, D>;
@@ -79,6 +93,9 @@ class ref_ptr final : public internal::ref_ptr_base<std::is_const_v<T>> {
   explicit ref_ptr(T* raw) : base(raw) {}
 
   /* implicit */ ref_ptr(std::nullptr_t) : base() {}
+
+  ref_ptr(const ref_ptr&) = default;
+  ref_ptr(ref_ptr&&) = default;
 
   template <class D, REQUIRES(is_compatible_v<D>)>
   ref_ptr(const ref_ptr<D>& rhs) : base(rhs) {}

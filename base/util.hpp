@@ -46,6 +46,20 @@ auto clamp(const T& value, const T& min, const T& max) {
   return std::max(min, std::min(value, max));
 }
 
+template <class C, class L>
+void visit_weak_collection(C& collection, const L& visitor) {
+  const auto end = std::end(collection);
+  for (auto i = std::begin(collection); i != end; ++i) {
+    while (i->get() == nullptr) {
+      if (i == end) {
+        return;
+      }
+      i = collection.erase(i);
+    }
+    visitor(i);
+  }
+}
+
 namespace operators {
 
 template <class... Ts, class T>

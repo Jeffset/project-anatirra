@@ -25,6 +25,8 @@ component("base") {
     "weak_ref.cc",
     "weak_ref.hpp",
     "enum_flags.hpp",
+    "run_loop.cc",
+    "run_loop.hpp",
   ]
 
   deps = [
@@ -38,6 +40,7 @@ gtest_binary("base_tests") {
   sources = [
     "ref_ptr_unittest.cc",
     "weak_ref_unittest.cc",
+    "run_loop_unittest.cc",
   ]
   deps = [
     ":base",

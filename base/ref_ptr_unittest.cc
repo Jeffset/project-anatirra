@@ -4,8 +4,6 @@
 
 #include "base/ref_ptr.hpp"
 
-#include "gmock/gmock-function-mocker.h"
-#include "gmock/gmock-spec-builders.h"
 #include "third-party/googletest/gmock.hpp"
 #include "third-party/googletest/gtest.hpp"
 

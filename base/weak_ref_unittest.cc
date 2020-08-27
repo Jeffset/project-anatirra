@@ -20,14 +20,16 @@ class ObjectWithDestroy : public base::RefCounted {
   ~ObjectWithDestroy() noexcept { destroy(); }
 };
 
-class ObjectWithDestroyAndWeak : public ObjectWithDestroy, public base::WeakReferenced {
+class ObjectWithDestroyAndWeak : public base::WeakReferenced {
  public:
+  int data;
+
   MOCK_METHOD(void, destroy, ());
 
   virtual ~ObjectWithDestroyAndWeak() noexcept { destroy(); }
 };
 
-class Object : public base::WeakReferenced, public base::RefCounted {};
+class Object : public base::WeakReferenced {};
 
 class DerivedObject : public Object {
  public:
@@ -42,11 +44,11 @@ TEST(WeakRefTest, WeakSimple) {
   EXPECT_CALL(*p, destroy());
   {
     auto wp = base::weak_ref(p);
-    wp.get()->data = 5;
+    wp.lock()->data = 5;
   }
   {
     auto wp = base::weak_ref(p);
-    wp.get()->data = 10;
+    wp.lock()->data = 10;
   }
   EXPECT_EQ(p->data, 10);
 }
@@ -55,12 +57,12 @@ TEST(WeakRefTest, WeakNullatesIfRefNullates) {
   auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
   auto wp = base::weak_ref(p);
   EXPECT_CALL(*p, destroy());
-  EXPECT_TRUE(wp);
+  EXPECT_TRUE(wp.lock());
   EXPECT_NE(wp, nullptr);
 
   p = nullptr;
 
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
   EXPECT_EQ(wp, nullptr);
 }
 
@@ -68,53 +70,53 @@ TEST(WeakRefTest, WeakNullatesIfRefReset) {
   auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
   auto wp = base::weak_ref(p);
   EXPECT_CALL(*p, destroy());
-  EXPECT_TRUE(wp);
+  EXPECT_TRUE(wp.lock());
   EXPECT_NE(wp, nullptr);
 
   p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
 
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
   EXPECT_EQ(wp, nullptr);
 }
 
 TEST(WeakRefTest, WeakNullatesIfRefDestroyed) {
   auto wp = base::weak_ref<ObjectWithDestroyAndWeak>();
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
   {
     auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
     EXPECT_CALL(*p, destroy());
     auto tmp = base::weak_ref(p);
     wp = std::move(tmp);
-    EXPECT_TRUE(wp);
+    EXPECT_TRUE(wp.lock());
   }
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
   {
     auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
     EXPECT_CALL(*p, destroy());
     auto tmp = base::weak_ref(p);
     wp = std::move(tmp);
-    EXPECT_TRUE(wp);
+    EXPECT_TRUE(wp.lock());
   }
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
 }
 
 TEST(WeakRefTest, WeakNullatesIfRefDestroyed2) {
   auto wp = base::weak_ref<ObjectWithDestroyAndWeak>();
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
   {
     auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
     EXPECT_CALL(*p, destroy());
     wp = p;
-    EXPECT_TRUE(wp);
+    EXPECT_TRUE(wp.lock());
   }
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
   {
     auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
     EXPECT_CALL(*p, destroy());
     wp = p;
-    EXPECT_TRUE(wp);
+    EXPECT_TRUE(wp.lock());
   }
-  EXPECT_FALSE(wp);
+  EXPECT_FALSE(wp.lock());
 }
 
 TEST(WeakRefTest, MultipleWeakNullatesIfRefDestroyed) {
@@ -142,19 +144,19 @@ TEST(WeakRefTest, MultipleWeakNullatesIfRefDestroyed) {
 TEST(WeakRefTest, OtherWeaksAreIntactWhenOneIsDestroyed) {
   auto p = base::make_ref_ptr<ObjectWithDestroyAndWeak>();
   auto wp = base::weak_ref(p);
-  EXPECT_TRUE(wp);
+  EXPECT_TRUE(wp.lock());
 
   {
     auto wp1 = base::weak_ref(p);
-    EXPECT_EQ(wp1.get_ref_ptr(), p);
+    EXPECT_EQ(wp1.lock(), p);
   }
 
   {
     auto wp2 = wp;
-    EXPECT_EQ(wp2.get_ref_ptr(), p);
+    EXPECT_EQ(wp2.lock(), p);
   }
 
-  EXPECT_EQ(wp.get_ref_ptr(), p);
+  EXPECT_EQ(wp.lock(), p);
 }
 
 TEST(WeakRefTest, DerivedTest) {

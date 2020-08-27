@@ -4,14 +4,16 @@
 
 #include "base/weak_ref.hpp"
 
-namespace base {
+namespace base::internal {
 
-namespace internal {
-
-weak_ref_base::weak_ref_base(const WeakReferenced* ptr) noexcept
+template <ThreadSafe thread_safe>
+weak_ref_base<thread_safe>::weak_ref_base(
+    const WeakReferencedImpl<thread_safe>* ptr) noexcept
     : control_block_(ptr ? ptr->control_block() : nullptr) {}
 
-weak_ref_base& weak_ref_base::operator=(const WeakReferenced* ptr) noexcept {
+template <ThreadSafe thread_safe>
+weak_ref_base<thread_safe>& weak_ref_base<thread_safe>::operator=(
+    const WeakReferencedImpl<thread_safe>* ptr) noexcept {
   if (ptr) {
     control_block_ = ptr->control_block();
   } else {
@@ -20,19 +22,33 @@ weak_ref_base& weak_ref_base::operator=(const WeakReferenced* ptr) noexcept {
   return *this;
 }
 
-}  // namespace internal
+WeakReferencedImpl<ThreadSafe::NOT>::WeakReferencedImpl() noexcept
+    : mutable_this_(this) {}
 
-WeakReferenced::WeakReferenced() noexcept : mutable_this_(this) {}
+WeakReferencedImpl<ThreadSafe::SAFE>::WeakReferencedImpl() noexcept
+    : control_block_(new WeakRefControlBlock<ThreadSafe::SAFE>(this)) {}
 
-WeakReferenced::~WeakReferenced() noexcept {
+WeakReferencedImpl<ThreadSafe::NOT>::~WeakReferencedImpl() noexcept {
   if (control_block_)
-    control_block_->ptr_ = nullptr;
+    control_block_->nullate();
 }
 
-ref_ptr<internal::WeakRefControlBlock> WeakReferenced::control_block() const noexcept {
+WeakReferencedImpl<ThreadSafe::SAFE>::~WeakReferencedImpl() noexcept {
+  control_block_->nullate();
+}
+
+ref_ptr<internal::WeakRefControlBlock<ThreadSafe::NOT>>
+WeakReferencedImpl<ThreadSafe::NOT>::control_block() const noexcept {
   if (!control_block_)
-    control_block_ = make_ref_ptr<internal::WeakRefControlBlock>(mutable_this_);
+    control_block_ =
+        make_ref_ptr<internal::WeakRefControlBlock<ThreadSafe::NOT>>(mutable_this_);
   return control_block_;
 }
 
-}  // namespace base
+template class BASE_PUBLIC WeakRefControlBlock<ThreadSafe::NOT>;
+template class BASE_PUBLIC WeakRefControlBlock<ThreadSafe::SAFE>;
+
+template class BASE_PUBLIC weak_ref_base<ThreadSafe::NOT>;
+template class BASE_PUBLIC weak_ref_base<ThreadSafe::SAFE>;
+
+}  // namespace base::internal

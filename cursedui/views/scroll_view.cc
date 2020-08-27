@@ -5,17 +5,28 @@
 #include "cursedui/views/scroll_view.hpp"
 
 #include "avada/input.hpp"
+#include "base/run_loop.hpp"
 #include "base/util.hpp"
+#include "cursedui/animation/animation_host.hpp"
+#include "cursedui/animation/animations.hpp"
 #include "cursedui/view_specs.hpp"
+#include "cursedui/view_tree_host.hpp"
 
 #include <cmath>
+#include <thread>
 
 namespace cursedui::view {
 
+using namespace avada::render;
+using namespace std::chrono_literals;
+
 ScrollView::ScrollView() noexcept
-    : direction_{ScrollDirection::VERTICAL},
+    : scroll_bar_opacity_(),
+      direction_{ScrollDirection::VERTICAL},
       scroll_offset_{0, 0},
-      max_scroll_offset_{0, 0} {}
+      max_scroll_offset_{0, 0} {
+  own_view_data(scroll_bar_opacity_);
+}
 
 ScrollView::~ScrollView() noexcept = default;
 
@@ -51,8 +62,6 @@ gfx::Size ScrollView::on_measure(MeasureSpec width_spec, MeasureSpec height_spec
       std::min(scroll_offset_.height, max_scroll_offset_.height),
   };
 
-  LOG() << scroll_offset_ << "/" << max_scroll_offset_;
-
   return group_size;
 }
 
@@ -77,35 +86,46 @@ void ScrollView::on_layout() {
 }
 
 bool ScrollView::intercept_mouse_event(const avada::input::MouseEvent& event) {
-  return base::holds_alternative<avada::input::MouseEvent::Scroll>(event.data);
-}
-
-void ScrollView::on_mouse_event(const avada::input::MouseEvent& event) {
   using namespace avada::input;
-  std::visit(base::overloaded{
-                 [this](MouseEvent::Scroll scroll) {
-                   if (scroll == MouseEvent::Scroll::UP) {
-                     scroll_by(0, -1);
-                   } else {
-                     scroll_by(0, +1);
-                   }
-                 },
-                 [](auto) {},
-             },
-             event.data);
+  const auto visitor = base::overloaded{
+      [this](MouseEvent::Scroll scroll) -> bool {
+        if (scroll == MouseEvent::Scroll::UP) {
+          scroll_by(0, -1);
+        } else {
+          scroll_by(0, +1);
+        }
+        scroll_fade_out_ = nullptr;
+        if (!scroll_fade_in_) {
+          scroll_fade_in_ = base::make_ref_ptr<animation::DoubleAnimation>(
+              scroll_bar_opacity_, 1.0f, 200ms);
+          animation::start_view_animation(this, scroll_fade_in_.get());
+        }
+        hide_scroll_bar_ = base::make_ref_ptr<base::RunLoop::Task>([this]() {
+          scroll_fade_in_ = nullptr;
+          if (!scroll_fade_out_) {
+            scroll_fade_out_ = base::make_ref_ptr<animation::DoubleAnimation>(
+                scroll_bar_opacity_, 0.0f, 200ms);
+            animation::start_view_animation(this, scroll_fade_out_.get());
+          }
+          hide_scroll_bar_ = nullptr;
+        });
+        base::RunLoop::current().post(1000ms, hide_scroll_bar_);
+        return true;
+      },
+      [](auto) -> bool { return false; },
+  };
+  return std::visit(visitor, event.data);
 }
 
-namespace {
-using namespace avada::render;
-
-const paint::Pen scroll_area_pen{Colors::WHITE, ColorRGB{255, 255, 00, 64}};
-const paint::Pen scroll_bar_pen{Colors::WHITE, ColorRGB{255, 255, 255, 64}};
-
-}  // namespace
+void ScrollView::on_mouse_event(const avada::input::MouseEvent&) {}
 
 void ScrollView::on_draw(paint::Canvas& canvas) {
   FrameLayout::on_draw(canvas);
   if (max_scroll_offset_.height != 0) {
+    ColorRGB::channel_t alpha = 64 * scroll_bar_opacity_;
+    paint::Pen scroll_area_pen_{Colors::WHITE, ColorRGB{255, 255, 00, alpha}};
+    paint::Pen scroll_bar_pen_{Colors::WHITE, ColorRGB{255, 255, 255, alpha}};
+
     const auto bounds = inner_bounds();
     const auto scroll_bar_area = bounds.height();
     auto bar_len = std::max(1, scroll_bar_area * bounds.height() /
@@ -114,9 +134,9 @@ void ScrollView::on_draw(paint::Canvas& canvas) {
         (scroll_bar_area - bar_len) * scroll_offset_.height / max_scroll_offset_.height;
 
     canvas.draw_line(' ', {bounds.right, bounds.top}, paint::Direction::VERTICAL,
-                     scroll_bar_area, scroll_area_pen);
+                     scroll_bar_area, scroll_area_pen_);
     canvas.draw_line(' ', {bounds.right, bounds.top + pos}, paint::Direction::VERTICAL,
-                     bar_len, scroll_bar_pen);
+                     bar_len, scroll_bar_pen_);
   }
 }
 

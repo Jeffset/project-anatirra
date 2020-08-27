@@ -11,6 +11,7 @@
 
 #include "avada_config.hpp"
 
+#include <chrono>
 #include <codecvt>
 #include <locale>
 #include <map>
@@ -29,7 +30,7 @@ class AVADA_PUBLIC Context {
 
   DISABLE_COPY_MOVE(Context);
 
-  input::Event poll_event() /* may throw */;
+  input::Event poll_event(std::chrono::milliseconds timeout) /* may throw */;
 
   void render() /* may throw */;
 

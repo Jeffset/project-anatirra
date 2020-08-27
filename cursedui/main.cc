@@ -19,24 +19,6 @@
 #include <unordered_map>
 #include <vector>
 
-class Factory {
- public:
-  base::ref_ptr<cursedui::view::View> create() {
-    auto view = base::make_ref_ptr<cursedui::view::TextView>();
-    weaks_.emplace_back(view);
-    weaks_.push_back(base::weak_ref(view));
-    return view;
-  }
-
-  int weak_count() const {
-    return std::count_if(std::begin(weaks_), std::end(weaks_),
-                         [](const auto& ptr) { return ptr.get(); });
-  }
-
- private:
-  std::vector<base::weak_ref<cursedui::view::View>> weaks_;
-};
-
 int main() {
   using namespace cursedui;
   using namespace base::operators;
@@ -130,14 +112,6 @@ int main() {
 
   auto* ll = (view::LinearLayout::LayoutParams*)lin_layout2->layout_params().get();
   ll->set_weight(0.5f);
-
-  Factory factory;
-  ASSERT(factory.weak_count() == 0);
-  {
-    auto v = factory.create();
-    ASSERT(factory.weak_count() == 2);
-  }
-  ASSERT(factory.weak_count() == 0);
 
   try {
     ViewTreeHost{root}.run();

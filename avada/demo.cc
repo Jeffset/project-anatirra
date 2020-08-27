@@ -107,6 +107,7 @@ class EventHandler {
 };
 
 int main() {
+  using namespace std::chrono_literals;
   base::debug::LoggerToStdErr logger;
   base::debug::setup_logging(&logger);
 
@@ -117,7 +118,7 @@ int main() {
     EventHandler hander{context};
     while (!hander.should_exit()) {
       try {
-        std::visit(hander, context.poll_event());
+        std::visit(hander, context.poll_event(1s));
       } catch (avada::input::unparsed_exception& e) {
         LOG() << "Unparsed exception: " << e.what();
       }

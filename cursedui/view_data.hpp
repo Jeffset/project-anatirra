@@ -20,17 +20,17 @@ class CURSEDUI_PUBLIC ViewData {
   DISABLE_COPY_MOVE(ViewData);
 
  protected:
-  ViewData();
-  virtual ~ViewData() = default;
+  ViewData() noexcept;
+  ~ViewData() noexcept = default;
 
  protected:
-  void mark_needs_layout(NeedsLayout mark);
-  void mark_needs_repaint();
+  void mark_needs_layout(NeedsLayout mark) noexcept;
+  void mark_needs_repaint() noexcept;
 
  private:
   friend class View;
 
-  void owned_by(View* view);
+  void owned_by(View* view) noexcept;
 
  private:
   View* owner_;

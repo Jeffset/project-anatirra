@@ -6,6 +6,8 @@
 #define ANATIRRA_CURSEDUI_VIEWS_SCROLL_VIEW
 
 #include "base/enum_flags.hpp"
+#include "base/run_loop.hpp"
+#include "cursedui/animation/animations.hpp"
 #include "cursedui/views/frame_layout.hpp"
 
 #include "cursedui_config.hpp"
@@ -41,6 +43,10 @@ class CURSEDUI_PUBLIC ScrollView : public FrameLayout {
   void scroll_by(gfx::dim_t dx, gfx::dim_t dy) noexcept;
 
  private:
+  base::ref_ptr<animation::Animation> scroll_fade_in_, scroll_fade_out_;
+  base::ref_ptr<base::RunLoop::Task> hide_scroll_bar_;
+  animation::AnimationValue<double> scroll_bar_opacity_;
+
   base::EnumFlags<ScrollDirection> direction_;
   gfx::Size scroll_offset_;
   gfx::Size max_scroll_offset_;

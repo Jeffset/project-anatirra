@@ -34,10 +34,20 @@ component("cursedui") {
     "views/scroll_view.hpp",
     "views/text_view.cc",
     "views/text_view.hpp",
+    "animation/animation_host.cc",
+    "animation/animation_host.hpp",
+    "animation/animation.cc",
+    "animation/animation.hpp",
+    "animation/animations.cc",
+    "animation/animations.hpp",
   ]
 
   deps = [
     ":cursedui_config",
+  ]
+
+  libs = [
+    "pthread",
   ]
 
   public_deps = [

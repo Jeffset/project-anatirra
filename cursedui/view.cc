@@ -163,14 +163,14 @@ base::nullable<LayoutParams> View::layout_params() const noexcept {
 void View::set_layout_params(std::unique_ptr<LayoutParams> layout_params) {
   ASSERT(layout_params);
   layout_params_ = std::move(layout_params);
-  layout_params_->owned_by(this);
+  own_view_data(*layout_params_);
   mark_needs_layout(NeedsLayout::SIZE);
 }
 
 void View::set_background(std::unique_ptr<Drawable> drawable) {
   background_ = std::move(drawable);
   if (background_) {
-    background_->owned_by(this);
+    own_view_data(*background_);
   }
   mark_needs_paint();
 }
@@ -263,6 +263,10 @@ void View::on_draw(paint::Canvas& canvas) {
 
 void View::on_focus_changed(bool focused) {
   MARK_UNUSED(focused);
+}
+
+void View::own_view_data(ViewData& data) {
+  data.owned_by(this);
 }
 
 gfx::Rect View::inner_bounds() const noexcept {

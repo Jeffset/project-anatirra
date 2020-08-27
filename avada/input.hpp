@@ -6,6 +6,7 @@
 #define ANATIRRA_AVADA_INPUT
 
 #include "base/exception.hpp"
+#include "base/macro.hpp"
 
 #include "avada_config.hpp"
 
@@ -75,9 +76,9 @@ class AVADA_PUBLIC KeyboardEvent {
 
   std::wstring to_string() const;
 
-  inline bool alt() const { return modifiers & ALT; }
-  inline bool ctrl() const { return modifiers & CTRL; }
-  inline bool shift() const { return modifiers & SHIFT; }
+  GETTER inline bool alt() const { return modifiers & ALT; }
+  GETTER inline bool ctrl() const { return modifiers & CTRL; }
+  GETTER inline bool shift() const { return modifiers & SHIFT; }
 
   bool operator==(const KeyboardEvent& rhs) const {
     return key == rhs.key && modifiers == rhs.modifiers;
@@ -123,7 +124,7 @@ using Event = std::variant<ServiceEvent, ResizeEvent, KeyboardEvent, MouseEvent>
 class AVADA_PUBLIC unparsed_exception : public base::exception {
  public:
   template <class... Args>
-  unparsed_exception(Args&&... args) : exception(std::forward<Args>(args)...){};
+  unparsed_exception(Args&&... args) : exception(std::forward<Args>(args)...) {}
 };
 
 class InputParser {

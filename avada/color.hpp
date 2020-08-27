@@ -14,24 +14,26 @@
 namespace avada::render {
 
 union AVADA_PUBLIC ColorRGB {
-  uint32_t data_;
-  alignas(uint32_t) std::array<uint8_t, 4> rgba_;
+  using channel_t = uint8_t;
 
-  inline ColorRGB(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255)
+  uint32_t data_;
+  alignas(uint32_t) std::array<channel_t, 4> rgba_;
+
+  inline ColorRGB(channel_t red, channel_t green, channel_t blue, channel_t alpha = 255)
       : rgba_{red, green, blue, alpha} {}
 
   inline explicit ColorRGB(uint32_t rgb) : data_{rgb} {}
   inline ColorRGB() : data_(0) {}
 
-  inline uint8_t red() const noexcept { return rgba_[0]; }
-  inline uint8_t green() const noexcept { return rgba_[1]; }
-  inline uint8_t blue() const noexcept { return rgba_[2]; }
-  inline uint8_t alpha() const noexcept { return rgba_[3]; }
+  inline channel_t red() const noexcept { return rgba_[0]; }
+  inline channel_t green() const noexcept { return rgba_[1]; }
+  inline channel_t blue() const noexcept { return rgba_[2]; }
+  inline channel_t alpha() const noexcept { return rgba_[3]; }
 
-  inline uint8_t& red() noexcept { return rgba_[0]; }
-  inline uint8_t& green() noexcept { return rgba_[1]; }
-  inline uint8_t& blue() noexcept { return rgba_[2]; }
-  inline uint8_t& alpha() noexcept { return rgba_[3]; }
+  inline channel_t& red() noexcept { return rgba_[0]; }
+  inline channel_t& green() noexcept { return rgba_[1]; }
+  inline channel_t& blue() noexcept { return rgba_[2]; }
+  inline channel_t& alpha() noexcept { return rgba_[3]; }
 
   inline bool operator==(const ColorRGB& rhs) const noexcept {
     return data_ == rhs.data_;

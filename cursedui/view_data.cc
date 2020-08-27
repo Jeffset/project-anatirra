@@ -9,23 +9,23 @@
 
 namespace cursedui::view {
 
-ViewData::ViewData() : owner_(nullptr) {}
+ViewData::ViewData() noexcept : owner_(nullptr) {}
 
-void ViewData::mark_needs_layout(NeedsLayout mark) {
+void ViewData::mark_needs_layout(NeedsLayout mark) noexcept {
   if (!owner_) {
     return;
   }
   owner_->mark_needs_layout(mark);
 }
 
-void ViewData::mark_needs_repaint() {
+void ViewData::mark_needs_repaint() noexcept {
   if (!owner_) {
     return;
   }
   owner_->mark_needs_paint();
 }
 
-void ViewData::owned_by(View* view) {
+void ViewData::owned_by(View* view) noexcept {
   ASSERT(owner_ == nullptr);
   owner_ = view;
 }

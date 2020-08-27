@@ -112,6 +112,7 @@ gfx::dim_t BorderDrawable::border_width() const noexcept {
     default:
       ASSERT(false) << "Not reached";
   }
+  return 0;
 }
 
 void BorderDrawable::draw(paint::Canvas& canvas, const gfx::Rect& bounds) noexcept {

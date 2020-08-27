@@ -5,6 +5,7 @@
 #include "cursedui/view_tree_host.hpp"
 
 #include "base/macro.hpp"
+#include "base/run_loop.hpp"
 #include "base/util.hpp"
 #include "cursedui/canvas.hpp"
 #include "cursedui/view_group.hpp"
@@ -13,6 +14,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+using namespace std::chrono_literals;
 
 namespace cursedui {
 
@@ -51,67 +54,76 @@ void ViewTreeHost::set_focused_view(base::ref_ptr<view::View> focused_view) noex
   }
 }
 
-base::ref_ptr<view::View> ViewTreeHost::focused_view() noexcept {
-  return focused_view_.get_ref_ptr();
+base::ref_ptr<view::View> ViewTreeHost::focused_view() const noexcept {
+  return focused_view_.lock();
+}
+
+void ViewTreeHost::work_routine() {
+  using namespace avada::input;
+
+  avada::input::Event event;
+
+  try {
+    event = avada_.poll_event(1ms);
+  } catch (avada::input::unparsed_exception& e) {
+    LOG() << "Unparsed input! See: " << e.what();
+    event = ServiceEvent::IDLE;
+  }
+
+  const auto visitor = base::overloaded{
+      [this](const ResizeEvent& re) {
+        gfx::Size new_size{re.columns, re.rows};
+        if (new_size == root_size_)
+          return;
+        root_size_ = new_size;
+        need_root_resize_ = true;
+      },
+      [this](const KeyboardEvent& key) {
+        if (key == KeyboardKey::TAB) {
+          // TODO: focused view switching logic
+          return;
+        }
+        if (key == KeyboardEvent{L'q', KeyboardEvent::CTRL}) {
+          base::RunLoop::current().exit();
+          return;
+        }
+
+        if (auto view = focused_view_.lock()) {
+          view->on_key_event(key);
+        }
+      },
+      [this](const MouseEvent& mouse) { root_->dispatch_mouse_event(mouse); },
+      [](ServiceEvent se) {
+        ASSERT(se == ServiceEvent::IDLE);
+        // nothing else here
+      }};
+  std::visit(visitor, event);
+
+  if (base::RunLoop::current().exited())
+    return;
+
+  animation_host_.tick();
+
+  view_tree_routine();
+}
+
+void ViewTreeHost::view_tree_routine() {
+  paint::Canvas canvas(avada_.render_buffer());
+  paint::Region paint_region;
+  layout_tree(paint_region);
+  if (paint_tree(paint_region, canvas)) {
+    avada_.render();
+  }
 }
 
 void ViewTreeHost::run() {
-  paint::Canvas canvas(avada_.render_buffer());
-  bool should_exit = false;
-
-  avada::input::Event event = avada::input::ServiceEvent::IDLE;
-
-  while (true) {
-    using namespace avada::input;
-    const auto visitor = base::overloaded{
-        [this](const ResizeEvent& re) {
-          gfx::Size new_size{re.columns, re.rows};
-          if (new_size == root_size_)
-            return;
-          root_size_ = new_size;
-          need_root_resize_ = true;
-        },
-        [this, &should_exit](const KeyboardEvent& key) {
-          if (key == KeyboardKey::TAB) {
-            // TODO: focused view switching logic
-            return;
-          }
-          if (key == KeyboardEvent{L'q', KeyboardEvent::CTRL}) {
-            should_exit = true;
-            return;
-          }
-
-          if (auto* view = focused_view_.get()) {
-            view->on_key_event(key);
-          }
-        },
-        [this](const MouseEvent& mouse) { root_->dispatch_mouse_event(mouse); },
-        [](ServiceEvent se) {
-          ASSERT(se == ServiceEvent::IDLE);
-          // nothing else here
-        }};
-    std::visit(visitor, event);
-
-    if (should_exit)
-      break;
-
-    paint::Region paint_region;
-    layout_tree(paint_region);
-    if (paint_tree(paint_region, canvas)) {
-      avada_.render();
-    }
-
-    try {
-      event = avada_.poll_event();
-    } catch (avada::input::unparsed_exception& e) {
-      LOG() << "Unparsed input! See: " << e.what();
-      event = ServiceEvent::IDLE;
-    }
-  };
+  base::RunLoop run_loop;
+  view_tree_routine();
+  run_loop.run([this]() { work_routine(); });
 }
 
 void ViewTreeHost::layout_tree(paint::Region& repaint_region) {
-  if (UNLIKELY(need_root_resize_)) {
+  if (need_root_resize_) {
     auto bounds = gfx::rect_from({}, root_size_);
     // Mark root as needing size layout to keep internal invariants intact.
     root_->mark_needs_layout(view::NeedsLayout::SIZE);

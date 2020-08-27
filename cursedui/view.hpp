@@ -30,6 +30,9 @@ class ViewTreeHost;
 namespace paint {
 class Canvas;
 }  // namespace paint
+namespace animation {
+class Animation;
+}
 }  // namespace cursedui
 
 namespace cursedui::view {
@@ -37,11 +40,12 @@ namespace cursedui::view {
 class ViewGroup;
 class ViewTreeVisitor;
 class LayoutParams;
+class ViewData;
 
 /**
  * Base class for cursed UI view system.
  */
-class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReferenced {
+class CURSEDUI_PUBLIC View : public base::WeakReferenced {
  public:
   View();
   ~View() override;
@@ -108,6 +112,8 @@ class CURSEDUI_PUBLIC View : public base::RefCounted, public base::WeakReference
   virtual void on_draw(paint::Canvas& canvas);
 
   virtual void on_focus_changed(bool focused);
+
+  void own_view_data(ViewData&);
 
  private:
   void dispatch_layout(bool changed);

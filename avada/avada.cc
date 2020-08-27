@@ -94,12 +94,12 @@ Context::~Context() noexcept {
   g_avada_context = nullptr;
 }
 
-input::Event Context::poll_event() {
+input::Event Context::poll_event(std::chrono::milliseconds timeout) {
   pollfd pfd{STDIN_FILENO, POLLIN, 0};
 
-  int poll_result = 0;
-  while (poll_result == 0) {
-    poll_result = ::poll(&pfd, 1, 1 /*ms*/);
+  int poll_result = ::poll(&pfd, 1, timeout.count() /*ms*/);
+  if (poll_result == 0) {
+    return input::ServiceEvent::IDLE;
   }
   if (poll_result == -1) {
     if (errno == EINTR && g_pending_resize) {
@@ -132,7 +132,7 @@ void Context::render() {
 
 void Context::update_size() {
   struct winsize ws;
-  SYSTEM_CALL_NON_ZERO(ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws));
+  SYSTEM_CALL_NON_ZERO(::ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws));
   rows_ = ws.ws_row;
   columns_ = ws.ws_col;
   back_buffer_.resize(rows_, columns_);

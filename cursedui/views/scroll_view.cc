@@ -100,7 +100,7 @@ bool ScrollView::intercept_mouse_event(const avada::input::MouseEvent& event) {
               scroll_bar_opacity_, 1.0f, 200ms);
           animation::start_view_animation(this, scroll_fade_in_.get());
         }
-        hide_scroll_bar_ = base::make_ref_ptr<base::RunLoop::Task>([this]() {
+        hide_scroll_bar_ = base::RunLoop::current().post(1000ms, [this]() {
           scroll_fade_in_ = nullptr;
           if (!scroll_fade_out_) {
             scroll_fade_out_ = base::make_ref_ptr<animation::DoubleAnimation>(
@@ -109,7 +109,6 @@ bool ScrollView::intercept_mouse_event(const avada::input::MouseEvent& event) {
           }
           hide_scroll_bar_ = nullptr;
         });
-        base::RunLoop::current().post(1000ms, hide_scroll_bar_);
         return true;
       },
       [](auto) -> bool { return false; },

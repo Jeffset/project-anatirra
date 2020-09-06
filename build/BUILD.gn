@@ -12,7 +12,11 @@ config("compiler_defaults") {
       "-fno-rtti",
       "-march=native",
     ]
-    ldflags = [ "-fuse-ld=lld" ]
+    if (use_gcc) {
+      ldflags = [ "-fuse-ld=gold" ]
+    } else {
+      ldflags = [ "-fuse-ld=lld" ]
+    }
   }
 }
 
@@ -56,7 +60,7 @@ config("debug_config") {
 config("release_config") {
   cflags = [
     "-g0",
-    "-O2",
+    "-O3",
     "-flto",
     "-fno-asynchronous-unwind-tables",
     "-ffunction-sections",

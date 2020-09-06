@@ -80,13 +80,12 @@ TEST_F(RunLoopTest, MultiThread) {
       while (!go)  // this is done to increase contention.
         ;
       for (int j = 0; j < POST_COUNT; ++j) {
-        auto t = base::make_ref_ptr<base::RunLoop::Task>([&dummy, i, j]() {
+        auto t = t1_loop.post([&dummy, i, j]() {
           auto payload = (i << (sizeof(short) * 8)) | j;
           dummy.act1(payload);
         });
+        t2_loop.repost(t);
         tasks[i * POST_COUNT + j] = t;
-        t1_loop.post(t);
-        t2_loop.post(t);
         std::this_thread::yield();
       }
     });
@@ -97,10 +96,8 @@ TEST_F(RunLoopTest, MultiThread) {
     t.join();
   }
 
-  auto exiter =
-      base::make_ref_ptr<base::RunLoop::Task>([]() { base::RunLoop::current().exit(); });
-  t1_loop.post(exiter);
-  t2_loop.post(exiter);
+  auto exiter = t1_loop.post([]() { base::RunLoop::current().exit(); });
+  t2_loop.repost(exiter);
   t1.join();
   t2.join();
 }

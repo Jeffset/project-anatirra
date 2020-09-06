@@ -223,6 +223,8 @@ void TextView::set_multiline(bool multiline) noexcept {
 }
 
 void TextView::set_text_color(avada::render::Color color) noexcept {
+  if (text_color_ == color)
+    return;
   text_color_ = color;
   mark_needs_paint();
 }

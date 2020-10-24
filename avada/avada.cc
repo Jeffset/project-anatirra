@@ -135,7 +135,7 @@ void Context::update_size() {
   SYSTEM_CALL_NON_ZERO(::ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws));
   rows_ = ws.ws_row;
   columns_ = ws.ws_col;
-  back_buffer_.resize(rows_, columns_);
+  back_buffer_ = render::Buffer(rows_, columns_);
 }
 
 Context::ScopedPrivateModeChange::ScopedPrivateModeChange(

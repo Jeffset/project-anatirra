@@ -326,33 +326,15 @@ void Buffer::Cell::assign(const Buffer::Cell& rhs) noexcept {
   dirty_ = true;
 }
 
-Buffer::Buffer() noexcept
-    : row_capacity_(0), column_capacity_(0), rows_(0), columns_(0) {}
+Buffer::Buffer() noexcept = default;
 
-void Buffer::resize(int rows, int columns) noexcept {
-  // No content manpulation is done here.
-  // All rubbish will be dealt with in |render| method.
-
-  if (columns > column_capacity_) {
-    column_capacity_ = columns * 2;
-    for (auto& row : contents_) {
-      row.resize(column_capacity_);
-    }
-  }
-  columns_ = columns;
-  if (rows > row_capacity_) {
-    row_capacity_ = rows * 2;
-    contents_.resize(row_capacity_, std::vector<Cell>(column_capacity_));
-  }
-  rows_ = rows;
-}
+Buffer::Buffer(int rows, int columns) noexcept
+    : rows_(rows), columns_(columns), contents_(rows * columns) {}
 
 void Buffer::render(Buffer& screen_reference) {
   base::debug::ScopedTrace trace{"Buffer::render"};
 
   std::unordered_map<std::pair<Color, Color>, Renderer> renderers;
-  const auto screen_rows = screen_reference.rows();
-  const auto screen_columns = screen_reference.columns();
 
   // Enlarge example:
   //     _______________
@@ -371,40 +353,60 @@ void Buffer::render(Buffer& screen_reference) {
   // (shrink is basically the same, with B and C zones are empty, hence their loops will
   // not be entered and whole buffer may be validated.
 
-  screen_reference.resize(rows_, columns_);
+  const auto screen_rows = screen_reference.rows();
+  const auto screen_columns = screen_reference.columns();
+  int rows_with_reference, columns_with_reference;
+  if (UNLIKELY(screen_rows != rows_ || screen_columns != columns_)) {
+    screen_reference = Buffer{rows_, columns_};
+    rows_with_reference = columns_with_reference = 0;
+  } else {
+    rows_with_reference = screen_rows;
+    columns_with_reference = screen_columns;
+  }
 
-  const auto rows_with_reference = std::min(screen_rows, rows_);
-  const auto columns_with_reference = std::min(screen_columns, columns_);
-
-  for (int i = 0; i < rows_with_reference; ++i) {
-    auto& row = contents_[i];
-    for (int j = 0; j < columns_with_reference; ++j)  // Zone "A"
-      if (auto& cell = row[j]; cell.dirty()) {
+  int place = 0;
+  auto a_b_limit = columns_ * rows_with_reference;
+  while (place < a_b_limit) {
+    const auto row_start = place / columns_ * columns_;
+    auto a_limit = row_start + columns_with_reference;
+    while (place < a_limit) {  // Zone "A"
+      if (auto& cell = contents_[place]; cell.dirty()) {
         cell.clear_dirty();
-        if (screen_reference(i, j) == cell) {
+        auto& ref_cell = screen_reference.contents_[place];
+        if (ref_cell == cell) {
           // cell passed screen reference validation, no need to redraw.
           continue;
         }
+        const auto i = place / columns_;
+        const auto j = place % columns_;
         renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
-        screen_reference(i, j) = cell;
+        ref_cell = cell;
       }
-
-    for (int j = columns_with_reference; j < columns_; ++j) {  // Zone "B"
-      auto& cell = row[j];
-      cell.clear_dirty();
-      renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
-      screen_reference(i, j) = cell;
+      ++place;
     }
+
+    auto row_limit = row_start + columns_;
+    while (place < row_limit) {  // Zone "B"
+      auto& cell = contents_[place];
+      cell.clear_dirty();
+      const auto i = place / columns_;
+      const auto j = place % columns_;
+      renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
+      screen_reference.contents_[place] = cell;
+      ++place;
+    }
+    ++place;
   }
 
-  for (int i = rows_with_reference; i < rows_; ++i) {  // Zone "C"
-    auto& row = contents_[i];
-    for (int j = 0; j < columns_; ++j) {
-      auto& cell = row[j];
-      cell.clear_dirty();
-      renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
-      screen_reference(i, j) = cell;
-    }
+  const auto limit = rows_ * columns_;
+  while (place < limit) {
+    auto& cell = contents_[place];
+    cell.clear_dirty();
+    const auto i = place / columns_;
+    const auto j = place % columns_;
+    renderers[std::pair{cell.fg_color(), cell.bg_color()}].add(i, j, cell);
+    screen_reference.contents_[place] = cell;
+    ++place;
   }
 
   Renderer merged;
@@ -416,24 +418,22 @@ void Buffer::render(Buffer& screen_reference) {
 }
 
 void Buffer::clear() {
-  for (int i = 0; i < rows_; ++i) {
-    auto& row = contents_[i];
-    for (int j = 0; j < columns_; ++j) {
-      row[j] = Cell{};
-    }
+  auto limit = rows_ * columns_;
+  for (int place = 0; place < limit; ++place) {
+    contents_[place] = Cell{};
   }
 }
 
 Buffer::Cell& Buffer::operator()(int i, int j) noexcept {
   ASSERT(i >= 0 && i <= rows_) << "i: " << i;
   ASSERT(j >= 0 && j <= columns_) << "j:" << j;
-  return contents_[i][j];
+  return contents_[i * columns_ + j];
 }
 
 const Buffer::Cell& Buffer::operator()(int i, int j) const noexcept {
   ASSERT(i >= 0 && i <= rows_) << "i: " << i;
   ASSERT(j >= 0 && j <= columns_) << "j:" << j;
-  return contents_[i][j];
+  return contents_[i * columns_ + j];
 }
 
 }  // namespace avada::render

@@ -21,11 +21,11 @@ namespace avada::render {
 class AVADA_PUBLIC Buffer {
  public:
   Buffer() noexcept;
+  Buffer(int rows, int columns) noexcept;
 
   int rows() const noexcept { return rows_; }
   int columns() const noexcept { return columns_; }
 
-  void resize(int rows, int columns) noexcept;
   void render(Buffer& screen_reference);
   void clear();
 
@@ -68,21 +68,11 @@ class AVADA_PUBLIC Buffer {
   const Cell& operator()(int i, int j) const noexcept;
 
  private:
-  AVADA_PRIVATE bool check_cell(int i, int j, const Cell& cell) const noexcept {
-    if (i >= rows_ || j >= columns_)
-      return false;
-    return contents_[i][j] == cell;
-  }
-
- private:
-  int row_capacity_;
-  int column_capacity_;
-
   int rows_;
   int columns_;
 
   // cell matrix is stored as a vector of rows.
-  std::vector<std::vector<Cell>> contents_;
+  std::vector<Cell> contents_;
 };
 
 }  // namespace avada::render

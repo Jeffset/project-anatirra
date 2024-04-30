@@ -10,7 +10,7 @@
 #include "cursedui/animation/animation_host.hpp"
 #include "cursedui/view.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <chrono>
 #include <memory>

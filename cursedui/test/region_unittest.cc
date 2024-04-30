@@ -5,8 +5,9 @@
 #include "cursedui/region.hpp"
 
 #include "base/debug/debug.hpp"
-#include "third-party/googletest/gmock.hpp"
-#include "third-party/googletest/gtest.hpp"
+
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <algorithm>
 #include <vector>

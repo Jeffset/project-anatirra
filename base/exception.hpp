@@ -7,7 +7,7 @@
 
 #include "base/debug/stack_trace.hpp"
 
-#include "base_config.hpp"
+#include "base/config.hpp"
 
 #include <sstream>
 #include <stdexcept>
@@ -37,7 +37,7 @@ class BASE_PUBLIC exception : public std::exception {
 
 class BASE_PUBLIC system_exception : public exception {
  public:
-  explicit system_exception(std::string_view message);
+  explicit system_exception(std::string_view message) noexcept;
 };
 
 }  // namespace base

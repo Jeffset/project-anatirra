@@ -3,12 +3,12 @@ BasedOnStyle: Chromium
 ColumnLimit: 90
 
 Standard: Auto
-SortIncludes: true
+SortIncludes: CaseInsensitive
 IncludeBlocks: Regroup
 FixNamespaceComments: true
 
 IncludeCategories:
-  - Regex:    '^".*_config.hpp"'
+  - Regex:    '^".*/config.hpp"'
     Priority: 2
   - Regex:    '^".*"'
     Priority: 1

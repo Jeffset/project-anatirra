@@ -1,2 +1,0 @@
-buildconfig = "//build/BUILDCONFIG.gn"
-script_executable = "python3"

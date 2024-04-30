@@ -9,7 +9,7 @@
 #include "base/util.hpp"
 #include "cursedui/dim.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <type_traits>
 #include <variant>

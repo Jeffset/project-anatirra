@@ -10,7 +10,7 @@
 #include "cursedui/animation/animations.hpp"
 #include "cursedui/views/frame_layout.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 namespace cursedui::view {
 

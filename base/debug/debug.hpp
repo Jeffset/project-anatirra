@@ -7,7 +7,7 @@
 
 #include "base/macro.hpp"
 
-#include "base_config.hpp"
+#include "base/config.hpp"
 
 #include <sstream>
 
@@ -47,9 +47,9 @@ class BASE_PUBLIC LoggerBase {
   ~LoggerBase() noexcept = default;
 };
 
-class BASE_PUBLIC LoggerToStdErr : public LoggerBase {
+class BASE_PUBLIC LoggerToStdErr final : public LoggerBase {
  public:
-  void log(std::streambuf* message) noexcept final;
+  void log(std::streambuf* message) noexcept override;
 };
 
 // Main function used to setup logging.

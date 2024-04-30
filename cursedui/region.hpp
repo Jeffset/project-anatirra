@@ -5,7 +5,7 @@
 #ifndef ANATIRRA_CURSEDUI_REGION
 #define ANATIRRA_CURSEDUI_REGION
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include "cursedui/dim.hpp"
 

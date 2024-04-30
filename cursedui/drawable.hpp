@@ -10,7 +10,7 @@
 #include "cursedui/dim.hpp"
 #include "cursedui/view_data.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 namespace cursedui {
 

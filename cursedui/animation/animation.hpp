@@ -8,7 +8,7 @@
 #include "base/macro.hpp"
 #include "base/weak_ref.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <chrono>
 

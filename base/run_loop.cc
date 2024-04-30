@@ -25,7 +25,7 @@ auto pmr_wrap_unique(std::pmr::memory_resource* memory, T* ptr) {
     if (ptr == nullptr)
       return;
     std::pmr::polymorphic_allocator<T> alloc{memory};
-    alloc.destroy(ptr);
+    std::allocator_traits<decltype(alloc)>::destroy(alloc, ptr);
     alloc.deallocate(ptr, 1);
   };
   return std::unique_ptr<T, decltype(deleter)>(ptr, deleter);
@@ -135,13 +135,16 @@ void RunLoop::exit() noexcept {
 }
 
 void RunLoop::post_impl(duration_t delay, base::weak_ref<Task> task) noexcept {
-  TaskNode* tasks = pmr_make<TaskNode>(&memory_pool_, task, clock_t::now() + delay);
-  TaskNode* first = tasks;
+  TaskNode* last = pmr_make<TaskNode>(&memory_pool_, task, clock_t::now() + delay);
+  TaskNode* first = last;
   while (true) {
     // acquire ("lock") and take ownership for currently posted tasks.
     auto* acq = tasks_.exchange(nullptr, std::memory_order_acquire);
     if (acq) {
-      tasks = tasks->next = acq;
+      last = last->next = acq;
+      while (last->next) {
+        last = last->next;
+      }
     }
 
     // try to set a queue back, if it hasn't changed.

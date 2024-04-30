@@ -8,7 +8,7 @@
 #include "base/exception.hpp"
 #include "base/macro.hpp"
 
-#include "avada_config.hpp"
+#include "avada/config.hpp"
 
 #include <codecvt>
 #include <cstdint>

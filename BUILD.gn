@@ -1,9 +1,0 @@
-group("all") {
-  testonly = true
-
-  deps = [
-    "//avada",
-    "//cursedui",
-    "//injecxx",
-  ]
-}

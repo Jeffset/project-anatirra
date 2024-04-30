@@ -9,15 +9,11 @@
 #include "avada/input.hpp"
 #include "base/macro.hpp"
 
-#include "avada_config.hpp"
+#include "avada/config.hpp"
 
 #include <chrono>
-#include <codecvt>
-#include <locale>
-#include <map>
 #include <memory>
 #include <optional>
-#include <string>
 
 struct termios;
 

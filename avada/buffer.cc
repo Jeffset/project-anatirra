@@ -260,6 +260,7 @@ void Buffer::Cell::set_data(char ch) noexcept {
     return;
   }
   data_[0] = ch;
+  data_len_ = 1;
   dirty_ = true;
 }
 

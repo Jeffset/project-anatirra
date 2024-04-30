@@ -8,7 +8,7 @@
 #include "base/enum_flags.hpp"
 #include "base/macro.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <cstdint>
 #include <ostream>

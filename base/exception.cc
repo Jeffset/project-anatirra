@@ -16,7 +16,7 @@ const char* exception::what() const noexcept {
   return message_.c_str();
 }
 
-system_exception::system_exception(std::string_view message) : exception(message) {
+system_exception::system_exception(std::string_view message) noexcept : exception(message) {
   std::ostringstream oss;
   oss << "system error: " << std::system_error(errno, std::generic_category()).what()
       << '\n'

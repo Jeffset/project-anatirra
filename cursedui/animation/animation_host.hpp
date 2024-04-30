@@ -9,7 +9,7 @@
 #include "base/ref_ptr.hpp"
 #include "cursedui/animation/animation.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <chrono>
 #include <list>

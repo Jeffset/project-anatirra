@@ -4,10 +4,8 @@
 
 #include "base/weak_ref.hpp"
 
-#include "gmock/gmock-function-mocker.h"
-#include "gmock/gmock-spec-builders.h"
-#include "third-party/googletest/gmock.hpp"
-#include "third-party/googletest/gtest.hpp"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 namespace {
 

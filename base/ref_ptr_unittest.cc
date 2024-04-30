@@ -4,8 +4,8 @@
 
 #include "base/ref_ptr.hpp"
 
-#include "third-party/googletest/gmock.hpp"
-#include "third-party/googletest/gtest.hpp"
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
 
 namespace {
 

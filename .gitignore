@@ -1,13 +1,10 @@
-# GN build.
-/src/out/
-
-# Intellij.
+.qtcreator/
+.vscode/
 .idea/
 
 .clangd/
 
-/out
+/cmake-build*/
+/build*/
 
 /compile_commands.json
-
-__pycache__/

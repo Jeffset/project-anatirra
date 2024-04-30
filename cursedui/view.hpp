@@ -14,7 +14,7 @@
 #include "cursedui/drawable.hpp"
 #include "cursedui/view_specs.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <memory>
 #include <stdexcept>

@@ -8,7 +8,7 @@
 #include "base/macro.hpp"
 #include "base/weak_ref.hpp"
 
-#include "base_config.hpp"
+#include "base/config.hpp"
 
 #include <atomic>
 #include <chrono>

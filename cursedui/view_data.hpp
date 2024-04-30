@@ -8,7 +8,7 @@
 #include "base/macro.hpp"
 #include "cursedui/view_specs.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <unordered_set>
 

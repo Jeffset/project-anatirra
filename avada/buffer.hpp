@@ -8,7 +8,7 @@
 #include "avada/color.hpp"
 #include "base/nullable.hpp"
 
-#include "avada_config.hpp"
+#include "avada/config.hpp"
 
 #include <array>
 #include <cstdint>

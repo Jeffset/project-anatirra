@@ -5,7 +5,7 @@
 #ifndef ANATIRRA_BASE_DEBUG_STACK_TRACE
 #define ANATIRRA_BASE_DEBUG_STACK_TRACE
 
-#include "base_config.hpp"
+#include "base/config.hpp"
 
 #include <sstream>
 #include <string>

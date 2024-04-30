@@ -46,7 +46,7 @@ int main() {
   overlay->set_text(L"Hello world!");
   overlay->set_background_color(avada::render::ColorRGB{255, 0, 255, 128});
   overlay->set_debug_name("overlay");
-  // root->add_child(overlay);
+  root->add_child(overlay);
 
   lin_layout->set_background_color(avada::render::ColorRGB{33, 20, 20});
   auto lin_layout2 = base::make_ref_ptr<view::LinearLayout>();

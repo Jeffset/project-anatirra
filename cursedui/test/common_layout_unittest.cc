@@ -5,7 +5,8 @@
 #include "cursedui/test/test_harness.hpp"
 #include "cursedui/views/frame_layout.hpp"
 #include "cursedui/views/linear_layout.hpp"
-#include "third-party/googletest/gtest.hpp"
+
+#include "gtest/gtest.h"
 
 using namespace cursedui;
 using namespace cursedui::gfx;

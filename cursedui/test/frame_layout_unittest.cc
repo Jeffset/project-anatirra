@@ -7,7 +7,8 @@
 #include "base/debug/debug.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/test/test_harness.hpp"
-#include "third-party/googletest/gtest.hpp"
+
+#include "gtest/gtest.h"
 
 using namespace cursedui;
 using namespace cursedui::gfx;

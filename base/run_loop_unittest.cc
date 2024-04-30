@@ -5,8 +5,8 @@
 #include "base/run_loop.hpp"
 
 #include "base/debug/debug.hpp"
-#include "third-party/googletest/gmock.hpp"
-#include "third-party/googletest/gtest.hpp"
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <thread>
 #include <vector>
@@ -29,6 +29,8 @@ class RunLoopTest : public testing::Test {
 TEST_F(RunLoopTest, ExitWorks) {
   base::RunLoop loop;
   Dummy dummy;
+
+  printf("HELLLO!\n");
 
   EXPECT_CALL(dummy, act).Times(20);
 
@@ -76,6 +78,8 @@ TEST_F(RunLoopTest, MultiThread) {
       auto payload = (i << (sizeof(short) * 8)) | j;
       EXPECT_CALL(dummy, act1(payload)).Times(2);
     }
+  }
+  for (int i = 0; i < THREAD_COUNT; ++i) {
     std::thread poster([&, i]() {
       while (!go)  // this is done to increase contention.
         ;

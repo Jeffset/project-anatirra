@@ -13,7 +13,10 @@ class EventHandler {
       : context_(context),
         color_{255, 0, 255, 50},
         should_exit_(false),
-        is_drawing_(false) {}
+        is_drawing_(false) {
+    render_scene(context_.render_buffer(), '@');
+    context_.render();
+  }
 
   void operator()(avada::input::ResizeEvent resize) {
     LOG() << "ResizeEvent: " << resize.rows << " x " << resize.columns;
@@ -69,7 +72,7 @@ class EventHandler {
     using namespace avada::render;
     using namespace base::operators;
 
-    auto& cell = buffer(y - 1, x - 1);
+    auto& cell = buffer(y, x);
     cell.set_data(L'&');
     if (cell.fg_color() == SystemColor::DEFAULT) {
       auto cl = color_;
@@ -97,9 +100,21 @@ class EventHandler {
         buffer(i, j).set_data(c);
       }
     }
+
+    if (buffer.rows() >= 1) {
+      auto i = 1;
+      for (const auto ch : kMessage) {
+        if (i >= buffer.columns())
+          break;
+        buffer(1, i++).set_data(ch);
+        LOG() << "Set " << ch << " to (1, " << i << ")";
+      }
+    }
   }
 
  private:
+  static constexpr char kMessage[] = "Press Esc or Ctrl+Q to exit";
+
   avada::Context& context_;
   avada::render::ColorRGB color_;
   bool should_exit_;

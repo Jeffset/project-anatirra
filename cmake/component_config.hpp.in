@@ -1,0 +1,20 @@
+// Generated file. Do not edit directly.
+
+#if !defined(CURSEDUI_COMPONENT_CONFIG_${CONFIG_COMPONENT_NAME}_H)
+#define CURSEDUI_COMPONENT_CONFIG_${CONFIG_COMPONENT_NAME}_H
+
+#define ${CONFIG_COMPONENT_NAME}_SHARED ${CONFIG_SHARED}
+
+#if ${CONFIG_COMPONENT_NAME}_SHARED
+
+#define ${CONFIG_COMPONENT_NAME}_PUBLIC [[gnu::visibility("default")]]
+#define ${CONFIG_COMPONENT_NAME}_PRIVATE [[gnu::visibility("hidden")]]
+
+#else
+
+#define ${CONFIG_COMPONENT_NAME}_PUBLIC
+#define ${CONFIG_COMPONENT_NAME}_PRIVATE
+
+#endif
+
+#endif  // CURSEDUI_COMPONENT_CONFIG_${CONFIG_COMPONENT_NAME}_H

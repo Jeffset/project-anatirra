@@ -7,7 +7,7 @@
 
 #include "cursedui/view_group.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <vector>
 

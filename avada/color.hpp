@@ -5,7 +5,7 @@
 #ifndef ANATIRRA_AVADA_COLOR
 #define ANATIRRA_AVADA_COLOR
 
-#include "avada_config.hpp"
+#include "avada/config.hpp"
 
 #include <array>
 #include <cstdint>

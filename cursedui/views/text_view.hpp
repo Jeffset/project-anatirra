@@ -7,7 +7,7 @@
 
 #include "cursedui/view.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <string>
 #include <string_view>

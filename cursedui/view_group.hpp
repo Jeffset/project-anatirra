@@ -11,7 +11,7 @@
 #include "cursedui/view.hpp"
 #include "cursedui/view_data.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <list>
 #include <memory>

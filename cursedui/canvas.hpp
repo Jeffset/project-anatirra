@@ -9,7 +9,7 @@
 #include "cursedui/dim.hpp"
 #include "cursedui/region.hpp"
 
-#include "cursedui_config.hpp"
+#include "cursedui/config.hpp"
 
 #include <array>
 #include <stack>

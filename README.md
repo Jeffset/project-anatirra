@@ -2,8 +2,8 @@
 
 My public **C++** monorepo with with a variety of my personal bits of projects.
 
-> [!TIP]
-> The code here may be in various states of being (in)complete. Use with caution.
+> [!IMPORTANT]
+> The code here may be in various states of being (in)complete. Use with caution!
 
 Though I strive to keep things well-tested and organized here, I have limited resources to do so.
 

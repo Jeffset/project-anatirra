@@ -34,6 +34,7 @@ function(cursedui_component)
             "${CMAKE_CURRENT_BINARY_DIR}/.."
     )
     target_compile_options(${CURSEDUI_NAME} PRIVATE -Wall -Wextra -fno-rtti)
+    target_compile_features(${CURSEDUI_NAME} PUBLIC cxx_std_20)
     add_library(cursedui::${CURSEDUI_NAME} ALIAS ${CURSEDUI_NAME})
 
 endfunction()

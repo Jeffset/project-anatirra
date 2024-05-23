@@ -1,167 +1,167 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "base/run_loop.hpp"
 
 #include "base/debug/debug.hpp"
+#include "base/ref_ptr.hpp"
+#include "base/weak_ref.hpp"
 
+#include <atomic>
 #include <chrono>
-#include <forward_list>
-#include <memory>
+#include <cstddef>
+#include <list>
 #include <stack>
+#include <thread>
+#include <utility>
 #include <vector>
 
 namespace base {
 
 namespace {
-thread_local std::stack<RunLoop*, std::vector<RunLoop*>> g_run_loops;
-
-// TODO: move this into base?
-
-template <class T, class... Args>
-auto pmr_wrap_unique(std::pmr::memory_resource* memory, T* ptr) {
-  const auto deleter = [memory](T* ptr) {
-    if (ptr == nullptr)
-      return;
-    std::pmr::polymorphic_allocator<T> alloc{memory};
-    std::allocator_traits<decltype(alloc)>::destroy(alloc, ptr);
-    alloc.deallocate(ptr, 1);
-  };
-  return std::unique_ptr<T, decltype(deleter)>(ptr, deleter);
-}
-
-template <class T, class... Args>
-auto pmr_make_unique(std::pmr::memory_resource* memory, Args&&... args) {
-  void* mem = memory->allocate(sizeof(T), alignof(T));
-  T* ptr = new (mem) T(std::forward<Args>(args)...);
-  return pmr_wrap_unique(memory, ptr);
-}
-
-template <class T, class... Args>
-auto pmr_make(std::pmr::memory_resource* memory, Args&&... args) {
-  std::pmr::polymorphic_allocator<T> alloc{memory};
-  T* ptr = alloc.allocate(1);
-  alloc.construct(ptr, std::forward<Args>(args)...);
-  return ptr;
-}
+thread_local std::stack<RunLoop*, std::vector<RunLoop*>> tl_run_loops;
+std::atomic<RunLoop*> g_main_loop;
 }  // namespace
 
-struct RunLoop::TaskNode {
-  base::weak_ref<Task> task;
-  time_point_t time;
-  TaskNode* next;
-
-  TaskNode(base::weak_ref<Task> task, time_point_t time)
-      : task(std::move(task)), time(time), next(nullptr) {}
-
-  struct iterator {
-    using difference_type = int;
-    using value_type = TaskNode;
-    using pointer = TaskNode*;
-    using reference = TaskNode&;
-    using iterator_category = std::forward_iterator_tag;
-
-    iterator& operator++() noexcept {
-      ASSERT(current_);
-      current_ = current_->next;
-      return *this;
+RunLoop::RunLoop() noexcept : 
+  queues_{}
+  , queue_ptrs_{}
+  , exit_when_idle_(false)
+  , running_(false)
+  , idle_(false)
+  {
+    for (auto i = 0u; i < kQueuesCount; ++i) {
+      queue_ptrs_[i] = &queues_[i];
     }
-    bool operator!=(const iterator& rhs) const noexcept {
-      return current_ != rhs.current_;
-    }
-    TaskNode& operator*() noexcept { return *current_; }
+  }
 
-    TaskNode* current_ = nullptr;
-  };
+RunLoop::~RunLoop() noexcept = default;
 
-  iterator begin() noexcept { return {this}; }
-  iterator end() const noexcept { return {}; }
-};
+auto RunLoop::acquire_queue(std::size_t index) noexcept -> queue_t* {
+  queue_t* queue;
+  do {
+    queue = queue_ptrs_[index].exchange(nullptr, std::memory_order::acquire);
+  } while(!queue);
+  return queue;
+}
 
-RunLoop::RunLoop() noexcept : tasks_(nullptr), exited_(false), running_(false) {}
+void RunLoop::store_queue(queue_t* queue, std::size_t index) noexcept {
+  queue_ptrs_[index].store(queue, std::memory_order::release);
+}
 
-RunLoop::~RunLoop() noexcept {}
+auto RunLoop::queue_index() noexcept -> std::size_t {
+  const auto ti = std::this_thread::get_id();
+  return std::hash<std::thread::id>{}(ti) % RunLoop::kQueuesCount;
+}
 
-void RunLoop::run_impl(Task& loop) {
+void RunLoop::run(task_t on_idle) {
   ASSERT(!running_) << "Can't restart already running RunLoop";
-  ASSERT(!exited_) << "Can't restart exited RunLoop";
-  g_run_loops.push(this);
+  tl_run_loops.push(this);
   running_ = true;
 
-  std::pmr::unsynchronized_pool_resource memory;
-  std::pmr::forward_list<TaskNode> delayed_tasks{&memory};
+  std::list<base::weak_ref<DelayedTask>> delayed_tasks;
 
-  while (!exited_) {
-    loop.run();
-    auto now = clock_t::now();
-    if (auto queued_tasks = pmr_wrap_unique(
-            &memory_pool_, tasks_.exchange(nullptr, std::memory_order_acquire))) {
-      // FIXME(jeffset): reverse list.
-      for (auto& task_entry : *queued_tasks) {
-        if (auto task = task_entry.task.lock()) {
-          if (task_entry.time > now) {
-            // If task has a scheduled moment when to run - delay it.
-            delayed_tasks.emplace_front(std::move(task_entry));
-          } else {
-            task->run();
-            now = clock_t::now();
-          }
-        }
-      }
+  while (!exit_when_idle_ || !idle_) {
+    if (idle_) {
+      on_idle();
     }
-    delayed_tasks.remove_if([&now](const TaskNode& task_entry) -> bool {
-      auto task = task_entry.task.lock();
 
-      if (!task)
-        return true;
+    bool did_work = false;
+    for (auto index = 0u; index < kQueuesCount; ++index) {
+      auto* queue = acquire_queue(index);
+      // Extract the queued tasks
+      auto tasks = std::move(queue->tasks);
+      auto new_delayed_tasks = std::move(queue->delayed_tasks);
 
-      if (task_entry.time <= now) {
-        task->run();
-        now = clock_t::now();
-        return true;
+      queue->tasks.clear();
+      queue->delayed_tasks.clear();
+      // Unlock the queue as fast as possible
+      store_queue(queue, index);
+
+      for (auto& task : tasks) {
+        task.runnable();
       }
 
-      return false;
-    });
+      for (auto&& delayed_task : new_delayed_tasks) {
+        delayed_tasks.emplace_front(std::move(delayed_task));
+      }
+
+      did_work = did_work || !tasks.empty();
+    }
+
+    if (!delayed_tasks.empty()) {
+      delayed_tasks.remove_if([&did_work](const base::weak_ref<DelayedTask>& task_ref) {
+        if (auto task = task_ref.lock()) {
+          if (task->time <= clock_t::now()) {
+            task->runnable();
+            did_work = true;
+            return true;
+          }
+
+          return false;
+        }
+
+        return true;
+      });
+    }
+
+    idle_ = !did_work;
   }
-  ASSERT(g_run_loops.top() == this) << "Invalid destruction order";
-  g_run_loops.pop();
+  ASSERT(tl_run_loops.top() == this) << "Invalid destruction order";
+  tl_run_loops.pop();
   running_ = false;
 }
 
-void RunLoop::exit() noexcept {
-  exited_ = true;
+void RunLoop::exit_when_idle() noexcept {
+  exit_when_idle_ = true;
 }
 
-void RunLoop::post_impl(duration_t delay, base::weak_ref<Task> task) noexcept {
-  TaskNode* last = pmr_make<TaskNode>(&memory_pool_, task, clock_t::now() + delay);
-  TaskNode* first = last;
-  while (true) {
-    // acquire ("lock") and take ownership for currently posted tasks.
-    auto* acq = tasks_.exchange(nullptr, std::memory_order_acquire);
-    if (acq) {
-      last = last->next = acq;
-      while (last->next) {
-        last = last->next;
-      }
-    }
+void RunLoop::post(task_t task) noexcept {
+  const auto index = queue_index();
+  auto* queue = acquire_queue(index);
+  queue->tasks.emplace_back(std::move(task));
+  store_queue(queue, index);
+}
 
-    // try to set a queue back, if it hasn't changed.
-    TaskNode* expected = nullptr;
-    if (tasks_.compare_exchange_strong(expected, first, std::memory_order_release,
-                                       std::memory_order_relaxed)) {
-      // successfully changed: release ownership and return.
-      return;
-    }
-    // if failed - retry.
-  }
+auto RunLoop::post_delayed(task_t task, duration_t delay) noexcept -> base::ref_ptr<DelayedTask> {
+  auto delayed_task = base::make_ref_ptr<DelayedTask>(
+      std::move(task), clock_t::now() + delay);
+  const auto index = queue_index();
+  auto* queue = acquire_queue(index);
+  queue->delayed_tasks.emplace_back(delayed_task);
+  store_queue(queue, index);
+  return delayed_task;
 }
 
 // static
 RunLoop& RunLoop::current() noexcept {
-  ASSERT(!g_run_loops.empty()) << "No current RunLoop";
-  return *g_run_loops.top();
+  ASSERT(!tl_run_loops.empty()) << "No current RunLoop";
+  return *tl_run_loops.top();
+}
+
+// static
+RunLoop& RunLoop::main() noexcept {
+  auto main_loop = g_main_loop.load(std::memory_order::acquire);
+  ASSERT(main_loop) << "No main RunLoop";
+  return *main_loop;
+}
+
+// static
+void RunLoop::set_main(RunLoop* main_loop) noexcept {
+  auto* old = g_main_loop.exchange(main_loop, std::memory_order::release);
+  ASSERT(!old) << "Main RunLoop already set";
 }
 
 }  // namespace base

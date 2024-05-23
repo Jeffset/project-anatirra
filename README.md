@@ -1,13 +1,20 @@
-# CURSEDUI
+# Project Anatirra
 
-A library implementing terminal UI written in C++20
+My public **C++** monorepo with with a variety of my personal bits of projects.
 
-### avada
+> [!TIP]
+> The code here may be in various states of being (in)complete. Use with caution.
+
+Though I strive to keep things well-tested and organized here, I have limited resources to do so.
+
+Currently the project is using `C++20` *modulo* modules.
+
+## library: avada
 Avada is a lower-level library providing means to efficiently render contents
-with ANSI terminal sequences.
+with ANSI terminal sequences. Designed to replace `ncurses`.
 
-### cursedui
-The high-level library implementing UI elements, based on libavada. 
+## library: cursedui
+The high-level library implementing UI elements, based on `libavada`. 
 Layout routines and object model are inspired by Android Views.
 
 ## Building & Usage
@@ -27,4 +34,4 @@ avada/avada_example 2>/dev/null         # Raw painting example
 cursedui/cursedui_example 2>/dev/null   # UI example
 ```
 
-To use the library in the project:
+TBD

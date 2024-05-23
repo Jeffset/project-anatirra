@@ -1,9 +1,19 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef ANATIRRA_BASE_TYPE_ARRAY
-#define ANATIRRA_BASE_TYPE_ARRAY
+#pragma once
 
 #include <type_traits>
 
@@ -154,27 +164,27 @@ constexpr auto unwrap(ta<ta<Ts...>>) {
 
 template <template <typename> typename P>
 constexpr auto predicate() {
-  return [](auto t) { return P<ta_single_t<decltype(t)>>::value; };
+  return []<typename T>(T) { return P<ta_single_t<T>>::value; };
 }
 
 template <typename N>
 constexpr auto not_type(ta<N>) {
-  return [](auto t) { return !std::is_same_v<ta_single_t<decltype(t)>, N>; };
+  return []<typename T>(T) { return !std::is_same_v<ta_single_t<T>, N>; };
 }
 
 template <typename T>
 constexpr auto is_type(ta<T>) {
-  return [](auto t) { return std::is_same_v<ta_single_t<decltype(t)>, T>; };
+  return []<typename K>(K) { return std::is_same_v<ta_single_t<K>, T>; };
 }
 
 template <typename T>
 constexpr auto is_type() {
-  return [](auto t) { return std::is_same_v<ta_single_t<decltype(t)>, T>; };
+  return []<typename K>(K) { return std::is_same_v<ta_single_t<K>, T>; };
 }
 
 template <typename Base>
 constexpr auto is_base_of(ta<Base>) {
-  return [](auto t) { return std::is_base_of_v<Base, ta_single_t<decltype(t)>>; };
+  return []<typename T>(T) { return std::is_base_of_v<Base, ta_single_t<T>>; };
 }
 
 template <class... Ts>
@@ -183,5 +193,3 @@ constexpr auto filter_not_null(ta<Ts...> array) {
 }
 
 }  // namespace base::meta
-
-#endif  // ANATIRRA_BASE_TYPE_ARRAY

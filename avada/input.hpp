@@ -1,9 +1,19 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef ANATIRRA_AVADA_INPUT
-#define ANATIRRA_AVADA_INPUT
+#pragma once
 
 #include "base/exception.hpp"
 #include "base/macro.hpp"
@@ -61,6 +71,7 @@ class AVADA_PUBLIC KeyboardEvent {
  public:
   std::variant<wchar_t, KeyboardKey> key;
   uint8_t modifiers;
+  std::string raw_value;
 
   constexpr static uint8_t ALT = 0x1;
   constexpr static uint8_t CTRL = 0x2;
@@ -108,6 +119,8 @@ class AVADA_PUBLIC MouseEvent {
   struct ButtonEvent {
     Button code : 4;
     State state : 1;
+
+    auto operator<=>(const ButtonEvent&) const = default;
   };
 
   std::variant<std::monostate, ButtonEvent, Scroll> data;
@@ -147,5 +160,3 @@ class InputParser {
 };
 
 }  // namespace avada::input
-
-#endif  // ANATIRRA_AVADA_INPUT

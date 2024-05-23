@@ -1,9 +1,19 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef ANATIRRA_CURSEDUI_TEST_TEST_HARNESS
-#define ANATIRRA_CURSEDUI_TEST_TEST_HARNESS
+#pragma once
 
 #include "base/util.hpp"
 #include "cursedui/view.hpp"
@@ -38,5 +48,3 @@ inline auto make_view(gfx::Size preferred_size = {10, 10}) {
 #define EXPECT_BOUNDS(view, bounds) EXPECT_EQ(view->outer_bounds(), (bounds))
 
 }  // namespace cursedui::view::test
-
-#endif  // ANATIRRA_CURSEDUI_TEST_TEST_HARNESS

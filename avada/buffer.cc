@@ -1,22 +1,29 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "avada/buffer.hpp"
 
 #include "avada/write.hpp"
 #include "base/debug/debug.hpp"
 #include "base/debug/tracing.hpp"
-#include "base/exception.hpp"
 #include "base/macro.hpp"
-#include "base/util.hpp"
 
 #include <algorithm>
-#include <cmath>
 #include <codecvt>
 #include <locale>
 #include <optional>
-#include <unistd.h>
 #include <unordered_map>
 
 #define CSI "\x1B["
@@ -36,8 +43,7 @@ class Renderer {
 
       do {
         if (LIKELY(position_)) {
-          auto [ci, cj] = position_.value();
-          if (ci == i) {  // we are on the same row
+          if (auto [ci, cj] = position_.value(); ci == i) {  // we are on the same row
             // use CUF
             auto distance = j - cj;
             // For now we know, that cells are added only with increasing i or j.
@@ -327,7 +333,7 @@ void Buffer::Cell::assign(const Buffer::Cell& rhs) noexcept {
   dirty_ = true;
 }
 
-Buffer::Buffer() noexcept = default;
+Buffer::Buffer() noexcept : rows_{0}, columns_{0}, contents_{} {}
 
 Buffer::Buffer(int rows, int columns) noexcept
     : rows_(rows), columns_(columns), contents_(rows * columns) {}
@@ -376,6 +382,7 @@ void Buffer::render(Buffer& screen_reference) {
         auto& ref_cell = screen_reference.contents_[place];
         if (ref_cell == cell) {
           // cell passed screen reference validation, no need to redraw.
+          ++place;
           continue;
         }
         const auto i = place / columns_;
@@ -396,7 +403,6 @@ void Buffer::render(Buffer& screen_reference) {
       screen_reference.contents_[place] = cell;
       ++place;
     }
-    ++place;
   }
 
   const auto limit = rows_ * columns_;
@@ -418,7 +424,7 @@ void Buffer::render(Buffer& screen_reference) {
   merged.do_render();
 }
 
-void Buffer::clear() {
+void Buffer::clear() noexcept {
   auto limit = rows_ * columns_;
   for (int place = 0; place < limit; ++place) {
     contents_[place] = Cell{};
@@ -439,12 +445,11 @@ const Buffer::Cell& Buffer::operator()(int i, int j) const noexcept {
 
 }  // namespace avada::render
 
-namespace std {
 using namespace avada::render;
 
-size_t hash<pair<Color, Color>>::operator()(
-    const pair<Color, Color>& pair) const noexcept {
-  hash<Color> hasher;
+size_t std::hash<std::pair<Color, Color>>::operator()(
+    const std::pair<Color, Color>& pair) const noexcept {
+  std::hash<Color> hasher;
   static_assert(sizeof(size_t) == 4 || sizeof(size_t) == 8);
   if constexpr (sizeof(size_t) == 8) {
     return (hasher(pair.first) << 32) | hasher(pair.second);
@@ -452,8 +457,6 @@ size_t hash<pair<Color, Color>>::operator()(
     return (hasher(pair.first) << 8) ^ hasher(pair.second);
   }
 }
-
-}  // namespace std
 
 namespace avada::internal {
 

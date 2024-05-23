@@ -1,15 +1,27 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef ANATIRRA_BASE_WEAK_REF
-#define ANATIRRA_BASE_WEAK_REF
+#pragma once
 
 #include "base/ref_ptr.hpp"
 
 #include "base/config.hpp"
 
 #include <atomic>
+#include <cstddef>
+#include <concepts>
 
 namespace base::internal {
 
@@ -86,7 +98,6 @@ class BASE_PUBLIC WeakReferencedImpl<ThreadSafe::NOT> : public RefCounted {
   friend class internal::weak_ref_base<ThreadSafe::NOT>;
 
  private:
-  WeakReferencedImpl* mutable_this_;  // FIXME: get rid of this shit.
   mutable ref_ptr<internal::WeakRefControlBlock<ThreadSafe::NOT>> control_block_;
 };
 
@@ -96,18 +107,22 @@ class BASE_PUBLIC weak_ref_base {
   weak_ref_base() noexcept = default;
   weak_ref_base(const WeakReferencedImpl<thread_safe>* ptr) noexcept;
 
-  weak_ref_base& operator=(const WeakReferencedImpl<thread_safe>* ptr) noexcept;
+  void assign(const WeakReferencedImpl<thread_safe>* ptr) noexcept;
+  bool equals(const WeakReferencedImpl<thread_safe>* ptr) const noexcept;
+  bool equals(std::nullptr_t) const noexcept;
 
   base::ref_ptr<WeakRefControlBlock<thread_safe>> control_block_;
 };
 
 template <class D>
 static constexpr bool supports_weak_referenced =
-    std::is_base_of_v<WeakReferencedImpl<ThreadSafe::NOT>, D>;
+    std::is_base_of_v<WeakReferencedImpl<ThreadSafe::NOT>, D> &&
+    !std::is_base_of_v<WeakReferencedImpl<ThreadSafe::SAFE>, D>;
 
 template <class D>
 static constexpr bool supports_thread_safe_weak_referenced =
-    std::is_base_of_v<WeakReferencedImpl<ThreadSafe::SAFE>, D>;
+    std::is_base_of_v<WeakReferencedImpl<ThreadSafe::SAFE>, D> &&
+    !std::is_base_of_v<WeakReferencedImpl<ThreadSafe::NOT>, D>;
 
 template <class T>
 using weak_ref_base_for =
@@ -121,31 +136,59 @@ namespace base {
 using WeakReferenced = internal::WeakReferencedImpl<internal::ThreadSafe::NOT>;
 using WeakReferencedThreadSafe = internal::WeakReferencedImpl<internal::ThreadSafe::SAFE>;
 
-template <class T>
+template <class T> 
+requires (internal::supports_weak_referenced<T> ||
+          internal::supports_thread_safe_weak_referenced<T>)
 class weak_ref final : public internal::weak_ref_base_for<T> {
-  static_assert(internal::supports_weak_referenced<T> xor
-                    internal::supports_thread_safe_weak_referenced<T>,
-                "Type must either be WeakReferenced or WeakReferencedThreadSafe");
   using base = internal::weak_ref_base_for<T>;
-
-  template <class D>
-  static constexpr bool is_compatible_v = std::is_base_of_v<T, D>;
-
  public:
   weak_ref() noexcept = default;
   ~weak_ref() noexcept = default;
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  weak_ref(const weak_ref& wp) noexcept : base(wp) {}
+  weak_ref(weak_ref&& wp) noexcept : base(std::move(wp)) {}
+
+  template <class D> requires std::convertible_to<D*, T*>
   explicit weak_ref(D* ptr) noexcept : base(ptr) {}
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
-  weak_ref(const ref_ptr<D>& ptr) noexcept : base(ptr.get()) {}
+  template <class D> requires std::convertible_to<D*, T*>
+  explicit weak_ref(const ref_ptr<D>& ptr) noexcept : base(ptr.get()) {}
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  template <class D> requires std::convertible_to<D*, T*>
   weak_ref(const weak_ref<D>& wp) noexcept : base(wp) {}
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  template <class D> requires std::convertible_to<D*, T*>
   weak_ref(weak_ref<D>&& wp) noexcept : base(std::move(wp)) {}
+
+  weak_ref(std::nullptr_t) noexcept : base() {}
+
+  weak_ref& operator=(const weak_ref& wp) noexcept {
+    base::control_block_ = wp.control_block_;
+    return *this;
+  }
+
+  weak_ref& operator=(weak_ref&& wp) noexcept {
+    base::control_block_ = std::move(wp.control_block_);
+    return *this;
+  }
+
+  template <class D> requires std::convertible_to<D*, T*>
+  weak_ref& operator=(const weak_ref<D>& wp) noexcept { 
+    base::control_block_ = wp.control_block_;
+    return *this;
+  }
+
+  template <class D> requires std::convertible_to<D*, T*>
+  weak_ref& operator=(weak_ref<D>&& wp) noexcept { 
+    base::control_block_ = std::move(wp.control_block_);
+    return *this;
+  }
+
+  template <class D> requires std::convertible_to<D*, T*>
+  weak_ref& operator=(const ref_ptr<D>& wp) noexcept { 
+    base::assign(wp.get());
+    return *this;
+  }
 
   weak_ref& operator=(std::nullptr_t) {
     base::control_block_ = nullptr;
@@ -153,8 +196,8 @@ class weak_ref final : public internal::weak_ref_base_for<T> {
   }
 
   ref_ptr<T> lock() const {
-    T* ptr =
-        base::control_block_ ? static_cast<T*>(base::control_block_->get_ptr()) : nullptr;
+    auto* ptr = base::control_block_ ?
+        static_cast<T*>(base::control_block_->get_ptr()) : nullptr;
     return ref_ptr<T>(ptr);
   }
 
@@ -162,21 +205,33 @@ class weak_ref final : public internal::weak_ref_base_for<T> {
     return base::control_block_ == other.control_block_;
   }
 
-  bool operator==(std::nullptr_t) const noexcept {
-    return base::control_block_ == nullptr || base::control_block_->is_ptr_null();
-  }
-
   bool operator!=(const weak_ref& other) const noexcept {
     return base::control_block_ != other.control_block_;
   }
 
-  bool operator!=(std::nullptr_t) const noexcept {
-    return base::control_block_ != nullptr && !base::control_block_->is_ptr_null();
+  template <class D>
+  requires std::convertible_to<D*, T*> && internal::supports_weak_referenced<T>
+  bool operator==(const ref_ptr<D>& ptr) {
+    return base::equals(ptr.get());
+  }
+
+  template <class D>
+  requires std::convertible_to<D*, T*> && internal::supports_weak_referenced<T>
+  bool operator!=(const ref_ptr<D>& ptr) {
+    return !base::equals(ptr.get());
+  }
+
+  bool operator==(std::nullptr_t) const noexcept requires internal::supports_weak_referenced<T> {
+    return base::equals(nullptr);
+  }
+
+  bool operator!=(std::nullptr_t) const noexcept requires internal::supports_weak_referenced<T> {
+    return !base::equals(nullptr);
   }
 };
 
 template <class D>
-weak_ref(const ref_ptr<D>&) -> weak_ref<D>;
+explicit weak_ref(const ref_ptr<D>&) -> weak_ref<D>;
 
 }  // namespace base
 
@@ -190,5 +245,3 @@ struct BASE_PUBLIC hash<base::weak_ref<T>> {
 };
 
 }  // namespace std
-
-#endif  // ANATIRRA_BASE_WEAK_REF

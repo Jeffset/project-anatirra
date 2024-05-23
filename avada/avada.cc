@@ -1,16 +1,27 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "avada/avada.hpp"
 
 #include "avada/write.hpp"
 #include "base/debug/debug.hpp"
 #include "base/exception.hpp"
-#include "base/macro.hpp"
 
 #include <csignal>
-#include <regex>
+#include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <sys/ioctl.h>
 #include <sys/poll.h>
@@ -56,7 +67,10 @@ Context::Context()
               1011,  // Don’t scroll to bottom on key press (rxvt).
           }} {
   ASSERT(g_avada_context == nullptr) << "Only one AvadaContext is permitted to exist";
-  std::signal(SIGWINCH, handle_resize);
+
+  if ((saved_sigwinch_ = std::signal(SIGWINCH, handle_resize)) == SIG_ERR) {
+    throw base::system_exception("signal(SIGWINCH, ...) failed");
+  }
 
   std::setlocale(LC_ALL, "");
 
@@ -88,7 +102,7 @@ Context::Context()
 }
 
 Context::~Context() noexcept {
-  std::signal(SIGWINCH, SIG_DFL);
+  std::signal(SIGWINCH, saved_sigwinch_);
   ::tcsetattr(STDIN_FILENO, TCSAFLUSH, saved_context_.get());
   ASSERT(g_avada_context == this);
   g_avada_context = nullptr;
@@ -99,6 +113,13 @@ input::Event Context::poll_event(std::chrono::milliseconds timeout) {
 
   int poll_result = ::poll(&pfd, 1, timeout.count() /*ms*/);
   if (poll_result == 0) {
+    if (g_pending_resize) {
+      // Doesn't necessarily interrupt the poll, because we may be not
+      //  on the main thread.
+      g_pending_resize = 0;
+      update_size();
+      return input::ResizeEvent{columns_, rows_};
+    }
     return input::ServiceEvent::IDLE;
   }
   if (poll_result == -1) {

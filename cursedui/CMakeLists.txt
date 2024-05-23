@@ -1,5 +1,7 @@
 
-set(SOURCES
+cursedui_component(
+        NAME cursedui
+        SOURCES
         canvas.cc
         canvas.hpp
         dim.hpp
@@ -27,6 +29,8 @@ set(SOURCES
         views/scroll_view.cc
         views/text_view.hpp
         views/text_view.cc
+        views/button.hpp
+        views/button.cc
 
         animation/animation.cc
         animation/animation.hpp
@@ -34,11 +38,6 @@ set(SOURCES
         animation/animation_host.hpp
         animation/animations.cc
         animation/animations.hpp
-)
-
-cursedui_component(
-        NAME cursedui
-        SOURCES ${SOURCES}
 )
 
 target_link_libraries(cursedui PUBLIC base avada)

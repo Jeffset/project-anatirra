@@ -1,9 +1,19 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef ANATIRRA_BASE_MACRO
-#define ANATIRRA_BASE_MACRO
+#pragma once
 
 #define MARK_UNUSED(expr) (void)(expr)
 
@@ -25,17 +35,5 @@
 
 #define NONNULL [[gnu::__nonnull__]]
 
-#define REQUIRES(condition) typename = std::enable_if_t<(condition), void>
-
-#define PIMPL(Class)  \
-  struct Class##Impl; \
-  std::unique_ptr<Class##Impl> impl_
-
-#define PIMPL_INIT(Class) impl_(std::make_unique<Class##Impl>())
-
-#define PIMPL_DEFINE(Class) struct Class::Class##Impl
-
 #define LIKELY(cond) __builtin_expect(bool(cond), 1)
 #define UNLIKELY(cond) __builtin_expect(bool(cond), 0)
-
-#endif  // ANATIRRA_BASE_MACRO

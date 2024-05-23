@@ -1,15 +1,24 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "cursedui/views/text_view.hpp"
 
-#include "avada/input.hpp"
 #include "base/util.hpp"
 #include "cursedui/canvas.hpp"
 #include "cursedui/drawable.hpp"
 
-#include <iostream>
 #include <limits>
 #include <string_view>
 
@@ -17,8 +26,8 @@ namespace cursedui::view {
 
 namespace {
 
-std::wstring_view create_view(std::wstring::const_iterator begin,
-                              std::wstring::const_iterator end) {
+std::string_view create_view(std::string::const_iterator begin,
+                             std::string::const_iterator end) {
   return {&*begin, static_cast<size_t>(end - begin)};
 }
 
@@ -154,18 +163,6 @@ void TextView::on_layout() {
   text_pos_ = gfx::gravitated_rect(bounds, text_block_size, gravity_).position();
 }
 
-void TextView::on_key_event(const avada::input::KeyboardEvent& event) {
-  std::visit(base::overloaded{
-                 [this](wchar_t key) { set_text(text_ + key); },
-                 [this](avada::input::KeyboardKey key) {
-                   if (key == avada::input::KeyboardKey::BACKSPACE) {
-                     set_text(text_.substr(0, text_.size() - 1));
-                   }
-                 },
-             },
-             event.key);
-}
-
 void TextView::on_draw(paint::Canvas& canvas) {
   View::on_draw(canvas);
 
@@ -191,17 +188,29 @@ void TextView::on_focus_changed(bool focused) {
   mark_needs_paint();
 }
 
-TextView::TextView()
+TextView::TextView() noexcept
     : gravity_(gfx::Gravity::CENTER),
       multiline_(false),
       text_color_(avada::render::SystemColor::DEFAULT) {}
 
-void TextView::set_text(std::wstring str) {
+void TextView::set_text(std::string str) noexcept {
   using namespace base::operators;
   if (text_ == str)
     return;
   lines_to_render_.clear();
   text_ = std::move(str);
+  auto size_mark = multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH;
+  mark_needs_layout(size_mark | NeedsLayout::CONTENT);
+  mark_needs_paint();
+}
+
+void TextView::append_text(std::string_view str) noexcept {
+  using namespace base::operators;
+  if (str.empty())
+    return;
+
+  lines_to_render_.clear();
+  text_.append(str);
   auto size_mark = multiline_ ? NeedsLayout::SIZE : NeedsLayout::WIDTH;
   mark_needs_layout(size_mark | NeedsLayout::CONTENT);
   mark_needs_paint();

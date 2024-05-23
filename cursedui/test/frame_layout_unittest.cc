@@ -1,10 +1,20 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "cursedui/views/frame_layout.hpp"
 
-#include "base/debug/debug.hpp"
 #include "cursedui/drawable.hpp"
 #include "cursedui/test/test_harness.hpp"
 
@@ -94,6 +104,11 @@ TEST(FrameLayoutTest, MultipleGravity) {
   auto left_column = test::make_view();
   auto right_column = test::make_view();
 
+  for (auto& view : {left, right, top, bottom, left_top, right_top, left_bottom,
+                     right_bottom, top_bar, bottom_bar, left_column, right_column}) {
+    view->border().set_style(BorderDrawable::Style::SINGLE);
+  }
+
   constexpr auto wc = LayoutWrapContent{};
   add_child(fl, left, wc, wc, Gravity::LEFT);
   add_child(fl, right, wc, wc, Gravity::RIGHT);
@@ -179,8 +194,8 @@ TEST(FrameLayoutTest, CrossMatchParentComplex) {
 
   EXPECT_BOUNDS(fl, rect_from({25, 25}, {50, 50}));
 
-  EXPECT_BOUNDS(c1, rect_from({44, 25}, {12, 50}));
-  EXPECT_BOUNDS(c2, rect_from({25, 44}, {50, 12}));
+  EXPECT_BOUNDS(c1, rect_from({45, 25}, {10, 50}));
+  EXPECT_BOUNDS(c2, rect_from({25, 45}, {50, 10}));
 
   EXPECT_BOUNDS(c3, rect_from({25, 25}, {50, 50}));
   EXPECT_BOUNDS(c4, rect_from({25, 25}, {50, 50}));

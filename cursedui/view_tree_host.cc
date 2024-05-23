@@ -1,16 +1,27 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "cursedui/view_tree_host.hpp"
 
-#include "base/macro.hpp"
 #include "base/run_loop.hpp"
 #include "base/util.hpp"
+#include "base/weak_ref.hpp"
 #include "cursedui/canvas.hpp"
+#include "cursedui/view.hpp"
 #include "cursedui/view_group.hpp"
 
-#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -39,6 +50,8 @@ ViewTreeHost::ViewTreeHost(base::ref_ptr<view::View> root)
       root_size_{avada_.get_columns(), avada_.get_rows()},
       need_root_resize_{true} {
   root_->set_tree_host(this);
+
+  view_tree_routine();
 }
 
 void ViewTreeHost::set_focused_view(base::ref_ptr<view::View> focused_view) noexcept {
@@ -84,7 +97,12 @@ void ViewTreeHost::work_routine() {
           return;
         }
         if (key == KeyboardEvent{L'q', KeyboardEvent::CTRL}) {
-          base::RunLoop::current().exit();
+          base::RunLoop::main().exit_when_idle();
+          return;
+        }
+
+        if (keyboard_handler_ && keyboard_handler_(key)) {
+          // Handled by global handler
           return;
         }
 
@@ -99,7 +117,7 @@ void ViewTreeHost::work_routine() {
       }};
   std::visit(visitor, event);
 
-  if (base::RunLoop::current().exited())
+  if (base::RunLoop::current().exit_requested())
     return;
 
   animation_host_.tick();
@@ -116,10 +134,9 @@ void ViewTreeHost::view_tree_routine() {
   }
 }
 
-void ViewTreeHost::run() {
-  base::RunLoop run_loop;
-  view_tree_routine();
-  run_loop.run([this]() { work_routine(); });
+void ViewTreeHost::tick() {
+  // view_tree_routine();
+  work_routine();
 }
 
 void ViewTreeHost::layout_tree(paint::Region& repaint_region) {

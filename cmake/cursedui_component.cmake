@@ -16,10 +16,8 @@ function(cursedui_component)
         set(CONFIG_SHARED 0)
         set(LIB_TYPE STATIC)
     endif ()
-
-
     string(TOUPPER ${CURSEDUI_NAME} CONFIG_COMPONENT_NAME)
-    configure_file("${CMAKE_SOURCE_DIR}/cmake/component_config.hpp.in" "config.hpp")
+    configure_file("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/component_config.hpp.in" "config.hpp")
 
     add_library(${CURSEDUI_NAME} ${LIB_TYPE} ${CURSEDUI_SOURCES})
     target_sources(${CURSEDUI_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/config.hpp")
@@ -31,7 +29,11 @@ function(cursedui_component)
         )
     endif ()
 
-    target_include_directories(${CURSEDUI_NAME} PUBLIC ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR})
+    target_include_directories(${CURSEDUI_NAME} PUBLIC 
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." 
+            "${CMAKE_CURRENT_BINARY_DIR}/.."
+    )
+    target_compile_options(${CURSEDUI_NAME} PRIVATE -Wall -Wextra -fno-rtti)
     add_library(cursedui::${CURSEDUI_NAME} ALIAS ${CURSEDUI_NAME})
 
 endfunction()

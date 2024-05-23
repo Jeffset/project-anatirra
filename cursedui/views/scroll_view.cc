@@ -1,6 +1,17 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "cursedui/views/scroll_view.hpp"
 
@@ -11,9 +22,6 @@
 #include "cursedui/animation/animations.hpp"
 #include "cursedui/view_specs.hpp"
 #include "cursedui/view_tree_host.hpp"
-
-#include <cmath>
-#include <thread>
 
 namespace cursedui::view {
 
@@ -100,7 +108,7 @@ bool ScrollView::intercept_mouse_event(const avada::input::MouseEvent& event) {
               scroll_bar_opacity_, 1.0f, 200ms);
           animation::start_view_animation(this, scroll_fade_in_.get());
         }
-        hide_scroll_bar_ = base::RunLoop::current().post(1000ms, [this]() {
+        hide_scroll_bar_ = base::RunLoop::current().post_delayed([this]() {
           scroll_fade_in_ = nullptr;
           if (!scroll_fade_out_) {
             scroll_fade_out_ = base::make_ref_ptr<animation::DoubleAnimation>(
@@ -108,7 +116,7 @@ bool ScrollView::intercept_mouse_event(const avada::input::MouseEvent& event) {
             animation::start_view_animation(this, scroll_fade_out_.get());
           }
           hide_scroll_bar_ = nullptr;
-        });
+        }, 1000ms);
         return true;
       },
       [](auto) -> bool { return false; },
@@ -122,7 +130,7 @@ void ScrollView::on_draw(paint::Canvas& canvas) {
   FrameLayout::on_draw(canvas);
   if (max_scroll_offset_.height != 0) {
     ColorRGB::channel_t alpha = 64 * scroll_bar_opacity_;
-    paint::Pen scroll_area_pen_{Colors::WHITE, ColorRGB{255, 255, 00, alpha}};
+    paint::Pen scroll_area_pen_{Colors::WHITE, ColorRGB{255, 255, 255, 0}};
     paint::Pen scroll_bar_pen_{Colors::WHITE, ColorRGB{255, 255, 255, alpha}};
 
     const auto bounds = inner_bounds();

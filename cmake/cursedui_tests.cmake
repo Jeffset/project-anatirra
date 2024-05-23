@@ -17,6 +17,7 @@ function(cursedui_tests)
 
         add_executable(${CURSEDUI_NAME}_tests ${CURSEDUI_SOURCES})
         target_link_libraries(${CURSEDUI_NAME}_tests ${CURSEDUI_NAME} GTest::gtest_main GTest::gmock)
+        target_compile_options(${CURSEDUI_NAME}_tests PRIVATE -fno-rtti)
         gtest_discover_tests(${CURSEDUI_NAME}_tests)
     endif ()
 endfunction()

@@ -1,9 +1,19 @@
-// Copyright (C) 2020 Marco Jeffset (f.giffist@yandex.ru)
-// This software is a part of the Anatirra Project.
-// "Nothing is certain, but we shall hope."
+/* Copyright 2020-2024 Fedor Ihnatkevich
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-#ifndef ANATIRRA_BASE_REF_PTR
-#define ANATIRRA_BASE_REF_PTR
+#pragma once
 
 #include "base/macro.hpp"
 
@@ -11,7 +21,7 @@
 
 #include <atomic>
 #include <cstddef>
-#include <functional>
+#include <concepts>
 #include <type_traits>
 #include <utility>
 
@@ -59,10 +69,12 @@ class ref_ptr_base {
 
 template <class D>
 static constexpr bool supports_ref_counted =
-    std::is_base_of_v<RefCountedImpl<ThreadSafe::NOT>, D>;
+    std::is_base_of_v<RefCountedImpl<ThreadSafe::NOT>, D> &&
+    !std::is_base_of_v<RefCountedImpl<ThreadSafe::SAFE>, D>;
 template <class D>
 static constexpr bool supports_thread_safe_ref_counted =
-    std::is_base_of_v<RefCountedImpl<ThreadSafe::SAFE>, D>;
+    std::is_base_of_v<RefCountedImpl<ThreadSafe::SAFE>, D> &&
+    !std::is_base_of_v<RefCountedImpl<ThreadSafe::NOT>, D>;
 
 template <class T>
 using ref_ptr_base_for =
@@ -78,15 +90,10 @@ using RefCounted = internal::RefCountedImpl<internal::ThreadSafe::NOT>;
 using RefCountedThreadSafe = internal::RefCountedImpl<internal::ThreadSafe::SAFE>;
 
 template <class T>
+requires (internal::supports_ref_counted<T> ||
+          internal::supports_thread_safe_ref_counted<T>)
 class ref_ptr final : public internal::ref_ptr_base_for<T> {
-  static_assert(internal::supports_ref_counted<T> xor
-                    internal::supports_thread_safe_ref_counted<T>,
-                "Type must be either RefCounted or RefCountedThreadSafe");
   using base = internal::ref_ptr_base_for<T>;
-
-  template <class D>
-  static constexpr bool is_compatible_v = std::is_base_of_v<T, D>;
-
  public:
   ref_ptr() = default;
 
@@ -97,10 +104,10 @@ class ref_ptr final : public internal::ref_ptr_base_for<T> {
   ref_ptr(const ref_ptr&) = default;
   ref_ptr(ref_ptr&&) = default;
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  template <class D> requires std::convertible_to<D*, T*>
   ref_ptr(const ref_ptr<D>& rhs) : base(rhs) {}
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  template <class D> requires std::convertible_to<D*, T*>
   ref_ptr(ref_ptr<D>&& rhs) noexcept : base(std::move(rhs)) {}
 
   ref_ptr& operator=(ref_ptr rhs) noexcept {
@@ -120,7 +127,7 @@ class ref_ptr final : public internal::ref_ptr_base_for<T> {
 
   bool operator==(const ref_ptr& rhs) const { return base::ptr_ == rhs.ptr_; }
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  template <class D> requires std::convertible_to<const D*, const T*>
   bool operator==(D* rhs) const {
     return base::ptr_ == rhs;
   }
@@ -129,7 +136,7 @@ class ref_ptr final : public internal::ref_ptr_base_for<T> {
 
   bool operator!=(const ref_ptr& rhs) const { return base::ptr_ != rhs.ptr_; }
 
-  template <class D, REQUIRES(is_compatible_v<D>)>
+  template <class D> requires std::convertible_to<const D*, const T*>
   bool operator!=(D* rhs) const noexcept {
     return base::ptr_ != rhs;
   }
@@ -143,5 +150,3 @@ auto make_ref_ptr(Args&&... args) {
 }
 
 }  // namespace base
-
-#endif  // ANATIRRA_BASE_REF_PTR

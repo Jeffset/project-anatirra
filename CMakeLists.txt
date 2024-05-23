@@ -16,16 +16,13 @@ FetchContent_Declare(
         EXCLUDE_FROM_ALL
 )
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(CURSEDUI_BUILD_SHARED "Builds cursedui as a shared library" ON)
 option(CURSEDUI_BUILD_TESTS "Builds tests" ON)
 option(CURSEDUI_BUILD_EXAMPLES "Builds examples" ON)
 
-add_compile_options(
-        -Wall -Wextra -Wpedantic -fno-rtti
-)
 set(CMAKE_CXX_FLAGS_DEBUG
         "-g -O0 -fasynchronous-unwind-tables -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE

@@ -29,9 +29,11 @@ function(cursedui_component)
         )
     endif ()
 
-    target_include_directories(${CURSEDUI_NAME} PUBLIC 
-            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." 
-            "${CMAKE_CURRENT_BINARY_DIR}/.."
+    cmake_path(GET CMAKE_CURRENT_FUNCTION_LIST_DIR PARENT_PATH PROJECT_ROOT)
+    cmake_path(GET CMAKE_CURRENT_BINARY_DIR PARENT_PATH PROJECT_GEN_DIR)
+    target_include_directories(${CURSEDUI_NAME} PUBLIC
+            "${PROJECT_ROOT}" 
+            "${PROJECT_GEN_DIR}"
     )
     target_compile_options(${CURSEDUI_NAME} PRIVATE -Wall -Wextra -fno-rtti)
     target_compile_features(${CURSEDUI_NAME} PUBLIC cxx_std_20)

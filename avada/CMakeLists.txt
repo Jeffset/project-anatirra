@@ -13,6 +13,8 @@ cursedui_component(
         input.hpp
         write.cc
         write.hpp
+        render.cc
+        render.hpp
 )
 
 target_link_libraries(avada PUBLIC base)

@@ -17,7 +17,9 @@
 
 #include "avada/write.hpp"
 #include "base/debug/debug.hpp"
+#include "base/env_utils.hpp"
 #include "base/exception.hpp"
+#include "base/string_util.hpp"
 
 #include <csignal>
 #include <cstdlib>
@@ -48,7 +50,8 @@ extern "C" void handle_resize(int) {
 }  // namespace
 
 Context::Context()
-    : private_mode_changer_{
+    : capabilities_{}
+    , private_mode_changer_{
           {
               // Enable:
               1000,  // Send Mouse X & Y on button press and release.
@@ -67,6 +70,8 @@ Context::Context()
               1011,  // Don’t scroll to bottom on key press (rxvt).
           }} {
   ASSERT(g_avada_context == nullptr) << "Only one AvadaContext is permitted to exist";
+
+  detect_capabilities();
 
   if ((saved_sigwinch_ = std::signal(SIGWINCH, handle_resize)) == SIG_ERR) {
     throw base::system_exception("signal(SIGWINCH, ...) failed");
@@ -148,7 +153,7 @@ input::Event Context::poll_event(std::chrono::milliseconds timeout) {
 }
 
 void Context::render() {
-  back_buffer_.render(front_buffer_);
+  render::render(back_buffer_, front_buffer_, capabilities_);
 }
 
 void Context::update_size() {
@@ -157,6 +162,30 @@ void Context::update_size() {
   rows_ = ws.ws_row;
   columns_ = ws.ws_col;
   back_buffer_ = render::Buffer(rows_, columns_);
+}
+
+void Context::detect_capabilities() {
+  // TODO: Read real terminal capabilities
+  auto term = base::get_env("TERM").value_or("dumb");
+  if (term == "dumb") {
+    throw avada::unsupported_exception("`dumb` terminal");
+  }
+
+  if (auto color_term = base::get_env("COLORTERM"); color_term == "truecolor") {
+    color_support_ = ColorSupport::RGB;
+  }
+
+  if (term.ends_with("256color")) {
+    color_support_ = Context::PALETTE_256;
+  } else {
+    color_support_ = Context::BASIC_8;
+  }
+
+  if (term.starts_with("xterm")) {
+    capabilities_.REP_supported = true;
+  } else {
+    capabilities_.REP_supported = false;
+  }
 }
 
 Context::ScopedPrivateModeChange::ScopedPrivateModeChange(

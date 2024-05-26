@@ -27,6 +27,8 @@
 
 namespace avada::render {
 
+struct TerminalCapabilities;
+
 class AVADA_PUBLIC Buffer {
  public:
   Buffer() noexcept;
@@ -35,7 +37,6 @@ class AVADA_PUBLIC Buffer {
   GETTER int rows() const noexcept { return rows_; }
   GETTER int columns() const noexcept { return columns_; }
 
-  void render(Buffer& screen_reference);
   void clear() noexcept;
 
   class Cell {
@@ -77,6 +78,8 @@ class AVADA_PUBLIC Buffer {
   const Cell& operator()(int i, int j) const noexcept;
 
  private:
+  friend void render(Buffer&, Buffer&, const TerminalCapabilities&);
+
   int rows_;
   int columns_;
 

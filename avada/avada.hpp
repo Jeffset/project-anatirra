@@ -17,6 +17,8 @@
 
 #include "avada/buffer.hpp"
 #include "avada/input.hpp"
+#include "avada/render.hpp"
+#include "base/exception.hpp"
 #include "base/macro.hpp"
 
 #include "avada/config.hpp"
@@ -29,8 +31,20 @@ struct termios;
 
 namespace avada {
 
+class AVADA_PUBLIC unsupported_exception : public base::exception {
+ public:
+  template <class... Args>
+  unsupported_exception(Args&&... args) : exception(std::forward<Args>(args)...) {}
+};
+
 class AVADA_PUBLIC Context {
  public:
+  enum ColorSupport {
+    RGB,
+    PALETTE_256,
+    BASIC_8,
+  };
+
   Context() /* may throw */;
   ~Context() noexcept;
 
@@ -43,11 +57,16 @@ class AVADA_PUBLIC Context {
   GETTER int get_rows() const noexcept { return rows_; }
   GETTER int get_columns() const noexcept { return columns_; }
 
+  GETTER const render::TerminalCapabilities& capabilities() const noexcept { 
+    return capabilities_;
+  }
+
   GETTER render::Buffer& render_buffer() noexcept { return back_buffer_; }
   GETTER const render::Buffer& render_buffer() const noexcept { return back_buffer_; }
 
  private:
   AVADA_PRIVATE void update_size() /* may throw */;
+  AVADA_PRIVATE void detect_capabilities();
 
   class AVADA_PRIVATE ScopedPrivateModeChange {
    public:
@@ -71,6 +90,8 @@ class AVADA_PUBLIC Context {
  private:
   sighandler_t saved_sigwinch_;
   std::unique_ptr<termios> saved_context_;
+  ColorSupport color_support_;
+  render::TerminalCapabilities capabilities_;
   ScopedPrivateModeChange private_mode_changer_;
 
   input::InputParser input_parser_;

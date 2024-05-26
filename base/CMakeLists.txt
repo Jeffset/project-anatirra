@@ -20,6 +20,9 @@ cursedui_component(
         run_loop.hpp
         type_array.hpp
         util.hpp
+        string_util.hpp
+        env_utils.hpp
+        map_util.hpp
         weak_ref.cc
         weak_ref.hpp
 )
